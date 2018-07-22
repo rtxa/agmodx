@@ -158,7 +158,7 @@ enum {
 	VOTE_INVALID_NUMBER
 }
 
-// This and gVoteList have to be in the same order...
+// gVoteList has to be in the same order...
 enum {
 	VOTE_AGABORT,
 	VOTE_AGALLOW,
@@ -167,11 +167,25 @@ enum {
 	VOTE_AGPAUSE,
 	VOTE_AGSTART,
 	VOTE_MAP,
+}
+
+#define ENUM_MP_INDEX 100
+
+// gVoteListMp has to be in the same order...
+enum {
+	VOTE_BUNNYHOP = ENUM_MP_INDEX,
+	VOTE_FALLDAMAGE,
+	VOTE_FLASHLIGHT,
+	VOTE_FOOTSTEPS,
+	VOTE_FORCERESPAWN,
+	VOTE_FRAGLIMIT,
 	VOTE_FRIENDLYFIRE,
 	VOTE_SELFGAUSS,
 	VOTE_TIMELIMIT,
-	VOTE_MODE // modes always have to be at the end
+	VOTE_WEAPONSTAY,
 }
+
+#define VOTE_MODE 300
 
 // this is used for check if user's vote is valid
 new const gVoteList[][] = {
@@ -182,9 +196,20 @@ new const gVoteList[][] = {
 	"agpause",
 	"agstart",
 	"map",
+};
+
+// this is used for check if user's vote is valid
+new const gVoteListMp[][] = {
+	"mp_bunnyhop",
+	"mp_falldamage",
+	"mp_flashlight",
+	"mp_footsteps",
+	"mp_forcerespawn",
+	"mp_fraglimit",
 	"mp_friendlyfire",
 	"mp_selfgauss",
 	"mp_timelimit",
+	"mp_weaponstay",
 };
 
 // this is used for check if user's vote is valid (this can be replaced with a dinamic array to block some modes)
@@ -229,11 +254,16 @@ new gCvarAgStartMinPlayers;
 new gCvarAgStartAllowUnlimited;
 new gCvarAmxNextMap;
 
-new gCvarTimeLimit;
+new gCvarBunnyHop;
+new gCvarFallDamage;
+new gCvarFlashLight;
+new gCvarFootSteps;
+new gCvarForceRespawn;
 new gCvarFragLimit;
 new gCvarFriendlyFire;
-new gCvarForceRespawn;
 new gCvarSelfGauss;
+new gCvarTimeLimit;
+new gCvarWeaponStay;
 
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
@@ -385,11 +415,16 @@ public plugin_precache() {
 		gCvarBanAmmo[i] = create_cvar(gNameBanAmmo[i], "0", FCVAR_SERVER);
 
 	// Multiplayer cvars
-	gCvarTimeLimit = get_cvar_pointer("mp_timelimit");
-	gCvarFragLimit = get_cvar_pointer("mp_fraglimit");
+	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
+	gCvarFallDamage = get_cvar_pointer("mp_falldamage");
+	gCvarFlashLight = get_cvar_pointer("mp_flashlight");
+	gCvarFootSteps = get_cvar_pointer("mp_footsteps");
 	gCvarForceRespawn = get_cvar_pointer("mp_forcerespawn");
+	gCvarFragLimit = get_cvar_pointer("mp_fraglimit");
 	gCvarFriendlyFire = get_cvar_pointer("mp_friendlyfire");
 	gCvarSelfGauss = get_cvar_pointer("mp_selfgauss");
+	gCvarTimeLimit = get_cvar_pointer("mp_timelimit");
+	gCvarWeaponStay = get_cvar_pointer("mp_weaponstay");
 	
 	// AG Hud Color
 	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER | FCVAR_SPONLY); // yellow
@@ -1685,6 +1720,8 @@ public CmdVote(id) {
 			console_print(id, "%i. %s", ++j, gVoteListModes[i]);
 		for (i = 0; i < sizeof gVoteList; i++)
 			console_print(id, "%i. %s", ++j, gVoteList[i]);
+		for (i = 0; i < sizeof gVoteListMp; i++)
+			console_print(id, "%i. %s", ++j, gVoteListMp[i]);
 		return PLUGIN_HANDLED;
 	}
 
@@ -1715,6 +1752,7 @@ public CmdVote(id) {
 	gVoteArg1 = arg1;
 	gVoteArg2 = arg2;
 	TrieGetCell(gTrieVoteList, arg1, gVoteMode);
+
 	gVoteStarted = true;
 	gVotePlayers[id] = VOTE_YES;
 
@@ -1764,6 +1802,8 @@ public CreateVoteSystem() {
 	gTrieVoteList = TrieCreate();
 	for (new i; i < sizeof gVoteList; i++)
 		TrieSetCell(gTrieVoteList, gVoteList[i], i);
+	for (new i; i < sizeof gVoteListMp; i++)
+		TrieSetCell(gTrieVoteList, gVoteListMp[i], i + ENUM_MP_INDEX);
 	for (new i; i < sizeof gVoteListModes; i++) 
 		TrieSetCell(gTrieVoteList, gVoteListModes[i], VOTE_MODE);
 }
@@ -1780,16 +1820,21 @@ public DoVote() {
 	client_print(0, print_center, "%L", LANG_PLAYER, "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
 
 	switch (gVoteMode) {
-		case VOTE_AGSTART: 		StartVersus();
 		case VOTE_AGABORT: 		AbortVersus();
-		case VOTE_AGPAUSE: 		PauseGame(find_player("a", gVoteCallerName));
 		case VOTE_AGALLOW: 		AllowPlayer(find_player("a", gVoteCallerName));
-		case VOTE_MAP: 			ChangeMap(gVoteArg2);
 		case VOTE_AGNEXTMAP:	set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
 		case VOTE_AGNEXTMODE:	set_pcvar_string(gCvarGameMode, gVoteArg2);
+		case VOTE_AGPAUSE: 		PauseGame(find_player("a", gVoteCallerName));
+		case VOTE_AGSTART: 		StartVersus();
+		case VOTE_MAP: 			ChangeMap(gVoteArg2);
+		case VOTE_BUNNYHOP: 	set_pcvar_string(gCvarBunnyHop, gVoteArg2);
+		case VOTE_FALLDAMAGE:	set_pcvar_string(gCvarFallDamage, gVoteArg2);
+		case VOTE_FLASHLIGHT:	set_pcvar_string(gCvarFlashLight, gVoteArg2);
+		case VOTE_FOOTSTEPS:	set_pcvar_string(gCvarFootSteps, gVoteArg2);
+		case VOTE_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
 		case VOTE_SELFGAUSS:	set_pcvar_string(gCvarSelfGauss, gVoteArg2);
 		case VOTE_TIMELIMIT:	set_pcvar_string(gCvarTimeLimit, gVoteArg2);
-		case VOTE_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
+		case VOTE_WEAPONSTAY:	set_pcvar_string(gCvarWeaponStay, gVoteArg2);
 		case VOTE_MODE: 		ChangeMode(gVoteArg1);
 	}
 	
@@ -1835,7 +1880,9 @@ bool:IsVoteInvalid(id, arg1[], arg2[], len) {
 			isInvalid = (player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF)) ? get_user_name(player, arg2, len) : 0; // cmd_target shows his own error message.
 		case VOTE_MAP, VOTE_AGNEXTMAP: 
 			isInvalid = is_map_valid(arg2) ? VOTE_VALID : VOTE_INVALID_MAP;
-		case VOTE_TIMELIMIT, VOTE_FRIENDLYFIRE, VOTE_SELFGAUSS:
+		case VOTE_TIMELIMIT, VOTE_FRIENDLYFIRE, VOTE_SELFGAUSS, 
+			VOTE_FALLDAMAGE, VOTE_BUNNYHOP, VOTE_FRAGLIMIT, VOTE_WEAPONSTAY, 
+			VOTE_FORCERESPAWN, VOTE_FOOTSTEPS, VOTE_FLASHLIGHT:
 			isInvalid = is_str_num(arg2) ? VOTE_VALID : VOTE_INVALID_NUMBER;
 		case VOTE_AGNEXTMODE:
 			isInvalid = TrieKeyExists(gTrieVoteList, arg2) ? VOTE_VALID : VOTE_INVALID_MODE;
