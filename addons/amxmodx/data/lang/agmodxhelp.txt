@@ -1,0 +1,31 @@
+[en]
+HELP_HELP = - shows help on using other commands of AG Mod X.
+HELP_AGSTART = [name or #userid 1] [name or #userid 2] ... [name or #userid 32] - start a match with the players entered.
+HELP_AGALLOW = [name or #userid] - allows a player to enter a match
+HELP_AGABORT = - abort the match
+HELP_AGPAUSE = - pause the game
+HELP_AGNEXTMODE = - set the next gamemode
+HELP_AGNEXTMAP = - set the next map
+HELP_VOTE = <arg> [arg2] - do a vote
+HELP_YES = - vote yes when a vote is running
+HELP_NO = - vote no when a vote is running
+HELP_SETTINGS = - shows a splash hud with the current settings of the server.
+HELP_PLAYTEAM = <file>.wav - reproduce el nombre del sonido ingresado a todo el equipo.
+HELP_TIMELEFT = - muestra el tiempo restante de la partida
+HELP_MODE = - changes to that mode
+
+[es]
+HELP_HELP = - muestra la lista de comandos del AG Mod X
+HELP_AGSTART = [name1 or #userid] [name2 or #userid] ... [name32 or #userid32] - comienza una partida con los jugadores ingresados
+HELP_AGALLOW = [name or #userid] - permite ingresar un usuario a la partida
+HELP_AGABORT = - termina la partida
+HELP_AGPAUSE = - pone en pausa la partida
+HELP_AGNEXTMODE = - establece el siguiente modo.
+HELP_AGNEXTMAP = - establece el siguiente mapa.
+HELP_VOTE = <arg> [arg2] - realiza una votacion
+HELP_YES = - vota a favor cuando hay una votacion
+HELP_NO = - vota en contra cuando hay una votacion
+HELP_SETTINGS = - muestra los ajustes del AG Mod X
+HELP_PLAYTEAM = <file>.wav - reproduce el nombre del sonido ingresado a todo el equipo.
+HELP_TIMELEFT = - muestra el tiempo restante de la partida
+HELP_MODE = - cambia a ese modo
