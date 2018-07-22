@@ -28,6 +28,7 @@ VOTE_RUNNING = Vote is running, type yes or no in console
 VOTE_DELAY =  Last vote was not accepted - %i seconds until next vote can be called.
 INVALID_MAP = Map is invalid
 INVALID_MODE = Mode is invalid
+INVALID_NUMBER = Number is invalid
 
 [es]
 DISPLAY_INFO1 = Escribe 'help' 'vote' en la consola para ver los comandos disponibles del AG Mod X.
@@ -59,3 +60,4 @@ VOTE_RUNNING = Hay una votacion en progreso, escribe 'yes' o 'no' en la consola
 VOTE_DELAY = El ultimo voto no ha sido aceptado - Faltan %i segundos para poder volver a votar.
 INVALID_MAP = Mapa invalido
 INVALID_MODE = Modo invalido
+INVALID_NUMBER = Numero invalido

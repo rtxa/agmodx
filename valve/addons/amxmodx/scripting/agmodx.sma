@@ -79,6 +79,8 @@ new const gCountSnd[][] = {
 
 new const gBeepSnd[] = "fvox/beep";
 
+#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+
 #define HL_MAX_TEAMNAME_LENGTH 16
 
 // Team models (this is used to fix team selection from VGUI Viewport)
@@ -148,7 +150,44 @@ new bool:gIsPause;
 
 new Trie:gTrieScoreAuthId; // handle where it saves all the authids of players playing a versus for rescore system...
 
-// this is used for check if user vote is valid
+enum {
+	VOTE_VALID,
+	VOTE_INVALID,
+	VOTE_INVALID_MAP,
+	VOTE_INVALID_MODE,
+	VOTE_INVALID_NUMBER
+}
+
+// This and gVoteList have to be in the same order...
+enum {
+	VOTE_AGABORT,
+	VOTE_AGALLOW,
+	VOTE_AGNEXTMAP,
+	VOTE_AGNEXTMODE,
+	VOTE_AGPAUSE,
+	VOTE_AGSTART,
+	VOTE_MAP,
+	VOTE_FRIENDLYFIRE,
+	VOTE_SELFGAUSS,
+	VOTE_TIMELIMIT,
+	VOTE_MODE // modes always have to be at the end
+}
+
+// this is used for check if user's vote is valid
+new const gVoteList[][] = {
+	"agabort",
+	"agallow",
+	"agnextmap",
+	"agnextmode",
+	"agpause",
+	"agstart",
+	"map",
+	"mp_friendlyfire",
+	"mp_selfgauss",
+	"mp_timelimit",
+};
+
+// this is used for check if user's vote is valid (this can be replaced with a dinamic array to block some modes)
 new const gVoteListModes[][] = {
 	"arena",
 	"tdm",
@@ -158,34 +197,18 @@ new const gVoteListModes[][] = {
 	"ffa"
 };
 
-// this is used for check if user vote is valid
-new const gVoteListOneArg[][] = {
-	"agstart",
-	"agabort",
-	"agpause",
-};
-
-// this is used for check if user vote is valid
-new const gVoteListTwoArgs[][] = {
-	"agallow",
-	"agnextmap",
-	"agnextmode",
-	"map",
-	"mp_timelimit",
-	"mp_friendlyfire",
-	"mp_selfgauss"
-};
-
 #define VOTE_YES 1
 #define VOTE_NO -1
 
 // vote system
+new Trie:gTrieVoteList;
 new bool:gVoteStarted;
 new Float:gVoteFailedTime; // in seconds
 new gVotePlayers[33]; // 1: vote yes; 0: didn't vote; -1; vote no; 
 new gVoteArg1[32];
 new gVoteArg2[32];
 new gVoteCallerName[MAX_NAME_LENGTH];
+new gVoteMode;
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
@@ -460,9 +483,8 @@ public plugin_init() {
 	// this saves score of players that're playing a match
 	// so if someone get disconnect by any reason, the score will be restored when he returns
 	gTrieScoreAuthId = TrieCreate();
-	
 	gArenaQueue = ArrayCreate();
-
+	CreateVoteSystem();
 	// this is used for change hud colors of ag mod x
 	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
 
@@ -578,7 +600,7 @@ public PlayerKilled(victim, attacker) {
 
 	// Arena
 	if (gIsArenaMode) {
-		if (victim != attacker) {
+		if (victim != attacker && IsPlayer(attacker)) { // what happens if victim die by fall?
 			gMatchWinner = attacker;
 			gMatchLooser = victim;
 		} else if (gMatchWinner == victim) {
@@ -914,6 +936,11 @@ public ArenaCountdown() {
 	PlaySound(0, gCountSnd[gStartMatchTime]);
 
 	if (gStartMatchTime == 0) {
+		if (!is_user_connected(gMatchWinner) || !is_user_connected(gMatchLooser)) {
+			set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+			return;
+		}
+
 		if (hl_get_user_spectator(gMatchWinner))
 			ag_set_user_spectator(gMatchWinner, false);
 		else
@@ -1645,24 +1672,19 @@ public CmdVoteNo(id) {
 }
 
 public CmdVote(id) {
-	server_print("CmdVote");
+	//server_print("CmdVote");
 
 	if (!get_pcvar_num(gCvarAllowVote))
 		return PLUGIN_HANDLED;
 
-	new argc = read_argc();
-
-	// Show help
-	if (argc == 1) {
-		console_print(id, "%L", LANG_PLAYER, "VOTE_HELP");
+	// Print help on console
+	if (read_argc() == 1) {
 		new i, j;
+		console_print(id, "%L", LANG_PLAYER, "VOTE_HELP");
 		for (i = 0; i < sizeof gVoteListModes; i++)
 			console_print(id, "%i. %s", ++j, gVoteListModes[i]);
-		for (i = 0; i < sizeof gVoteListOneArg; i++)
-			console_print(id, "%i. %s", ++j, gVoteListOneArg[i]);
-		for (i = 0; i < sizeof gVoteListTwoArgs; i++)
-			console_print(id, "%i. %s", ++j, gVoteListTwoArgs[i]);
-
+		for (i = 0; i < sizeof gVoteList; i++)
+			console_print(id, "%i. %s", ++j, gVoteList[i]);
 		return PLUGIN_HANDLED;
 	}
 
@@ -1687,12 +1709,12 @@ public CmdVote(id) {
 		return PLUGIN_HANDLED;
 	}*/
 	
-	if (IsVoteInvalid(id, arg1, arg2, charsmax(arg2), argc))
+	if (IsVoteInvalid(id, arg1, arg2, charsmax(arg2)))
 		return PLUGIN_HANDLED;
 
 	gVoteArg1 = arg1;
 	gVoteArg2 = arg2;
-
+	TrieGetCell(gTrieVoteList, arg1, gVoteMode);
 	gVoteStarted = true;
 	gVotePlayers[id] = VOTE_YES;
 
@@ -1708,12 +1730,13 @@ public CmdVote(id) {
 }
 
 public ShowVote() {
+	//server_print("ShowVote");
+	
 	if (!gVoteStarted) {
 		RemoveVote();
 		return;
 	}
 
-	//server_print("ShowVote");
 	new numVoteFor, numVoteAgainst, numUndecided;
 
 	// count votes
@@ -1737,6 +1760,15 @@ public ShowVote() {
 	}
 }
 
+public CreateVoteSystem() {
+	gTrieVoteList = TrieCreate();
+	for (new i; i < sizeof gVoteList; i++)
+		TrieSetCell(gTrieVoteList, gVoteList[i], i);
+	for (new i; i < sizeof gVoteListModes; i++) 
+		TrieSetCell(gTrieVoteList, gVoteListModes[i], VOTE_MODE);
+}
+
+// remplezar todo con get_user_userid para que sea mas independiente...
 public DoVote() {
 	//server_print("DoVote");
 
@@ -1747,50 +1779,21 @@ public DoVote() {
 	// sometimes  hud doesnt show, show old style vote too
 	client_print(0, print_center, "%L", LANG_PLAYER, "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
 
-	/*
-	switch (mode) {
-		VOTE_AGSTART: 		StartVersus();
-		VOTE_AGABORT: 		AbortVersus();
-		VOTE_AGPAUSE: 		PauseGame(find_player("a", gVoteCallerName));
-		VOTE_AGALLOW: 		AllowPlayer(find_player("a", gVoteCallerName));
-		VOTE_MAP: 			engine_changelevel(gVoteArg2); // we need to reload the map to take effect cvars
-		VOTE_AGNEXTMAP:		set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
-		VOTE_AGNEXTMODE:	set_pcvar_string(gCvarGameMode, gVoteArg2);
-		VOTE_SELFGAUSS:		set_pcvar_string(gCvarSelfGauss, gVoteArg2);
-		VOTE_TIMELIMIT:		set_pcvar_string(gCvarTimeLimit, gVoteArg2);
-		VOTE_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
-		VOTE_MODE: 			ChangeMode(gVoteArg1);
+	switch (gVoteMode) {
+		case VOTE_AGSTART: 		StartVersus();
+		case VOTE_AGABORT: 		AbortVersus();
+		case VOTE_AGPAUSE: 		PauseGame(find_player("a", gVoteCallerName));
+		case VOTE_AGALLOW: 		AllowPlayer(find_player("a", gVoteCallerName));
+		case VOTE_MAP: 			ChangeMap(gVoteArg2);
+		case VOTE_AGNEXTMAP:	set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
+		case VOTE_AGNEXTMODE:	set_pcvar_string(gCvarGameMode, gVoteArg2);
+		case VOTE_SELFGAUSS:	set_pcvar_string(gCvarSelfGauss, gVoteArg2);
+		case VOTE_TIMELIMIT:	set_pcvar_string(gCvarTimeLimit, gVoteArg2);
+		case VOTE_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
+		case VOTE_MODE: 		ChangeMode(gVoteArg1);
 	}
-	*/
-
-	// do actions of selected mode
-	if (equal(gVoteArg1, "agstart")) {
-		StartVersus();
-	} else if (equal(gVoteArg1, "agabort")){
-		AbortVersus();
-	} else if (equal(gVoteArg1, "agpause")) {
-		PauseGame(find_player("a", gVoteCallerName));
-	} else if (equal(gVoteArg1, "agallow")) {
-		AllowPlayer(find_player("a", gVoteCallerName));
-	} else if (equal(gVoteArg1, "map")) {
-		ChangeMap(gVoteArg2);
-	} else if (equal(gVoteArg1, "agnextmap")) {
-		set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
-	} else if (equal(gVoteArg1, "agnextmode")) {
-		set_pcvar_string(gCvarGameMode, gVoteArg2);
-	} else if (equal(gVoteArg1, "mp_timelimit")) {
-		set_pcvar_string(gCvarTimeLimit, gVoteArg2);
-	} else if (equal(gVoteArg1, "mp_selfgauss")) {
-		set_pcvar_string(gCvarSelfGauss, gVoteArg2);
-	} else if (equal(gVoteArg1, "mp_friendlyfire")) {
-		set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
-	} else { // modes
-		ChangeMode(gVoteArg1);
-	}
-
+	
 	RemoveVote();
-
-	return PLUGIN_HANDLED;
 }
 
 public DenyVote() {
@@ -1808,59 +1811,47 @@ public DenyVote() {
 
 public RemoveVote() {
 	//server_print("RemoveVote");
-	gVoteStarted = false;
 
-	remove_task(TASK_DENYVOTE);
+	if (task_exists(TASK_DENYVOTE) && gVoteStarted) {
+		gVoteStarted = false;
+		remove_task(TASK_DENYVOTE);
+	} else
+		set_task(0.1, "RemoveVote");
 
 	// reset user votes
 	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
 }
 
-IsVoteInvalid(id, arg1[], arg2[], len, argc) {
-	new isInvalid = 1;
+bool:IsVoteInvalid(id, arg1[], arg2[], len) {
+	new isInvalid, mode, player;
 
-	switch (argc) {
-		case 2: {
-			for (new i; i < sizeof gVoteListOneArg; i++)
-				if (equal(arg1, gVoteListOneArg[i]))
-					isInvalid = 0;
-			for (new i; i < sizeof gVoteListModes; i++)
-				if (equal(arg1, gVoteListModes[i]))
-					isInvalid = 0;
-		} case 3: {
-			if (equal(arg1, "map") || equal(arg1, "agnextmap")) {
-				if (is_map_valid(arg2))
-					isInvalid = 0;
-				else
-					isInvalid = 2;
-			} else if (equal(arg1, "agallow")) {
-				new player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF);
-				if (player) {
-					get_user_name(player, arg2, len);
-					isInvalid = 0;
-				} else
-					return PLUGIN_HANDLED; // cmd_target shows his own error message.
-			} else if (equal(arg1, "mp_timelimit") || equal(arg1, "mp_friendlyfire") || equal(arg1, "mp_selfgauss")) {
-				if (is_str_num(arg2))
-					isInvalid = 0;
-			} else if (equal(arg1, "agnextmode")) {
-				isInvalid = 3;
-				for (new i; i < sizeof gVoteListModes; i++)
-					if (equal(arg2, gVoteListModes[i]))
-						isInvalid = 0;
-			}	
-		}
+	if (!TrieGetCell(gTrieVoteList, arg1, mode))
+		mode = -1;
+
+	switch (mode) {
+		case VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
+			isInvalid = VOTE_VALID;
+		case VOTE_AGALLOW:
+			isInvalid = (player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF)) ? get_user_name(player, arg2, len) : 0; // cmd_target shows his own error message.
+		case VOTE_MAP, VOTE_AGNEXTMAP: 
+			isInvalid = is_map_valid(arg2) ? VOTE_VALID : VOTE_INVALID_MAP;
+		case VOTE_TIMELIMIT, VOTE_FRIENDLYFIRE, VOTE_SELFGAUSS:
+			isInvalid = is_str_num(arg2) ? VOTE_VALID : VOTE_INVALID_NUMBER;
+		case VOTE_AGNEXTMODE:
+			isInvalid = TrieKeyExists(gTrieVoteList, arg2) ? VOTE_VALID : VOTE_INVALID_MODE;
+		default:
+			isInvalid = VOTE_INVALID;
 	}
 
 	switch (isInvalid) {
-		case 1: console_print(id, "%L", LANG_PLAYER, "VOTE_INVALID");
-		case 2: console_print(id, "%L", LANG_PLAYER, "INVALID_MAP");
-		case 3: console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
+		case VOTE_INVALID: console_print(id, "%L", LANG_PLAYER, "VOTE_INVALID");
+		case VOTE_INVALID_MAP: console_print(id, "%L", LANG_PLAYER, "INVALID_MAP");
+		case VOTE_INVALID_MODE: console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
+		case VOTE_INVALID_NUMBER: console_print(id, "%L", LANG_PLAYER, "INVALID_NUMBER");
 	}
 
-	return isInvalid > 0 ? 1 : 0;
+	return isInvalid > 0 ? true : false;
 }
-
 
 public ChangeMode(const mode[]) {
 	set_pcvar_string(gCvarGameMode, mode); // set new mode
@@ -1873,7 +1864,7 @@ public ChangeMode(const mode[]) {
 	StartIntermissionMode();
 }
 
-// i want to show the score when map finishes, not change it instantly with engine_changelevel
+// i want to show score when map finishes so you can take a pic, engine_changelevel() will change it instantly
 public ChangeMap(const map[]) {
 	set_pcvar_string(gCvarAmxNextMap, map);
 	StartIntermissionMode();
