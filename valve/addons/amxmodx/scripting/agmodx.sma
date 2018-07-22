@@ -27,7 +27,7 @@
 #include <hl>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.0 Build 17/7/2018"
+#define VERSION "Beta 1.1 Build 22/7/2018"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -791,9 +791,11 @@ public LmsMatchCountdown() {
 				hl_user_spawn(player);
 		}
 
-		RespawnAll();
-
 		remove_task(TASK_STARTMATCH);
+
+		EndMatchLms();
+
+		RespawnAll();
 
 		return;
 	}
@@ -883,6 +885,8 @@ public LtsMatchCountdown() {
 		}
 
 		remove_task(TASK_STARTMATCH);
+
+		EndMatchLts();
 
 		RespawnAll();
 
@@ -1817,7 +1821,6 @@ public CreateVoteSystem() {
 		TrieSetCell(gTrieVoteList, gVoteListModes[i], VOTE_MODE);
 }
 
-// remplezar todo con get_user_userid para que sea mas independiente...
 public DoVote() {
 	//server_print("DoVote");
 
@@ -1891,7 +1894,7 @@ bool:IsVoteInvalid(id, arg1[], arg2[], len) {
 		mode = -1;
 
 	switch (mode) {
-		case VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
+		case VOTE_MODE, VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
 			isInvalid = VOTE_VALID;
 		case VOTE_AGALLOW:
 			if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF)))
