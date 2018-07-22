@@ -2129,6 +2129,15 @@ public StartIntermissionMode() {
 	new ent = create_entity("game_end");
 	if (is_valid_ent(ent))
 		ExecuteHamB(Ham_Use, ent, 0, 0, 1.0, 0.0);
+
+	gBlockCmdKill = true;
+	gBlockCmdSpec = true;
+	gBlockCmdDrop = true;
+
+	for (new id = 1; id < MaxClients; id++) {
+		if (is_user_connected(id))
+			FreezePlayer(id);
+	}
 }
 
 public CacheTeamListModels(teamlist[][], size) {
