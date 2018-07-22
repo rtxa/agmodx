@@ -279,6 +279,7 @@ new gCvarBanHealthKit;
 new gCvarBanLongJump;
 new gCvarBanHevCharger;
 new gCvarBanHealthCharger;
+new gCvarReplaceEgonWithAmmo;
 
 new const gNameStartWeapons[SIZE_WEAPONS][] = {
 	"sv_ag_start_357",
@@ -379,6 +380,7 @@ new const gClearFieldEntsClass[][] = {
 };
 
 public plugin_precache() {
+	ReplaceEgonWithAmmo();
 	create_cvar("agmodx_version", VERSION, FCVAR_SERVER);
 	gCvarContact = get_cvar_pointer("sv_contact");
 
@@ -405,6 +407,7 @@ public plugin_precache() {
 	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
 	gCvarBanHealthCharger = create_cvar("sv_ag_ban_healthcharger", "0");
 	gCvarBanHevCharger = create_cvar("sv_ag_ban_hevcharger", "0");
+	gCvarReplaceEgonWithAmmo = create_cvar("sv_ag_replace_egonwithammo", "0");
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
 		gCvarStartWeapons[i] = create_cvar(gNameStartWeapons[i], "0", FCVAR_SERVER);
@@ -445,7 +448,11 @@ public plugin_precache() {
 
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
-	
+
+	// doesn't work in plugin_precache :/
+	if (get_pcvar_num(gCvarReplaceEgonWithAmmo))
+		ReplaceEgonWithAmmo();
+
 	// Cache models from teamlist
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS); // This will fix VGUI Viewport
 	CacheTeamListModels(gTeamListModels, HL_MAX_TEAMS);
@@ -497,15 +504,6 @@ public plugin_init() {
 	register_clcmd("pauseAgUser", "CmdPauseAgUser");
 	register_clcmd("pauseAgAdmin", "CmdPauseAgAdmin");
 	
-	// debug arena mode
-	//register_concmd("PrintArenaQueue", "PrintArenaQueue");
-
-	// pause it because "say timeleft" shows wrong timeleft, unless we modify the amx plugin, or put the plugin first and create our own timeleft cmd...
-	pause("cd", "timeleft.amxx");
-
-	// i'm not sure if its fixed, sometimes i get a bad cvar pointer
-	gCvarAmxNextMap = get_cvar_pointer("amx_nextmap");
-
 	// debug for arena, lts and lms
 	register_clcmd("userinfo", "CmdUserInfo");
 
@@ -520,13 +518,22 @@ public plugin_init() {
 	// so if someone get disconnect by any reason, the score will be restored when he returns
 	gTrieScoreAuthId = TrieCreate();
 	gArenaQueue = ArrayCreate();
-	CreateVoteSystem();
+
 	// this is used for change hud colors of ag mod x
 	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
 
+	CreateVoteSystem();
 	StartTimeLeft();
-
 	StartMode();
+}
+
+
+public plugin_cfg() {
+	// pause it because "say timeleft" shows wrong timeleft, unless we modify the amx plugin, or put the plugin first and create our own timeleft cmd...
+	pause("cd", "timeleft.amxx");
+
+	// this should fix bad cvar pointer
+	gCvarAmxNextMap = get_cvar_pointer("amx_nextmap");
 }
 
 // Change game description to show current AG mode  when you find servers (ex: AG TDM)
@@ -2069,6 +2076,24 @@ public RespawnAll() {
 				set_pev(i, pev_nextthink, get_gametime());
 			}
 		}
+	}
+}
+
+public ReplaceEgonWithAmmo() {
+	new num, idx, ents[64], Float:origin[3];
+
+	while (num < sizeof ents && (ents[num] = find_ent_by_class(idx, "weapon_egon"))) {
+		idx = ents[num];
+		num++;
+	}
+
+	for (new i; i < num; i++) {
+		pev(ents[i], pev_origin, origin);
+		remove_entity(ents[i]);
+
+		ents[i] = create_entity("ammo_gaussclip");
+		entity_set_origin(ents[i], origin);
+		DispatchSpawn(ents[i]);
 	}
 }
 
