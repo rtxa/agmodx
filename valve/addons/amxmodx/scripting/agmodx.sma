@@ -233,6 +233,7 @@ new gVotePlayers[33]; // 1: vote yes; 0: didn't vote; -1; vote no;
 new gVoteArg1[32];
 new gVoteArg2[32];
 new gVoteCallerName[MAX_NAME_LENGTH];
+new gVoteCallerUserId;
 new gVoteMode;
 
 // array size of some gamemode cvars
@@ -1755,6 +1756,7 @@ public CmdVote(id) {
 
 	gVoteStarted = true;
 	gVotePlayers[id] = VOTE_YES;
+	gVoteCallerUserId = get_user_userid(id);
 
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
 
@@ -1818,13 +1820,21 @@ public DoVote() {
 
 	// sometimes  hud doesnt show, show old style vote too
 	client_print(0, print_center, "%L", LANG_PLAYER, "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
+	
+	new caller = find_player("k", gVoteCallerUserId);
+	
+	// if it's not connected vote caller, cancel vote...
+	if (!caller) {
+		RemoveVote();
+		return;
+	}
 
 	switch (gVoteMode) {
 		case VOTE_AGABORT: 		AbortVersus();
-		case VOTE_AGALLOW: 		AllowPlayer(find_player("a", gVoteCallerName));
+		case VOTE_AGALLOW: 		AllowPlayer(caller);
 		case VOTE_AGNEXTMAP:	set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
 		case VOTE_AGNEXTMODE:	set_pcvar_string(gCvarGameMode, gVoteArg2);
-		case VOTE_AGPAUSE: 		PauseGame(find_player("a", gVoteCallerName));
+		case VOTE_AGPAUSE: 		PauseGame(caller);
 		case VOTE_AGSTART: 		StartVersus();
 		case VOTE_MAP: 			ChangeMap(gVoteArg2);
 		case VOTE_BUNNYHOP: 	set_pcvar_string(gCvarBunnyHop, gVoteArg2);
@@ -1877,7 +1887,10 @@ bool:IsVoteInvalid(id, arg1[], arg2[], len) {
 		case VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
 			isInvalid = VOTE_VALID;
 		case VOTE_AGALLOW:
-			isInvalid = (player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF)) ? get_user_name(player, arg2, len) : 0; // cmd_target shows his own error message.
+			if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF)))
+				get_user_name(player, arg2, len); 
+			else
+				return true; // cmd_target shows his own error message.
 		case VOTE_MAP, VOTE_AGNEXTMAP: 
 			isInvalid = is_map_valid(arg2) ? VOTE_VALID : VOTE_INVALID_MAP;
 		case VOTE_TIMELIMIT, VOTE_FRIENDLYFIRE, VOTE_SELFGAUSS, 
