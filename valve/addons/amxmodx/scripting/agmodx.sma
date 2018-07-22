@@ -563,11 +563,7 @@ public client_putinserver(id) {
 }
 
 public client_disconnected(id) {
-	// reset player vote and update showvote
-	if (gVoteStarted) {
-		gVotePlayers[id] = 0;
-		ShowVote();
-	}
+
 
 	new authid[32];
 	get_user_authid(id, authid, charsmax(authid));
@@ -590,6 +586,12 @@ public client_disconnected(id) {
 
 // here is_user_alive(id) will show 0 :)
 public client_remove(id) {
+	// reset player vote and update showvote
+	if (gVoteStarted) {
+		gVotePlayers[id] = 0;
+		set_task(0.1, "ShowVote", TASK_SHOWVOTE);
+	}
+
 	if (gIsArenaMode) {
 		EndArena(id);
 	} else if (gIsLtsMode) {
