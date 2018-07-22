@@ -563,8 +563,6 @@ public client_putinserver(id) {
 }
 
 public client_disconnected(id) {
-
-
 	new authid[32];
 	get_user_authid(id, authid, charsmax(authid));
 
@@ -589,7 +587,8 @@ public client_remove(id) {
 	// reset player vote and update showvote
 	if (gVoteStarted) {
 		gVotePlayers[id] = 0;
-		set_task(0.1, "ShowVote", TASK_SHOWVOTE);
+		if (!task_exists(TASK_SHOWVOTE))
+			set_task(0.1, "ShowVote", TASK_SHOWVOTE);
 	}
 
 	if (gIsArenaMode) {
@@ -624,8 +623,10 @@ public PlayerPostSpawn(id) {
 	remove_task(id + TASK_SHOWSETTINGS);
 
 	// here happens the same thing
-	if (gVoteStarted)
-		set_task(0.1, "ShowVote", TASK_SHOWVOTE); 
+	if (gVoteStarted) {
+		if (!task_exists(TASK_SHOWVOTE))
+			set_task(0.1, "ShowVote", TASK_SHOWVOTE);
+	}
 
 	if (is_user_alive(id)) // what happens if users spawn dead? it's just a prevention.
 		SetPlayerStats(id); // note: you cant set stats on pre spawn
@@ -1435,6 +1436,9 @@ public CmdSpectate(id) {
 			ResetScore(id); // Penalize players when they go to spec in a match
 	} else if (gBlockCmdSpec)
 		return PLUGIN_HANDLED;
+
+	if (!task_exists(TASK_SHOWVOTE))
+		set_task(0.1, "ShowVote", TASK_SHOWVOTE);
 
 	return PLUGIN_CONTINUE;
 }
