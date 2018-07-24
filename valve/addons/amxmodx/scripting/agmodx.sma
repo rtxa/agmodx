@@ -656,8 +656,8 @@ public PlayerKilled(victim, attacker) {
 		}
 
 		//server_print("(PlayerKilled) Winner: %i; Looser: %i", gMatchWinner, gMatchLooser);
-
-		set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
+		if (is_user_connected(gMatchWinner))
+			set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
 
 		// Send looser to the end of the queue
 		new idx =  ArrayFindValue(gArenaQueue, gMatchLooser);
@@ -1514,9 +1514,14 @@ public CmdAgPause(id, level, cid) {
 	if (!cmd_access(id, level, cid, 0))
 	    return PLUGIN_HANDLED;
 
+	new name[32], authid[32];
+	get_user_name(id, name, charsmax(name));
+	get_user_authid(id, authid, charsmax(authid));
+
+	log_message("Agpause: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
+
 	RemoveVote();
 	PauseGame(id);
-
 	return PLUGIN_CONTINUE;	
 }
 
@@ -1554,8 +1559,13 @@ public CmdAgStart(id, level, cid) {
 			}
 		}		
 	}
-	get_user_name(id, arg, charsmax(arg));
-	server_print("Id: %i Nombre: %s inicio versus", id, arg);
+
+	new name[32], authid[32];
+	get_user_name(id, name, charsmax(name));
+	get_user_authid(id, authid, charsmax(authid));
+
+	log_message("Agstart: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
+
 	StartVersus();
 
 	return PLUGIN_HANDLED;
@@ -1564,6 +1574,12 @@ public CmdAgStart(id, level, cid) {
 public CmdAgAbort(id, level, cid) {
 	if (!cmd_access(id, level, cid, 0))
 	    return PLUGIN_HANDLED;
+
+	new name[32], authid[32];
+	get_user_name(id, name, charsmax(name));
+	get_user_authid(id, authid, charsmax(authid));
+
+	log_message("Agabort: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
 
 	AbortVersus();
 
@@ -1580,14 +1596,25 @@ public CmdAgAllow(id, level, cid) {
 	new arg[32], player;
 	read_argv(1, arg, charsmax(arg));
 
-	if (!arg[0])
+	if (equal(arg, ""))
 		player = id;
 	else 
 		player = cmd_target(id, arg, CMDTARGET_ALLOW_SELF);
 
+	if (!player)
+		return PLUGIN_HANDLED;
+
 	AllowPlayer(player);
 
-	return PLUGIN_CONTINUE;
+	new name[32], authid[32];
+	get_user_name(id, name, charsmax(name));
+	get_user_authid(id, authid, charsmax(authid));
+
+	log_message("Agallow: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
+
+	AbortVersus();
+
+	return PLUGIN_HANDLED;
 }
 
 public AllowPlayer(id) {
