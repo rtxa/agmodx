@@ -1349,8 +1349,8 @@ public MsgSayText(msg_id, msg_dest, target) {
 	}
 
 	// replace all %q with total ammo (ammo and backpack ammo) of current weapon
-	replace_string(text, charsmax(text), "%q", fmt("%i", ammo < 0 ? bpammo : ammo + bpammo), false); // when the weapon doesnt have ammo, it shows -1, replace it with 0
-
+	replace_string(text, charsmax(text), "%q", fmt("%i", ammo < 0 ? bpammo : ammo + bpammo), false); // if the weapon only has bpammo, ammo will return -1, replace it with 0
+	
 	// send final message
 	set_msg_arg_string(2, text);
 
