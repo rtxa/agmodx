@@ -1172,7 +1172,7 @@ public StartVersus() {
 		if (pev_valid(id) != 2)
 			continue;
 
-		if (IsObserver(id) && pev(id, pev_deadflag) != DEAD_RESPAWNABLE) // this is to avoid set spec to dead players, just i wnat to spec players  in welcome cam 
+		if (IsObserver(id) && pev(id, pev_deadflag) != DEAD_RESPAWNABLE) // send to spec players in welcome cam 
 			ag_set_user_spectator(id);
 
 		if (is_user_connected(id) && !hl_get_user_spectator(id)) {
@@ -1294,7 +1294,7 @@ public SendVictimToSpec(taskid) {
 /*
 * AG Say
 */
-public MsgSayText(msg_id, msg_dest, dest_id) {
+public MsgSayText(msg_id, msg_dest, target) {
 	new text[191]; // 192 will crash the sv if someone put a large message with any %l, %w, etc...
 	
 	get_msg_arg_string(2, text, charsmax(text)); // get user message
@@ -1302,45 +1302,44 @@ public MsgSayText(msg_id, msg_dest, dest_id) {
 	if (text[0] == '*') // ignore server messages
 		return PLUGIN_CONTINUE;
 
-	new id = get_msg_arg_int(1);
+	new caller = get_msg_arg_int(1);
+	new isTargetSpec = hl_get_user_spectator(target);
 
 	// Add or change channel tags	
-	if (is_user_connected(id)) { 
-		if (hl_get_user_spectator(id)) {
-			if (containi(text, "(TEAM)") != -1) {
-				replace(text, charsmax(text), "(TEAM)", "(ST)"); // Spectator Team
-				if (dest_id != id && !hl_get_user_spectator(dest_id)) // only show messages to spectator
-					return PLUGIN_HANDLED;
-			} else {
-				format(text, charsmax(text), "^x02(S)%s", text); // Spectator
-				if (dest_id != id && gVersusStarted && !get_pcvar_num(gCvarSpecTalk)) // spec cant talk to people in vs so block it
-					return PLUGIN_HANDLED;
-			}
+	if (hl_get_user_spectator(caller)) {
+		if (contain(text, "^x02(TEAM)") != -1) {
+			if (!isTargetSpec) // only show messages to spectator
+				return PLUGIN_HANDLED;
+			replace(text, charsmax(text), "(TEAM)", "(ST)"); // Spectator Team
 		} else {
-			if (containi(text, "(TEAM)") != -1) { // Team
-				replace(text, charsmax(text), "(TEAM)", "(T)"); 
-				if (dest_id != id && hl_get_user_spectator(dest_id))
-					return PLUGIN_HANDLED;
-			} else {
-				format(text, charsmax(text), "^x02(A)%s", text); // All
-			}
+			if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk) && !isTargetSpec) // spec cant talk to people in vs so block it
+				return PLUGIN_HANDLED;
+			format(text, charsmax(text), "^x02(S)%s", text); // Spectator
+		}
+	} else {
+		if (contain(text, "^x02(TEAM)") != -1) { // Team
+			if (isTargetSpec)
+				return PLUGIN_HANDLED;
+			replace(text, charsmax(text), "(TEAM)", "(T)"); 
+		} else {
+			format(text, charsmax(text), "^x02(A)%s", text); // All
 		}
 	}
 
 	// replace all %h with health
-	replace_string(text, charsmax(text), "%h", fmt("%i", get_user_health(id)), false);
+	replace_string(text, charsmax(text), "%h", fmt("%i", get_user_health(caller)), false);
 
 	// replace all %a with armor
-	replace_string(text, charsmax(text), "%a", fmt("%i", get_user_armor(id)), false);
+	replace_string(text, charsmax(text), "%a", fmt("%i", get_user_armor(caller)), false);
 
 	// replace all %p with longjump
-	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(id) ? "On" : "Off", false);
+	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(caller) ? "On" : "Off", false);
 
 	// replace all %l with location
-	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(id, gLocationOrigin, gNumLocations)], false);
+	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(caller, gLocationOrigin, gNumLocations)], false);
 
 	// replace all %w with name of current weapon
-	new ammo, bpammo, weaponid = get_user_weapon(id, ammo, bpammo);
+	new ammo, bpammo, weaponid = get_user_weapon(caller, ammo, bpammo);
 
 	if (weaponid) {
 		new weaponName[32];
