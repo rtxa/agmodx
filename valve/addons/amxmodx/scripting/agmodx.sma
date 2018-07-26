@@ -243,6 +243,7 @@ new gVoteMode;
 #define SIZE_AMMOENTS 9
 
 // cvar pointers
+new gCvarDebugVote;
 new gCvarContact;
 new gCvarGameName;
 new gCvarGameMode;
@@ -380,9 +381,12 @@ new const gClearFieldEntsClass[][] = {
 };
 
 public plugin_precache() {
-	ReplaceEgonWithAmmo();
+	// AG Mod X Version
 	create_cvar("agmodx_version", VERSION, FCVAR_SERVER);
+
 	gCvarContact = get_cvar_pointer("sv_contact");
+
+	gCvarDebugVote = create_cvar("sv_ag_debug_vote", "0", FCVAR_SERVER);
 
 	// Chat cvar
 	gCvarSpecTalk = create_cvar("sv_ag_spectalk", "0", FCVAR_SERVER | FCVAR_SPONLY);
@@ -1752,7 +1756,8 @@ public CmdVoteNo(id) {
 }
 
 public CmdVote(id) {
-	//server_print("CmdVote");
+	if (gCvarDebugVote)
+		server_print("CmdVote");
 
 	if (!get_pcvar_num(gCvarAllowVote))
 		return PLUGIN_HANDLED;
@@ -1814,7 +1819,8 @@ public CmdVote(id) {
 }
 
 public ShowVote() {
-	//server_print("ShowVote");
+	if (gCvarDebugVote)
+		server_print("ShowVote");
 	
 	if (!gVoteStarted) {
 		RemoveVote();
@@ -1839,7 +1845,7 @@ public ShowVote() {
 	} else if (numVoteAgainst > numVoteFor && numVoteAgainst > numUndecided) { // denied
 		DenyVote();
 	} else { // in progress
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 59.0, 0.2);
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, get_pcvar_float(gCvarVoteDuration) * 2, 0.2);
 		ShowSyncHudMsg(0, gHudShowVote, "%L", LANG_PLAYER, "VOTE_START", gVoteArg1, gVoteArg2, gVoteCallerName, numVoteFor, numVoteAgainst, numUndecided);
 	}
 }
@@ -1855,7 +1861,8 @@ public CreateVoteSystem() {
 }
 
 public DoVote() {
-	//server_print("DoVote");
+	if (gCvarDebugVote)
+		server_print("DoVote");
 
 	// show vote is accepted
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 10.0);
@@ -1895,7 +1902,8 @@ public DoVote() {
 }
 
 public DenyVote() {
-	//server_print("DenyVote");
+	if (gCvarDebugVote)
+		server_print("DenyVote");
 
 	RemoveVote();
 	gVoteFailedTime = get_gametime() + get_pcvar_num(gCvarVoteFailedTime);
@@ -1908,14 +1916,17 @@ public DenyVote() {
 }
 
 public RemoveVote() {
-	//server_print("RemoveVote");
+	if (gCvarDebugVote)
+		server_print("RemoveVote");
 
-	if (task_exists(TASK_DENYVOTE) && gVoteStarted) {
+	/*if (task_exists(TASK_DENYVOTE) && gVoteStarted) {
 		gVoteStarted = false;
 		remove_task(TASK_DENYVOTE);
 	} else
-		set_task(0.1, "RemoveVote");
+		set_task(0.1, "RemoveVote");*/
 
+	gVoteStarted = false;
+	remove_task(TASK_DENYVOTE);
 	// reset user votes
 	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
 }
