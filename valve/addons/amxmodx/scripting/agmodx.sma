@@ -552,8 +552,8 @@ public client_putinserver(id) {
 	new authid[32];
 	get_user_authid(id, authid, charsmax(authid));
 
-	// restore score by steamid
-	if (TrieKeyExists(gTrieScoreAuthId, authid))
+	// restore score by authid
+	if (ScoreExists(authid))
 		set_task(1.0, "RestoreScore", id, authid, sizeof authid); // delay to avoid some scoreboard glitchs
 	else if (gSendConnectingToSpec)
 		set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
@@ -570,17 +570,12 @@ public client_disconnected(id) {
 	new authid[32];
 	get_user_authid(id, authid, charsmax(authid));
 
-	// save score by steamid
-	if (gVersusStarted && TrieKeyExists(gTrieScoreAuthId, authid)) {
-		new score[2];
-
-		score[SCORE_FRAGS] = get_user_frags(id);
-		score[SCORE_DEATHS] = hl_get_user_deaths(id);
-
-		// save frags and deaths by authid
-		TrieSetArray(gTrieScoreAuthId, authid, score, sizeof score);
-
-		console_print(0, "%L", LANG_PLAYER, "MATCH_LEAVE", authid, score[SCORE_FRAGS], score[SCORE_DEATHS]);
+	// save score by authid
+	if (gVersusStarted && ScoreExists(authid)) {
+		new frags = get_user_frags(id);
+		new deaths = hl_get_user_deaths(id);
+		SaveScore(id, frags, deaths);
+		console_print(0, "%L", LANG_PLAYER, "MATCH_LEAVE", authid, frags, deaths);
 	}
 
 	return PLUGIN_HANDLED;
@@ -604,15 +599,6 @@ public client_remove(id) {
 	}
 
 	return PLUGIN_HANDLED;
-}
-
-public RestoreScore(authid[], id) {	
-	new score[2];	
-	if (TrieGetArray(gTrieScoreAuthId, authid, score, sizeof score)) {
-		set_user_frags(id, score[SCORE_FRAGS]);
-		hl_set_user_deaths(id, score[SCORE_DEATHS]);
-		//server_print("* Authid putin: %s; frags: %i; deaths: %i;", authid, score[SCORE_FRAGS], score[SCORE_DEATHS]);
-	}
 }
 
 public PlayerPreSpawn(id) {
@@ -1206,13 +1192,10 @@ public StartVersusCountdown() {
 		// message hold on a lot of time to avoid flickering or dissapearing, so remove it manually
 		ClearSyncHud(0, gHudShowMatch);
 
-		new authid[32];
 		for (new id = 1; id <= MaxClients; id++) {
 			if (is_user_connected(id) && !hl_get_user_spectator(id)) {
-				get_user_authid(id, authid, charsmax(authid));
-
 				// when a match start, save authid of every match player
-				TrieSetCell(gTrieScoreAuthId, authid, 0);
+				SaveScore(id, 0, 0);
 
 				hl_user_spawn(id);
 
@@ -1258,11 +1241,6 @@ public AbortVersus() {
 		} else if (hl_get_user_spectator(id))
 			ag_set_user_spectator(id, false);
 	}
-}
-
-ResetScore(id) {
-	set_user_frags(id, 0);
-	hl_set_user_deaths(id, 0);
 }
 
 FreezePlayer(id, bool:freeze=true) {
@@ -1350,7 +1328,7 @@ public MsgSayText(msg_id, msg_dest, target) {
 
 	// replace all %q with total ammo (ammo and backpack ammo) of current weapon
 	replace_string(text, charsmax(text), "%q", fmt("%i", ammo < 0 ? bpammo : ammo + bpammo), false); // if the weapon only has bpammo, ammo will return -1, replace it with 0
-	
+
 	// send final message
 	set_msg_arg_string(2, text);
 
@@ -1434,7 +1412,7 @@ public CmdSpectate(id) {
 	new authid[32];
 	get_user_authid(id, authid, charsmax(authid));
 
-	if (TrieKeyExists(gTrieScoreAuthId, authid)) { // let user spectate if he is playing a versus
+	if (ScoreExists(authid)) { // let user spectate if he is playing a versus
 		if (!hl_get_user_spectator(id)) // set score when he is in spec will mess up the scoreboard (bugfixed hl bug?)
 			ResetScore(id); // Penalize players when they go to spec in a match
 	} else if (gBlockCmdSpec)
@@ -1629,7 +1607,7 @@ public AllowPlayer(id) {
 		get_user_authid(id, authid, charsmax(authid));
 
 		// create a key for this new guy so i can save his score when he gets disconnect...
-		TrieSetCell(gTrieScoreAuthId, authid, 0);
+		SaveScore(id, 0, 0);
 
 		ag_set_user_spectator(id, false);
 
@@ -2155,6 +2133,49 @@ public ClearField() {
 	entid = 0;
 	while ((entid = find_ent_by_class(entid, "grenade")))
 		set_pev(entid, pev_dmg, 0);
+}
+
+
+/*
+* Restore Score
+*/
+public bool:ScoreExists(const authid[]) {
+	return TrieKeyExists(gTrieScoreAuthId, authid);
+}
+
+// save score by steamid
+public SaveScore(id, frags, deaths) {
+	new authid[32], score[2];
+
+	get_user_authid(id, authid, charsmax(authid));
+
+	score[SCORE_FRAGS] = frags;
+	score[SCORE_DEATHS] = deaths;
+
+	TrieSetArray(gTrieScoreAuthId, authid, score, sizeof score);
+}
+
+public GetScore(const authid[], &frags, &deaths) {
+	new score[2];
+	TrieGetArray(gTrieScoreAuthId, authid, score, sizeof score);
+
+	frags = score[SCORE_FRAGS];
+	deaths = score[SCORE_DEATHS];
+}
+
+public RestoreScore(authid[], id) {	
+	new frags, deaths;
+
+	if (ScoreExists(authid)) {
+		GetScore(authid, frags, deaths);
+		set_user_frags(id, frags);
+		hl_set_user_deaths(id, deaths);
+	}
+}
+
+ResetScore(id) {
+	set_user_frags(id, 0);
+	hl_set_user_deaths(id, 0);
 }
 
 SetHudColorCvarByString(const color[], &red, &green, &blue) {
