@@ -1221,8 +1221,6 @@ public StartVersusCountdown() {
 * AgAbort
 */
 public AbortVersus() {
-	server_print("AgAbort");
-
 	gVersusStarted = false;
 
 	// clear authids to prepare for the next match
@@ -1502,7 +1500,7 @@ public CmdAgPause(id, level, cid) {
 	get_user_name(id, name, charsmax(name));
 	get_user_authid(id, authid, charsmax(authid));
 
-	log_message("Agpause: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
+	log_amx("Agpause: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
 
 	RemoveVote();
 	PauseGame(id);
@@ -1512,6 +1510,12 @@ public CmdAgPause(id, level, cid) {
 public CmdAgStart(id, level, cid) {
 	if (!cmd_access(id, level, cid, 0))
 	    return PLUGIN_HANDLED;
+
+	new name[32], authid[32];
+	get_user_name(id, name, charsmax(name));
+	get_user_authid(id, authid, charsmax(authid));
+
+	log_amx("Agstart: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
 
 	new arg[32];
 	read_argv(1, arg, charsmax(arg));
@@ -1544,11 +1548,9 @@ public CmdAgStart(id, level, cid) {
 		}		
 	}
 
-	new name[32], authid[32];
-	get_user_name(id, name, charsmax(name));
-	get_user_authid(id, authid, charsmax(authid));
 
-	log_message("Agstart: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
+
+	
 
 	StartVersus();
 
@@ -1563,7 +1565,7 @@ public CmdAgAbort(id, level, cid) {
 	get_user_name(id, name, charsmax(name));
 	get_user_authid(id, authid, charsmax(authid));
 
-	log_message("Agabort: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
+	log_amx("Agabort: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
 
 	AbortVersus();
 
@@ -1594,7 +1596,7 @@ public CmdAgAllow(id, level, cid) {
 	get_user_name(id, name, charsmax(name));
 	get_user_authid(id, authid, charsmax(authid));
 
-	log_message("Agallow: ^"%s<%d><%s><>^"", name, get_user_userid(id), authid);
+	log_amx("Agallow: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
 
 	AbortVersus();
 
@@ -1899,7 +1901,7 @@ public DenyVote() {
 public RemoveVote() {
 	if (gCvarDebugVote)
 		server_print("RemoveVote");
-		
+
 	gVoteStarted = false;
 
 	remove_task(TASK_DENYVOTE);
