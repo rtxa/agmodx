@@ -63,7 +63,7 @@ new const gHelpList[][] = {
 	"yes",
 };
 
-// sounds 
+// countdown sounds
 new const gCountSnd[][] = {
 	"barney/ba_bring", // zero
 	"fvox/one", 
@@ -212,7 +212,7 @@ new const gVoteListMp[][] = {
 	"mp_weaponstay",
 };
 
-// this is used for check if user's vote is valid (this can be replaced with a dinamic array to block some modes)
+// this is used for check if user's vote is valid (this can be replaced with a dynamic array to block some modes)
 new const gVoteListModes[][] = {
 	"arena",
 	"tdm",
@@ -282,6 +282,7 @@ new gCvarBanHevCharger;
 new gCvarBanHealthCharger;
 new gCvarReplaceEgonWithAmmo;
 
+// cvars names
 new const gNameStartWeapons[SIZE_WEAPONS][] = {
 	"sv_ag_start_357",
 	"sv_ag_start_9mmar",
@@ -299,6 +300,7 @@ new const gNameStartWeapons[SIZE_WEAPONS][] = {
 	"sv_ag_start_tripmine",
 };
 
+// cvars names
 new const gNameStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_shotgun",
 	"sv_ag_start_ammo_9mm",
@@ -313,6 +315,7 @@ new const gNameStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_snark",
 };
 
+// cvars names
 new const gNameBanWeapons[SIZE_BANWEAPONS][] = {
 	"sv_ag_ban_357",
 	"sv_ag_ban_9mmar",
@@ -330,6 +333,7 @@ new const gNameBanWeapons[SIZE_BANWEAPONS][] = {
 	"sv_ag_ban_tripmine",	
 };	
 
+// cvars names
 new const gNameBanAmmo[SIZE_AMMOENTS][] = {
 	"sv_ag_ban_ammo_357",		
 	"sv_ag_ban_ammo_9mm",
@@ -1273,7 +1277,7 @@ public SendVictimToSpec(taskid) {
 * AG Say
 */
 public MsgSayText(msg_id, msg_dest, target) {
-	new text[191]; // 192 will crash the sv if someone put a large message with any %l, %w, etc...
+	new text[191]; // 192 will crash the sv by overflow if someone send a large message with a lot of %l, %w, etc...
 	
 	get_msg_arg_string(2, text, charsmax(text)); // get user message
 	
@@ -2090,7 +2094,7 @@ public ResetChargers() {
 	}
 }
 
-// This will respawn all weapons, ammo and items to prepare for a new match (agstart)
+// This will respawn all weapons, ammo and items of the map to prepare for a new match (agstart)
 public RespawnAll() {
 	new classname[32];
 	for (new i; i < global_get(glb_maxEntities); i++) {
@@ -2143,7 +2147,7 @@ public bool:ScoreExists(const authid[]) {
 	return TrieKeyExists(gTrieScoreAuthId, authid);
 }
 
-// save score by steamid
+// save score by authid
 public SaveScore(id, frags, deaths) {
 	new authid[32], score[2];
 
