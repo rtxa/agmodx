@@ -86,8 +86,6 @@ new const gBeepSnd[] = "fvox/beep";
 // Team models (this is used to fix team selection from VGUI Viewport)
 new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
-// Game player equip keys
-new gGamePlayerEquipKeys[32][32];
 
 // Location system
 new gLocationName[128][32]; 	// Max locations (128) and max location name length (32);
@@ -116,6 +114,7 @@ new bool:gBlockCmdDrop;
 new bool:gSendVictimToSpec;
 new bool:gSendConnectingToSpec;
 new bool:gRestorePlayerEquipOnKill;
+new bool:gGamePlayerEquipExists;
 
 // gamemode flags
 new bool:gIsArenaMode;
@@ -622,9 +621,8 @@ public PlayerPostSpawn(id) {
 			set_task(0.1, "ShowVote", TASK_SHOWVOTE);
 	}
 
-	if (is_user_alive(id)) // what happens if users spawn dead? it's just a prevention.
-		SetPlayerStats(id); // note: you cant set stats on pre spawn
-
+	if (is_user_alive(id) && !gGamePlayerEquipExists) // what happens if users spawn dead? it's just a prevention.
+		SetPlayerEquipment(id); // note: you cant set stats on pre spawn
 }
 
 public PlayerKill(id) {
@@ -690,37 +688,22 @@ public PlayerKilled(victim, attacker) {
 SetGameModePlayerEquip() {
 	new ent = find_ent_by_class(0, "game_player_equip");
 
-	if (!ent)
+	if (!ent) {
 		ent = create_entity("game_player_equip");
+	} else {
+		gGamePlayerEquipExists = true;
+		return;
+	}
 
 	for (new i; i < SIZE_WEAPONS; i++) {
-		// If the weapon exists in the game_player_equip, do not create it again...
-		if (get_pcvar_num(gCvarStartWeapons[i]) && !ExistsKeyValue(gWeaponClass[i], gGamePlayerEquipKeys, sizeof gGamePlayerEquipKeys)) {
+		// If the map has a game_player_equip, ignore gamemode cvars (this will avoid problems in maps like 357_box or bootbox)
+		if (get_pcvar_num(gCvarStartWeapons[i]))
 			DispatchKeyValue(ent, gWeaponClass[i], "1");
-		}
 	}
 }
 
-public ExistsKeyValue(const key[], source[][], size) {
-	for (new i; i < size; i++) {
-		if (equal(key, source[i]))
-			return 1;
-	}
-	return 0;
-}
 
-// Get all keys of game_player_equip ent
-public pfn_keyvalue(entid)  {
-	new classname[32], key[32], value[4];
-	copy_keyvalue(classname, sizeof classname, key, sizeof key, value, sizeof value);
-	static i;
-	if (equal(classname, "game_player_equip")) {
-		copy(gGamePlayerEquipKeys[i], charsmax(gGamePlayerEquipKeys), key);
-		i++;
-	}
-}
-
-SetPlayerStats(id) {
+SetPlayerEquipment(id) {
 	set_user_health(id, get_pcvar_num(gCvarStartHealth));
 	set_user_armor(id, get_pcvar_num(gCvarStartArmor));
 
@@ -1060,7 +1043,7 @@ public CmdTimeLeft(id) {
 public StartTimeLeft() {
 	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
-	
+
 	if (gTimeLimit == MAXVALUE_TIMELIMIT)
 		gTimeLimit = 0;
 
