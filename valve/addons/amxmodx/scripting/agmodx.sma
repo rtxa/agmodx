@@ -94,7 +94,7 @@ new gLocationName[128][32]; 	// Max locations (128) and max location name length
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
 new gNumLocations;
 
-#define MAXVALUE_TIMELIMIT 1410065407
+#define MAXVALUE_TIMELIMIT 538214400
 #define TIMELEFT_SETUNLIMITED -1
 
 // timeleft / timelimit system
@@ -1060,6 +1060,10 @@ public CmdTimeLeft(id) {
 public StartTimeLeft() {
 	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
+	
+	if (gTimeLimit == MAXVALUE_TIMELIMIT)
+		gTimeLimit = 0;
+
 	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
 
 	// set mp_timelimit to "unlimited" and block changes so no one mess the timelimit
