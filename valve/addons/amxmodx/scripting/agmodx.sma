@@ -1913,10 +1913,9 @@ public RemoveVote() {
 }
 
 bool:IsVoteInvalid(id, arg1[], arg2[], len) {
-	new isInvalid, mode, player;
+	new isInvalid, player, mode = -1;
 
-	if (TrieKeyExists(gTrieVoteList, arg1))
-		TrieGetCell(gTrieVoteList, arg1, mode);
+	TrieGetCell(gTrieVoteList, arg1, mode);
 	
 	switch (mode) {
 		case VOTE_MODE, VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
