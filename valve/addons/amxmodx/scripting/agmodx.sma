@@ -1867,15 +1867,16 @@ public DoVote() {
 		case VOTE_AGPAUSE: 		PauseGame(caller);
 		case VOTE_AGSTART: 		StartVersus();
 		case VOTE_MAP: 			ChangeMap(gVoteArg2);
+		case VOTE_MODE: 		ChangeMode(gVoteArg1);
 		case VOTE_BUNNYHOP: 	set_pcvar_string(gCvarBunnyHop, gVoteArg2);
 		case VOTE_FALLDAMAGE:	set_pcvar_string(gCvarFallDamage, gVoteArg2);
 		case VOTE_FLASHLIGHT:	set_pcvar_string(gCvarFlashLight, gVoteArg2);
 		case VOTE_FOOTSTEPS:	set_pcvar_string(gCvarFootSteps, gVoteArg2);
+		case VOTE_FORCERESPAWN: set_pcvar_string(gCvarForceRespawn, gVoteArg2);
 		case VOTE_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
 		case VOTE_SELFGAUSS:	set_pcvar_string(gCvarSelfGauss, gVoteArg2);
 		case VOTE_TIMELIMIT:	set_pcvar_string(gCvarTimeLimit, gVoteArg2);
 		case VOTE_WEAPONSTAY:	set_pcvar_string(gCvarWeaponStay, gVoteArg2);
-		case VOTE_MODE: 		ChangeMode(gVoteArg1);
 	}
 	
 	RemoveVote();
@@ -1914,9 +1915,9 @@ public RemoveVote() {
 bool:IsVoteInvalid(id, arg1[], arg2[], len) {
 	new isInvalid, mode, player;
 
-	if (!TrieGetCell(gTrieVoteList, arg1, mode))
-		mode = -1;
-
+	if (TrieKeyExists(gTrieVoteList, arg1))
+		TrieGetCell(gTrieVoteList, arg1, mode);
+	
 	switch (mode) {
 		case VOTE_MODE, VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
 			isInvalid = VOTE_VALID;
