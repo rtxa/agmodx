@@ -1789,11 +1789,11 @@ public CmdVote(id) {
 
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
 
+	// cancel vote after x seconds (set_task doesnt work in pause)
+	set_task(get_pcvar_float(gCvarVoteDuration), "DenyVote", TASK_DENYVOTE); 
+
 	// show vote
 	ShowVote();
-
-	// cancel vote after x seconds (set_task doesnt work in pause)
-	set_task(get_pcvar_float(gCvarVoteDuration), "DenyVote", TASK_DENYVOTE);  
 
 	return PLUGIN_HANDLED;
 }
@@ -1899,15 +1899,11 @@ public DenyVote() {
 public RemoveVote() {
 	if (gCvarDebugVote)
 		server_print("RemoveVote");
-
-	/*if (task_exists(TASK_DENYVOTE) && gVoteStarted) {
-		gVoteStarted = false;
-		remove_task(TASK_DENYVOTE);
-	} else
-		set_task(0.1, "RemoveVote");*/
-
+		
 	gVoteStarted = false;
+
 	remove_task(TASK_DENYVOTE);
+
 	// reset user votes
 	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
 }
