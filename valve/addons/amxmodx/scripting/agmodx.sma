@@ -1141,12 +1141,12 @@ public StartVersus() {
 	if (get_playersnum() < get_pcvar_num(gCvarAgStartMinPlayers)) {
 		client_print(0, print_center, "%L", LANG_PLAYER, "MATCH_MINPLAYERS", get_pcvar_num(gCvarAgStartMinPlayers));
 		return;
-	} else if (gTimeLimit <= 0 && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // start versus with mp_timelimit 0
+	} else if (gTimeLimit <= 0 && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // block start versus with mp_timelimit 0
 		client_print(0, print_center, "%L", LANG_PLAYER, "MATCH_DENY_STARTUNLIMITED");
 		return;
 	}
 
-	// remove previous start match even if doesnt exist
+	// remove previous start match even if doesn't exist
 	remove_task(TASK_STARTVERSUS);
 
 	// clean list of authids to begin a new match
@@ -1155,17 +1155,17 @@ public StartVersus() {
 	// gamerules
 	gBlockCmdSpec = true;
 	gBlockCmdDrop = true;
+	gBlockCmdKill = true;
 	gSendConnectingToSpec = true;
 
-	// reset score and freeze players who are going to play versu
+	// reset score and freeze players who are going to play versus
 	for (new id = 1; id <= MaxClients; id++) {
-		if (pev_valid(id) != 2)
+		if (!is_user_connected(id))
 			continue;
 
-		if (IsObserver(id) && pev(id, pev_deadflag) != DEAD_RESPAWNABLE) // send to spec players in welcome cam 
+		if (IsInWelcomeCam(id)) // send to spec players in welcome cam 
 			ag_set_user_spectator(id);
-
-		if (is_user_connected(id) && !hl_get_user_spectator(id)) {
+		else if (!hl_get_user_spectator(id)) {
 			ResetScore(id);
 			FreezePlayer(id);
 		}
@@ -1192,17 +1192,15 @@ public StartVersusCountdown() {
 		gVersusStarted = true;
 
 		gBlockCmdDrop = false;
+		gBlockCmdKill = false;
 
-		// message hold on a lot of time to avoid flickering or dissapearing, so remove it manually
+		// message holds a lot of time to avoid flickering, so I remove it manually
 		ClearSyncHud(0, gHudShowMatch);
 
 		for (new id = 1; id <= MaxClients; id++) {
 			if (is_user_connected(id) && !hl_get_user_spectator(id)) {
-				// when a match start, save authid of every match player
-				SaveScore(id, 0, 0);
-
+				SaveScore(id);
 				hl_user_spawn(id);
-
 				set_task(0.5, "ShowSettings", id);
 			}
 		}
@@ -1236,6 +1234,7 @@ public AbortVersus() {
 	// restore gamerules
 	gBlockCmdSpec = false;
 	gBlockCmdDrop = false;
+	gBlockCmdKill = false;
 	gSendConnectingToSpec = false;
 
 	for (new id = 1; id <= MaxClients; id++) {
@@ -1712,7 +1711,7 @@ stock PrintUserInfo(caller, target) {
 
 	hl_get_user_model(target, model, charsmax(model));
 
-	client_print(caller, print_chat, "Team: %i; Model: %s; iuser1: %i; iuser2: %i Alive: %i; Deadflag: %i", team, model, iuser1, iuser2, alive, dead);
+	client_print(caller, print_chat, "Team: %i; Model: %s; iuser1: %i; iuser2: %i Alive: %i; Deadflag: %i IsInWelcomeCam: %i", team, model, iuser1, iuser2, alive, dead, IsInWelcomeCam(caller));
 }
 
 /* 
@@ -2148,7 +2147,7 @@ public bool:ScoreExists(const authid[]) {
 }
 
 // save score by authid
-public SaveScore(id, frags, deaths) {
+SaveScore(id, frags = 0, deaths = 0) {
 	new authid[32], score[2];
 
 	get_user_authid(id, authid, charsmax(authid));
@@ -2230,9 +2229,12 @@ public GetTeamListModels(output[][], size) {
 		nLen += (1 + copyc(output[nIdx], size, teamlist[nLen], ';'));
 }
 
-// is in welcome cam mode?
-IsObserver(id) {
-	return get_pdata_int(id, 193) & (1 << 5); // m_afPhysicsFlag = 193 and 1 << 5 pflag_observer
+bool:IsObserver(id) {
+	return get_pdata_int(id, 193) & (1 << 5) > 0 ? true : false; // m_afPhysicsFlag = 193 and 1 << 5 pflag_observer
+}
+
+bool:IsInWelcomeCam(id) {
+	return IsObserver(id) && get_pdata_int(id, OFFSET_HUD) & (1 << 5 | 1 << 3) ? true : false; // HIDEHUD_WEAPONS | HIDEHUD_HEALTH
 }
 
 stock ag_get_players(players[MAX_PLAYERS], &numplayers) {
