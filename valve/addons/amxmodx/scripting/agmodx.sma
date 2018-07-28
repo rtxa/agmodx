@@ -586,11 +586,10 @@ public client_disconnected(id) {
 
 // here is_user_alive(id) will show 0 :)
 public client_remove(id) {
-	// reset player vote and update showvote
+	// reset player's vote and updated hud
 	if (gVoteStarted) {
 		gVotePlayers[id] = 0;
-		if (!task_exists(TASK_SHOWVOTE))
-			set_task(0.1, "ShowVote", TASK_SHOWVOTE);
+		ShowVote();
 	}
 
 	if (gIsArenaMode) {
@@ -615,14 +614,11 @@ public PlayerPostSpawn(id) {
 	// when he spawn, the hud gets reset so allow him to show settings again
 	remove_task(id + TASK_SHOWSETTINGS);
 
-	// here happens the same thing
-	if (gVoteStarted) {
-		if (!task_exists(TASK_SHOWVOTE))
-			set_task(0.1, "ShowVote", TASK_SHOWVOTE);
-	}
+	if (gVoteStarted)
+		set_task(0.1, "ShowVote", TASK_SHOWVOTE); 	// when you respawn, the hud gets reset, so show vote after hud reset.
 
 	if (is_user_alive(id) && !gGamePlayerEquipExists) // what happens if users spawn dead? it's just a prevention.
-		SetPlayerEquipment(id); // note: you cant set stats on pre spawn
+		SetPlayerEquipment(id); // note: this doesn't have effect on pre spawn
 }
 
 public PlayerKill(id) {
@@ -1406,8 +1402,8 @@ public CmdSpectate(id) {
 	} else if (gBlockCmdSpec)
 		return PLUGIN_HANDLED;
 
-	if (!task_exists(TASK_SHOWVOTE))
-		set_task(0.1, "ShowVote", TASK_SHOWVOTE);
+	if (gVoteStarted)
+		set_task(0.1, "ShowVote", TASK_SHOWVOTE); // when you spectate, the hud gets reset, so show vote after hud reset
 
 	return PLUGIN_CONTINUE;
 }
@@ -1706,6 +1702,16 @@ stock PrintUserInfo(caller, target) {
 /* 
 * Vote system
 */
+public CreateVoteSystem() {
+	gTrieVoteList = TrieCreate();
+	for (new i; i < sizeof gVoteList; i++)
+		TrieSetCell(gTrieVoteList, gVoteList[i], i);
+	for (new i; i < sizeof gVoteListMp; i++)
+		TrieSetCell(gTrieVoteList, gVoteListMp[i], i + ENUM_MP_INDEX);
+	for (new i; i < sizeof gVoteListModes; i++) 
+		TrieSetCell(gTrieVoteList, gVoteListModes[i], VOTE_MODE);
+}
+
 public CmdVoteYes(id) {
 	if (gVoteStarted) {
 		gVotePlayers[id] = VOTE_YES;
@@ -1733,14 +1739,7 @@ public CmdVote(id) {
 
 	// Print help on console
 	if (read_argc() == 1) {
-		new i, j;
-		console_print(id, "%L", LANG_PLAYER, "VOTE_HELP");
-		for (i = 0; i < sizeof gVoteListModes; i++)
-			console_print(id, "%i. %s", ++j, gVoteListModes[i]);
-		for (i = 0; i < sizeof gVoteList; i++)
-			console_print(id, "%i. %s", ++j, gVoteList[i]);
-		for (i = 0; i < sizeof gVoteListMp; i++)
-			console_print(id, "%i. %s", ++j, gVoteListMp[i]);
+		VoteHelp(id);
 		return PLUGIN_HANDLED;
 	}
 
@@ -1760,19 +1759,16 @@ public CmdVote(id) {
 	read_argv(1, arg1, charsmax(arg1));
 	read_argv(2, arg2, charsmax(arg2));
 
-	/*if (gIsPause && !equal(arg1, "agpause")) {
-		console_print(id,"%L", LANG_PLAYER, "VOTE_ONLYPAUSE");
-		return PLUGIN_HANDLED;
-	}*/
+	gVoteMode = GetUserVote(id, arg1, arg2, charsmax(arg2));
 	
-	if (IsVoteInvalid(id, arg1, arg2, charsmax(arg2)))
+	if (gVoteMode < 0) // invalid vote
 		return PLUGIN_HANDLED;
 
 	gVoteArg1 = arg1;
 	gVoteArg2 = arg2;
-	TrieGetCell(gTrieVoteList, arg1, gVoteMode);
 
 	gVoteStarted = true;
+
 	gVotePlayers[id] = VOTE_YES;
 	gVoteCallerUserId = get_user_userid(id);
 
@@ -1790,11 +1786,6 @@ public CmdVote(id) {
 public ShowVote() {
 	if (gCvarDebugVote)
 		server_print("ShowVote");
-	
-	if (!gVoteStarted) {
-		RemoveVote();
-		return;
-	}
 
 	new numVoteFor, numVoteAgainst, numUndecided;
 
@@ -1819,15 +1810,6 @@ public ShowVote() {
 	}
 }
 
-public CreateVoteSystem() {
-	gTrieVoteList = TrieCreate();
-	for (new i; i < sizeof gVoteList; i++)
-		TrieSetCell(gTrieVoteList, gVoteList[i], i);
-	for (new i; i < sizeof gVoteListMp; i++)
-		TrieSetCell(gTrieVoteList, gVoteListMp[i], i + ENUM_MP_INDEX);
-	for (new i; i < sizeof gVoteListModes; i++) 
-		TrieSetCell(gTrieVoteList, gVoteListModes[i], VOTE_MODE);
-}
 
 public DoVote() {
 	if (gCvarDebugVote)
@@ -1840,13 +1822,13 @@ public DoVote() {
 	// sometimes  hud doesnt show, show old style vote too
 	client_print(0, print_center, "%L", LANG_PLAYER, "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
 	
+	RemoveVote();
+
 	new caller = find_player("k", gVoteCallerUserId);
 	
-	// if it's not connected vote caller, cancel vote...
-	if (!caller) {
-		RemoveVote();
+	// if it's not connected vote caller, cancel it...
+	if (!caller)
 		return;
-	}
 
 	switch (gVoteMode) {
 		case VOTE_AGABORT: 		AbortVersus();
@@ -1865,10 +1847,9 @@ public DoVote() {
 		case VOTE_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
 		case VOTE_SELFGAUSS:	set_pcvar_string(gCvarSelfGauss, gVoteArg2);
 		case VOTE_TIMELIMIT:	set_pcvar_string(gCvarTimeLimit, gVoteArg2);
+		case VOTE_FRAGLIMIT: 	set_pcvar_string(gCvarFragLimit, gVoteArg2);
 		case VOTE_WEAPONSTAY:	set_pcvar_string(gCvarWeaponStay, gVoteArg2);
 	}
-	
-	RemoveVote();
 }
 
 public DenyVote() {
@@ -1876,12 +1857,13 @@ public DenyVote() {
 		server_print("DenyVote");
 
 	RemoveVote();
+
 	gVoteFailedTime = get_gametime() + get_pcvar_num(gCvarVoteFailedTime);
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 10.0);
 	ShowSyncHudMsg(0, gHudShowVote, "%L", LANG_PLAYER, "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
 
-	// sometimes  hud doesnt show, show old style vote too
+	// sometimes  hud doesnt show, so show old style vote too
 	client_print(0, print_center, "%L", LANG_PLAYER, "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
 }
 
@@ -1892,12 +1874,17 @@ public RemoveVote() {
 	gVoteStarted = false;
 
 	remove_task(TASK_DENYVOTE);
+	remove_task(TASK_SHOWVOTE);
 
 	// reset user votes
 	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
 }
 
-bool:IsVoteInvalid(id, arg1[], arg2[], len) {
+
+// Get user's mode vote
+// If vote isn't valid, it will return -1
+// If vote is valid, return mode
+GetUserVote(id, arg1[], arg2[], len) {
 	new isInvalid, player, mode = -1;
 
 	TrieGetCell(gTrieVoteList, arg1, mode);
@@ -1909,7 +1896,7 @@ bool:IsVoteInvalid(id, arg1[], arg2[], len) {
 			if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF)))
 				get_user_name(player, arg2, len); 
 			else
-				return true; // cmd_target shows his own error message.
+				return -1; // cmd_target shows his own error message.
 		case VOTE_MAP, VOTE_AGNEXTMAP: 
 			isInvalid = is_map_valid(arg2) ? VOTE_VALID : VOTE_INVALID_MAP;
 		case VOTE_TIMELIMIT, VOTE_FRIENDLYFIRE, VOTE_SELFGAUSS, 
@@ -1929,7 +1916,18 @@ bool:IsVoteInvalid(id, arg1[], arg2[], len) {
 		case VOTE_INVALID_NUMBER: console_print(id, "%L", LANG_PLAYER, "INVALID_NUMBER");
 	}
 
-	return isInvalid > 0 ? true : false;
+	return isInvalid > 0 ? -1 : mode;
+}
+
+VoteHelp(id) {
+	new i, j;
+	console_print(id, "%L", LANG_PLAYER, "VOTE_HELP");
+	for (i = 0; i < sizeof gVoteListModes; i++)
+		console_print(id, "%i. %s", ++j, gVoteListModes[i]);
+	for (i = 0; i < sizeof gVoteList; i++)
+		console_print(id, "%i. %s", ++j, gVoteList[i]);
+	for (i = 0; i < sizeof gVoteListMp; i++)
+		console_print(id, "%i. %s", ++j, gVoteListMp[i]);
 }
 
 public ChangeMode(const mode[]) {
