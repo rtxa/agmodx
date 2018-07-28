@@ -573,6 +573,9 @@ public client_disconnected(id) {
 	new authid[32];
 	get_user_authid(id, authid, charsmax(authid));
 
+	remove_task(TASK_SENDTOSPEC + id);
+	remove_task(TASK_SENDVICTIMTOSPEC + id);
+
 	// save score by authid
 	if (gVersusStarted && ScoreExists(authid)) {
 		new frags = get_user_frags(id);
@@ -1241,7 +1244,8 @@ FreezePlayer(id, bool:freeze=true) {
 
 public SendToSpec(taskid) {
 	new id = taskid - TASK_SENDTOSPEC;
-	ag_set_user_spectator(id, true);
+	if (is_user_connected(id))
+		ag_set_user_spectator(id, true);
 }
 
 public SendVictimToSpec(taskid) {
