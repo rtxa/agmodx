@@ -1040,7 +1040,7 @@ public StartTimeLeft() {
 	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
 
-	if (gTimeLimit == MAXVALUE_TIMELIMIT)
+	if (gTimeLimit >= MAXVALUE_TIMELIMIT)
 		gTimeLimit = 0;
 
 	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
