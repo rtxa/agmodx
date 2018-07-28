@@ -1731,7 +1731,7 @@ public CmdVoteNo(id) {
 }
 
 public CmdVote(id) {
-	if (gCvarDebugVote)
+	if (get_pcvar_num(gCvarDebugVote))
 		server_print("CmdVote");
 
 	if (!get_pcvar_num(gCvarAllowVote))
@@ -1784,7 +1784,7 @@ public CmdVote(id) {
 }
 
 public ShowVote() {
-	if (gCvarDebugVote)
+	if (get_pcvar_num(gCvarDebugVote))
 		server_print("ShowVote");
 
 	new numVoteFor, numVoteAgainst, numUndecided;
@@ -1812,7 +1812,7 @@ public ShowVote() {
 
 
 public DoVote() {
-	if (gCvarDebugVote)
+	if (get_pcvar_num(gCvarDebugVote))
 		server_print("DoVote");
 
 	// show vote is accepted
@@ -1853,7 +1853,7 @@ public DoVote() {
 }
 
 public DenyVote() {
-	if (gCvarDebugVote)
+	if (get_pcvar_num(gCvarDebugVote))
 		server_print("DenyVote");
 
 	RemoveVote();
@@ -1868,7 +1868,7 @@ public DenyVote() {
 }
 
 public RemoveVote() {
-	if (gCvarDebugVote)
+	if (get_pcvar_num(gCvarDebugVote))
 		server_print("RemoveVote");
 
 	gVoteStarted = false;
