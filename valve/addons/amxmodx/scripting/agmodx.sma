@@ -27,7 +27,7 @@
 #include <hl>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.1 Build 22/7/2018"
+#define VERSION "Beta 1.1 Build 28/7/2018"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -233,6 +233,7 @@ new gVoteArg1[32];
 new gVoteArg2[32];
 new gVoteCallerName[MAX_NAME_LENGTH];
 new gVoteCallerUserId;
+new gVoteTargetUserId;
 new gVoteMode;
 
 // array size of some gamemode cvars
@@ -1585,8 +1586,6 @@ public CmdAgAllow(id, level, cid) {
 
 	log_amx("Agallow: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
 
-	AbortVersus();
-
 	return PLUGIN_HANDLED;
 }
 
@@ -1777,7 +1776,7 @@ public CmdVote(id) {
 	gVoteCallerUserId = get_user_userid(id);
 
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
-
+	
 	// cancel vote after x seconds (set_task doesnt work in pause)
 	set_task(get_pcvar_float(gCvarVoteDuration), "DenyVote", TASK_DENYVOTE); 
 
@@ -1828,7 +1827,8 @@ public DoVote() {
 	
 	RemoveVote();
 
-	new caller = find_player("k", gVoteCallerUserId);
+	new caller = find_player_ex(FindPlayer_MatchUserId, gVoteCallerUserId);
+	new target = find_player_ex(FindPlayer_MatchUserId, gVoteTargetUserId);
 	
 	// if it's not connected vote caller, cancel it...
 	if (!caller)
@@ -1836,7 +1836,7 @@ public DoVote() {
 
 	switch (gVoteMode) {
 		case VOTE_AGABORT: 		AbortVersus();
-		case VOTE_AGALLOW: 		AllowPlayer(caller);
+		case VOTE_AGALLOW: 		AllowPlayer(target);
 		case VOTE_AGNEXTMAP:	set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
 		case VOTE_AGNEXTMODE:	set_pcvar_string(gCvarGameMode, gVoteArg2);
 		case VOTE_AGPAUSE: 		PauseGame(caller);
@@ -1897,9 +1897,10 @@ GetUserVote(id, arg1[], arg2[], len) {
 		case VOTE_MODE, VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
 			isInvalid = VOTE_VALID;
 		case VOTE_AGALLOW:
-			if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF)))
-				get_user_name(player, arg2, len); 
-			else
+			if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF))) {
+				get_user_name(player, arg2, len);
+				gVoteTargetUserId = get_user_userid(player);
+			} else
 				return -1; // cmd_target shows his own error message.
 		case VOTE_MAP, VOTE_AGNEXTMAP: 
 			isInvalid = is_map_valid(arg2) ? VOTE_VALID : VOTE_INVALID_MAP;
