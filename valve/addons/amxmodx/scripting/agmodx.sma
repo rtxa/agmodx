@@ -148,12 +148,12 @@ new bool:gIsPause;
 
 new Trie:gTrieScoreAuthId; // handle where it saves all the authids of players playing a versus for rescore system...
 
-enum {
-	VOTE_VALID,
-	VOTE_INVALID,
+enum _:VoteValid {
+	VOTE_INVALID = -1,
 	VOTE_INVALID_MAP,
 	VOTE_INVALID_MODE,
-	VOTE_INVALID_NUMBER
+	VOTE_INVALID_NUMBER,
+	VOTE_VALID
 }
 
 // gVoteList has to be in the same order...
@@ -165,16 +165,16 @@ enum _:VoteList {
 	VOTE_AGPAUSE,
 	VOTE_AGSTART,
 	VOTE_MAP,
-	VOTE_BUNNYHOP,
-	VOTE_FALLDAMAGE,
-	VOTE_FLASHLIGHT,
-	VOTE_FOOTSTEPS,
-	VOTE_FORCERESPAWN,
-	VOTE_FRAGLIMIT,
-	VOTE_FRIENDLYFIRE,
-	VOTE_SELFGAUSS,
-	VOTE_TIMELIMIT,
-	VOTE_WEAPONSTAY,
+	VOTE_MP_BUNNYHOP,
+	VOTE_MP_FALLDAMAGE,
+	VOTE_MP_FLASHLIGHT,
+	VOTE_MP_FOOTSTEPS,
+	VOTE_MP_FORCERESPAWN,
+	VOTE_MP_FRAGLIMIT,
+	VOTE_MP_FRIENDLYFIRE,
+	VOTE_MP_SELFGAUSS,
+	VOTE_MP_TIMELIMIT,
+	VOTE_MP_WEAPONSTAY,
 	VOTE_MODE // always MODE has to be at the end
 }
 
@@ -1752,7 +1752,7 @@ public CmdVote(id) {
 
 	gVoteMode = GetUserVote(id, arg1, arg2, charsmax(arg2));
 	
-	if (gVoteMode < 0) // invalid vote
+	if (gVoteMode == VOTE_INVALID) // invalid vote
 		return PLUGIN_HANDLED;
 
 	gVoteArg1 = arg1;
@@ -1823,24 +1823,24 @@ public DoVote() {
 		return;
 
 	switch (gVoteMode) {
-		case VOTE_AGABORT: 		AbortVersus();
-		case VOTE_AGALLOW: 		AllowPlayer(target);
-		case VOTE_AGNEXTMAP:	set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
-		case VOTE_AGNEXTMODE:	set_pcvar_string(gCvarGameMode, gVoteArg2);
-		case VOTE_AGPAUSE: 		PauseGame(caller);
-		case VOTE_AGSTART: 		StartVersus();
-		case VOTE_MAP: 			ChangeMap(gVoteArg2);
-		case VOTE_MODE: 		ChangeMode(gVoteArg1);
-		case VOTE_BUNNYHOP: 	set_pcvar_string(gCvarBunnyHop, gVoteArg2);
-		case VOTE_FALLDAMAGE:	set_pcvar_string(gCvarFallDamage, gVoteArg2);
-		case VOTE_FLASHLIGHT:	set_pcvar_string(gCvarFlashLight, gVoteArg2);
-		case VOTE_FOOTSTEPS:	set_pcvar_string(gCvarFootSteps, gVoteArg2);
-		case VOTE_FORCERESPAWN: set_pcvar_string(gCvarForceRespawn, gVoteArg2);
-		case VOTE_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
-		case VOTE_SELFGAUSS:	set_pcvar_string(gCvarSelfGauss, gVoteArg2);
-		case VOTE_TIMELIMIT:	set_pcvar_string(gCvarTimeLimit, gVoteArg2);
-		case VOTE_FRAGLIMIT: 	set_pcvar_string(gCvarFragLimit, gVoteArg2);
-		case VOTE_WEAPONSTAY:	set_pcvar_string(gCvarWeaponStay, gVoteArg2);
+		case VOTE_AGABORT: 			AbortVersus();
+		case VOTE_AGALLOW: 			AllowPlayer(target);
+		case VOTE_AGNEXTMAP:		set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
+		case VOTE_AGNEXTMODE:		set_pcvar_string(gCvarGameMode, gVoteArg2);
+		case VOTE_AGPAUSE: 			PauseGame(caller);
+		case VOTE_AGSTART: 			StartVersus();
+		case VOTE_MAP: 				ChangeMap(gVoteArg2);
+		case VOTE_MODE: 			ChangeMode(gVoteArg1);
+		case VOTE_MP_BUNNYHOP: 		set_pcvar_string(gCvarBunnyHop, gVoteArg2);
+		case VOTE_MP_FALLDAMAGE:	set_pcvar_string(gCvarFallDamage, gVoteArg2);
+		case VOTE_MP_FLASHLIGHT:	set_pcvar_string(gCvarFlashLight, gVoteArg2);
+		case VOTE_MP_FOOTSTEPS:		set_pcvar_string(gCvarFootSteps, gVoteArg2);
+		case VOTE_MP_FORCERESPAWN: 	set_pcvar_string(gCvarForceRespawn, gVoteArg2);
+		case VOTE_MP_FRIENDLYFIRE:	set_pcvar_string(gCvarFriendlyFire, gVoteArg2);
+		case VOTE_MP_SELFGAUSS:		set_pcvar_string(gCvarSelfGauss, gVoteArg2);
+		case VOTE_MP_TIMELIMIT:		set_pcvar_string(gCvarTimeLimit, gVoteArg2);
+		case VOTE_MP_FRAGLIMIT: 	set_pcvar_string(gCvarFragLimit, gVoteArg2);
+		case VOTE_MP_WEAPONSTAY:	set_pcvar_string(gCvarWeaponStay, gVoteArg2);
 	}
 }
 
@@ -1873,43 +1873,38 @@ public RemoveVote() {
 }
 
 
-// Get user's mode vote
-// If vote isn't valid, it will return -1
-// If vote is valid, return mode
-GetUserVote(id, arg1[], arg2[], len) {
-	new isInvalid, player, mode = -1;
 
-	TrieGetCell(gTrieVoteList, arg1, mode);
-	
-	switch (mode) {
-		case VOTE_MODE, VOTE_AGSTART, VOTE_AGABORT, VOTE_AGPAUSE:
-			isInvalid = VOTE_VALID;
+
+// Get user vote from string
+// Returns vote number on success, -1 if vote is not valid.
+GetUserVote(id, arg1[], arg2[], len) {
+	new player, vote = VOTE_INVALID;
+	new valid = TrieGetCell(gTrieVoteList, arg1, vote) ? VOTE_VALID : VOTE_INVALID;
+
+	switch (vote) {
+		case VOTE_MAP, VOTE_AGNEXTMAP: 
+			valid = is_map_valid(arg2) ? VOTE_VALID : VOTE_INVALID_MAP;
+		case VOTE_AGNEXTMODE:
+			valid = TrieKeyExists(gTrieVoteList, arg2) ? VOTE_VALID : VOTE_INVALID_MODE;
+		case VOTE_MP_TIMELIMIT, VOTE_MP_FRIENDLYFIRE, VOTE_MP_SELFGAUSS, VOTE_MP_FALLDAMAGE, VOTE_MP_BUNNYHOP, 
+				VOTE_MP_FRAGLIMIT, VOTE_MP_WEAPONSTAY, VOTE_MP_FORCERESPAWN, VOTE_MP_FOOTSTEPS, VOTE_MP_FLASHLIGHT:
+			valid = is_str_num(arg2) ? VOTE_VALID : VOTE_INVALID_NUMBER;
 		case VOTE_AGALLOW:
 			if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF))) {
 				get_user_name(player, arg2, len);
 				gVoteTargetUserId = get_user_userid(player);
 			} else
-				return -1; // cmd_target shows his own error message.
-		case VOTE_MAP, VOTE_AGNEXTMAP: 
-			isInvalid = is_map_valid(arg2) ? VOTE_VALID : VOTE_INVALID_MAP;
-		case VOTE_TIMELIMIT, VOTE_FRIENDLYFIRE, VOTE_SELFGAUSS, 
-			VOTE_FALLDAMAGE, VOTE_BUNNYHOP, VOTE_FRAGLIMIT, VOTE_WEAPONSTAY, 
-			VOTE_FORCERESPAWN, VOTE_FOOTSTEPS, VOTE_FLASHLIGHT:
-			isInvalid = is_str_num(arg2) ? VOTE_VALID : VOTE_INVALID_NUMBER;
-		case VOTE_AGNEXTMODE:
-			isInvalid = TrieKeyExists(gTrieVoteList, arg2) ? VOTE_VALID : VOTE_INVALID_MODE;
-		default:
-			isInvalid = VOTE_INVALID;
+				return VOTE_INVALID; // cmd_target shows his own error message.
 	}
 
-	switch (isInvalid) {
-		case VOTE_INVALID: console_print(id, "%L", LANG_PLAYER, "VOTE_INVALID");
-		case VOTE_INVALID_MAP: console_print(id, "%L", LANG_PLAYER, "INVALID_MAP");
-		case VOTE_INVALID_MODE: console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
-		case VOTE_INVALID_NUMBER: console_print(id, "%L", LANG_PLAYER, "INVALID_NUMBER");
+	switch (valid) {
+		case VOTE_INVALID: 			console_print(id, "%L", LANG_PLAYER, "VOTE_INVALID");
+		case VOTE_INVALID_MAP: 		console_print(id, "%L", LANG_PLAYER, "INVALID_MAP");
+		case VOTE_INVALID_MODE: 	console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
+		case VOTE_INVALID_NUMBER: 	console_print(id, "%L", LANG_PLAYER, "INVALID_NUMBER");
 	}
 
-	return isInvalid > 0 ? -1 : mode;
+	return valid == VOTE_VALID ? vote : VOTE_INVALID;
 }
 
 VoteHelp(id) {
