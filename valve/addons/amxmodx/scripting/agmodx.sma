@@ -27,7 +27,7 @@
 #include <hl>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.1 Build 28/7/2018"
+#define VERSION "Beta 1.1 Build 4/8/2018"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -85,7 +85,6 @@ new const gBeepSnd[] = "fvox/beep";
 
 // Team models (this is used to fix team selection from VGUI Viewport)
 new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
-
 
 // Location system
 new gLocationName[128][32]; 	// Max locations (128) and max location name length (32);
@@ -158,7 +157,7 @@ enum {
 }
 
 // gVoteList has to be in the same order...
-enum {
+enum _:VoteList {
 	VOTE_AGABORT,
 	VOTE_AGALLOW,
 	VOTE_AGNEXTMAP,
@@ -166,13 +165,7 @@ enum {
 	VOTE_AGPAUSE,
 	VOTE_AGSTART,
 	VOTE_MAP,
-}
-
-#define ENUM_MP_INDEX 100
-
-// gVoteListMp has to be in the same order...
-enum {
-	VOTE_BUNNYHOP = ENUM_MP_INDEX,
+	VOTE_BUNNYHOP,
 	VOTE_FALLDAMAGE,
 	VOTE_FLASHLIGHT,
 	VOTE_FOOTSTEPS,
@@ -182,9 +175,8 @@ enum {
 	VOTE_SELFGAUSS,
 	VOTE_TIMELIMIT,
 	VOTE_WEAPONSTAY,
+	VOTE_MODE // always MODE has to be at the end
 }
-
-#define VOTE_MODE 300
 
 // this is used for check if user's vote is valid
 new const gVoteList[][] = {
@@ -195,10 +187,6 @@ new const gVoteList[][] = {
 	"agpause",
 	"agstart",
 	"map",
-};
-
-// this is used for check if user's vote is valid
-new const gVoteListMp[][] = {
 	"mp_bunnyhop",
 	"mp_falldamage",
 	"mp_flashlight",
@@ -1707,10 +1695,10 @@ stock PrintUserInfo(caller, target) {
 */
 public CreateVoteSystem() {
 	gTrieVoteList = TrieCreate();
+
 	for (new i; i < sizeof gVoteList; i++)
 		TrieSetCell(gTrieVoteList, gVoteList[i], i);
-	for (new i; i < sizeof gVoteListMp; i++)
-		TrieSetCell(gTrieVoteList, gVoteListMp[i], i + ENUM_MP_INDEX);
+
 	for (new i; i < sizeof gVoteListModes; i++) 
 		TrieSetCell(gTrieVoteList, gVoteListModes[i], VOTE_MODE);
 }
@@ -1931,8 +1919,6 @@ VoteHelp(id) {
 		console_print(id, "%i. %s", ++j, gVoteListModes[i]);
 	for (i = 0; i < sizeof gVoteList; i++)
 		console_print(id, "%i. %s", ++j, gVoteList[i]);
-	for (i = 0; i < sizeof gVoteListMp; i++)
-		console_print(id, "%i. %s", ++j, gVoteListMp[i]);
 }
 
 public ChangeMode(const mode[]) {
