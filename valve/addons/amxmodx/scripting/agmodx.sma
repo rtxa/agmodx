@@ -1249,7 +1249,7 @@ public SendVictimToSpec(taskid) {
 /*
 * AG Say
 */
-public MsgSayText(msg_id, msg_dest, target) {
+public MsgSayText(msg_id, msg_dest, receiver) {
 	new text[191]; // 192 will crash the sv by overflow if someone send a large message with a lot of %l, %w, etc...
 	
 	get_msg_arg_string(2, text, charsmax(text)); // get user message
@@ -1257,44 +1257,48 @@ public MsgSayText(msg_id, msg_dest, target) {
 	if (text[0] == '*') // ignore server messages
 		return PLUGIN_CONTINUE;
 
-	new caller = get_msg_arg_int(1);
-	new isTargetSpec = hl_get_user_spectator(target);
+	new sender = get_msg_arg_int(1);
+	new isReceiverSpec = hl_get_user_spectator(receiver);
 
 	// Add or change channel tags	
-	if (hl_get_user_spectator(caller)) {
+	if (hl_get_user_spectator(sender)) {
 		if (contain(text, "^x02(TEAM)") != -1) {
-			if (!isTargetSpec) // only show messages to spectator
+			if (!isReceiverSpec) // only show messages to spectator
 				return PLUGIN_HANDLED;
-			replace(text, charsmax(text), "(TEAM)", "(ST)"); // Spectator Team
+			else
+				replace(text, charsmax(text), "(TEAM)", "(ST)"); // Spectator Team
 		} else {
-			if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk) && !isTargetSpec) // spec cant talk to people in vs so block it
+			if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk)) {
+				if (sender == receiver)
+					client_print(sender, print_chat, "%L", LANG_PLAYER, "SPEC_CANTTALK");
 				return PLUGIN_HANDLED;
-			format(text, charsmax(text), "^x02(S)%s", text); // Spectator
+			} else
+				format(text, charsmax(text), "^x02(S)%s", text); // Spectator
 		}
 	} else {
 		if (contain(text, "^x02(TEAM)") != -1) { // Team
-			if (isTargetSpec)
+			if (isReceiverSpec)
 				return PLUGIN_HANDLED;
-			replace(text, charsmax(text), "(TEAM)", "(T)"); 
-		} else {
+			else
+				replace(text, charsmax(text), "(TEAM)", "(T)"); 
+		} else
 			format(text, charsmax(text), "^x02(A)%s", text); // All
-		}
 	}
 
 	// replace all %h with health
-	replace_string(text, charsmax(text), "%h", fmt("%i", get_user_health(caller)), false);
+	replace_string(text, charsmax(text), "%h", fmt("%i", get_user_health(sender)), false);
 
 	// replace all %a with armor
-	replace_string(text, charsmax(text), "%a", fmt("%i", get_user_armor(caller)), false);
+	replace_string(text, charsmax(text), "%a", fmt("%i", get_user_armor(sender)), false);
 
 	// replace all %p with longjump
-	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(caller) ? "On" : "Off", false);
+	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(sender) ? "On" : "Off", false);
 
 	// replace all %l with location
-	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(caller, gLocationOrigin, gNumLocations)], false);
+	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(sender, gLocationOrigin, gNumLocations)], false);
 
 	// replace all %w with name of current weapon
-	new ammo, bpammo, weaponid = get_user_weapon(caller, ammo, bpammo);
+	new ammo, bpammo, weaponid = get_user_weapon(sender, ammo, bpammo);
 
 	if (weaponid) {
 		new weaponName[32];
