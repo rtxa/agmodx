@@ -87,7 +87,7 @@ new const gBeepSnd[] = "fvox/beep";
 new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
 // Location system
-new gLocationName[128][32]; 	// Max locations (128) and max location name length (32);
+new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
 new gNumLocations;
 
@@ -217,12 +217,12 @@ new Trie:gTrieVoteList;
 new bool:gVoteStarted;
 new Float:gVoteFailedTime; // in seconds
 new gVotePlayers[33]; // 1: vote yes; 0: didn't vote; -1; vote no; 
-new gVoteArg1[32];
-new gVoteArg2[32];
 new gVoteCallerName[MAX_NAME_LENGTH];
 new gVoteCallerUserId;
 new gVoteTargetUserId;
-new gVoteMode;
+new gVoteArg1[32];
+new gVoteArg2[32];
+new gVoteOption;
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
@@ -1544,10 +1544,6 @@ public CmdAgStart(id, level, cid) {
 		}		
 	}
 
-
-
-	
-
 	StartVersus();
 
 	return PLUGIN_HANDLED;
@@ -1770,9 +1766,9 @@ public CmdVote(id) {
 	read_argv(1, arg1, charsmax(arg1));
 	read_argv(2, arg2, charsmax(arg2));
 
-	gVoteMode = GetUserVote(id, arg1, arg2, charsmax(arg2));
+	gVoteOption = GetUserVote(id, arg1, arg2, charsmax(arg2));
 	
-	if (gVoteMode == VOTE_INVALID) // invalid vote
+	if (gVoteOption == VOTE_INVALID) // invalid vote
 		return PLUGIN_HANDLED;
 
 	gVoteArg1 = arg1;
@@ -1842,7 +1838,7 @@ public DoVote() {
 	if (!caller)
 		return;
 
-	switch (gVoteMode) {
+	switch (gVoteOption) {
 		case VOTE_AGABORT: 			AbortVersus();
 		case VOTE_AGALLOW: 			AllowPlayer(target);
 		case VOTE_AGNEXTMAP:		set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
@@ -1895,8 +1891,8 @@ public RemoveVote() {
 
 
 
-// Get user vote from string
-// Returns vote number on success, -1 if vote is not valid.
+// Get user vote option from string
+// Returns vote option on success, -1 if vote is not valid.
 GetUserVote(id, arg1[], arg2[], len) {
 	new player, vote = VOTE_INVALID;
 	new valid = TrieGetCell(gTrieVoteList, arg1, vote) ? VOTE_VALID : VOTE_INVALID;
