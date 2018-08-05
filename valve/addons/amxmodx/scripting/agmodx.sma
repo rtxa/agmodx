@@ -27,7 +27,7 @@
 #include <hl>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.1 Build 4/8/2018"
+#define VERSION "Beta 1.1 Build 5/8/2018"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -2228,7 +2228,10 @@ bool:IsObserver(id) {
 }
 
 bool:IsInWelcomeCam(id) {
-	return IsObserver(id) && get_pdata_int(id, OFFSET_HUD) & (1 << 5 | 1 << 3) ? true : false; // HIDEHUD_WEAPONS | HIDEHUD_HEALTH
+	if (IsObserver(id) && (get_pdata_int(id, OFFSET_HUD) & (1 << 5 | 1 << 3) ? true : false) && !hl_get_user_spectator(id)) // HIDEHUD_WEAPONS | HIDEHUD_HEALTH
+		return true;
+	else
+		return false; 
 }
 
 stock ag_get_players(players[MAX_PLAYERS], &numplayers) {
