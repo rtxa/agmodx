@@ -503,8 +503,9 @@ public plugin_init() {
 	// debug for arena, lts and lms
 	register_clcmd("userinfo", "CmdUserInfo");
 
-	// Modify say with AG Say Style
+	// Chat and voice 
 	register_message(get_user_msgid("SayText"), "MsgSayText");
+	register_forward(FM_Voice_SetClientListening, "FwVoiceSetClientListening");
 
 	gHudShowVote = CreateHudSyncObj();
 	gHudShowMatch = CreateHudSyncObj();
@@ -1314,6 +1315,21 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	set_msg_arg_string(2, text);
 
 	return PLUGIN_CONTINUE;
+}
+
+/*
+* Block Voice of Spectators
+*/
+public FwVoiceSetClientListening(receiver, sender, bool:listen) {
+	if (receiver == sender)
+		return FMRES_IGNORED;
+
+	if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk) && hl_get_user_spectator(sender) && !hl_get_user_spectator(receiver)) {
+		engfunc(EngFunc_SetClientListening, receiver, sender, false);
+		return FMRES_SUPERCEDE;
+	}
+
+	return FMRES_IGNORED;
 }
 
 /*
