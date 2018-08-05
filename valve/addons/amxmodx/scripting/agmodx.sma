@@ -86,6 +86,8 @@ new const gBeepSnd[] = "fvox/beep";
 // Team models (this is used to fix team selection from VGUI Viewport)
 new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
+new gMsgVGUIMenu;
+
 // Location system
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
@@ -433,6 +435,9 @@ public plugin_precache() {
 	get_pcvar_string(gCvarHudColor, color, charsmax(color));
 	SetHudColorCvarByString(color, gHudRed, gHudGreen, gHudBlue);
 
+	// Get it to show VGUI Team menu
+	gMsgVGUIMenu = get_user_msgid("VGUIMenu");
+
 	// Load mode cvars
 	new mode[32];
 	get_pcvar_string(gCvarGameMode, mode, charsmax(mode));
@@ -630,11 +635,8 @@ public PlayerKilled(victim, attacker) {
 		if (victim != attacker && IsPlayer(attacker)) { // what happens if victim die by fall?
 			gMatchWinner = attacker;
 			gMatchLooser = victim;
-		} else if (gMatchWinner == victim) {
-			new temp = gMatchLooser;
-			gMatchLooser = victim;
-			gMatchWinner = temp;
-		}
+		} else if (gMatchWinner == victim)
+			swap(gMatchWinner, gMatchLooser);
 
 		//server_print("(PlayerKilled) Winner: %i; Looser: %i", gMatchWinner, gMatchLooser);
 		if (is_user_connected(gMatchWinner))
@@ -1421,9 +1423,16 @@ public CmdSpectate(id) {
 	return PLUGIN_CONTINUE;
 }
 
+// maybe we need to show old style menu because VGUI Viewport just let you select the first four teams.
 public CmdChangeTeam(id) {
-	// we need to show a menu to choose team because VGUI Viewport just show you 4 teams.
+	ShowVGUITeamMenu(id);
 	return PLUGIN_HANDLED;
+}
+
+public ShowVGUITeamMenu(id) {
+	message_begin(MSG_ONE, gMsgVGUIMenu, _, id);
+	write_byte(2);
+	message_end();
 }
 
 public CmdJoinTeam(id) {
@@ -2301,4 +2310,10 @@ stock ag_set_user_spectator(client, bool:spectator = true) {
 			message_end();
 		}
 	}
+}
+
+stock swap(&x, &y) {
+	x = x + y;
+	y = x - y;
+	x = x -y;
 }
