@@ -27,7 +27,7 @@
 #include <hl>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.1 Build 4/8/2018"
+#define VERSION "Beta 1.1 Build 7/8/2018"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -529,7 +529,6 @@ public plugin_init() {
 	StartMode();
 }
 
-
 public plugin_cfg() {
 	// pause it because "say timeleft" shows wrong timeleft, unless we modify the amx plugin, or put the plugin first and create our own timeleft cmd...
 	pause("cd", "timeleft.amxx");
@@ -670,7 +669,6 @@ public PlayerKilled(victim, attacker) {
 		EndMatchLts();
 	else if (gIsLmsMode)
 		EndMatchLms();
-
 }
 
 /*
@@ -692,7 +690,6 @@ SetGameModePlayerEquip() {
 			DispatchKeyValue(ent, gWeaponClass[i], "1");
 	}
 }
-
 
 SetPlayerEquipment(id) {
 	set_user_health(id, get_pcvar_num(gCvarStartHealth));
@@ -907,12 +904,8 @@ public EndMatchLts() {
 	}	
 }
 
-stock AutoTeamBalance() {
-
-}
-stock AutoAssing() {
-
-}
+stock AutoTeamBalance() {}
+stock AutoAssing() {}
 
 /* 
 * Arena Mode
@@ -997,7 +990,8 @@ public EndArena(id) {
 	}
 }
 
-// this will add to the queue newly connected players and it will remove disconnected players
+/* This will add to the queue newly connected players and it will remove disconnected players
+ */
 public CountArenaQueue() {
 	new isUserConnected, arrayIdx;
 
@@ -1030,7 +1024,6 @@ public CmdTimeLeft(id) {
 /*
 * Timeleft/Timelimit System
 */
-
 public StartTimeLeft() {
 	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
@@ -1826,7 +1819,6 @@ public ShowVote() {
 	}
 }
 
-
 public DoVote() {
 	if (get_pcvar_num(gCvarDebugVote))
 		server_print("DoVote");
@@ -1896,9 +1888,6 @@ public RemoveVote() {
 	// reset user votes
 	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
 }
-
-
-
 
 // Get user vote option from string
 // Returns vote option on success, -1 if vote is not valid.
@@ -2279,7 +2268,6 @@ stock ag_set_user_spectator(client, bool:spectator = true) {
 			engclient_cmd(client, "spectate");
 		}
 	} else {
-
 		hl_user_spawn(client);
 
 		set_pev(client, pev_iuser1, 0);
