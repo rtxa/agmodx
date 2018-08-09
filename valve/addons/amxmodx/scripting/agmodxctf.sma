@@ -11,6 +11,15 @@
 #define VERSION "1.0"
 #define AUTHOR  "rtxa"
 
+#define BLUE_TEAM 1
+#define RED_TEAM 2
+
+enum _:FlagSequences {
+	FLAG_ONGROUND,
+	FLAG_NOTCARRIED,
+	FLAG_CARRIED
+}
+
 // maybe we can reutilize some entities, but anyway keep it compatible with ag maps...
 // cs 1.6 uses info_player_start and info_player_deathmatch for team 1 and 2, and because in ag there is no team 3 and 4...
 new const gInfoPlayerBlue[] = "info_player_team1";
@@ -54,6 +63,25 @@ public FwFlagTouch() {
 
 public CmdDropFlag(id, level, cid) {
 	return PLUGIN_HANDLED;
+}
+
+public SpawnFlag(const origin[3], team) {
+	new flag = create_entity("info_target");
+
+	entity_set_model(flag, gFlagMdl);
+	set_pev(flag,pev_movetype,MOVETYPE_TOSS);
+	set_pev(flag, pev_solid, SOLID_TRIGGER);
+	set_pev(flag, pev_sequence, FLAG_NOTCARRIED);
+
+	if (team == BLUE_TEAM) {
+		set_pev(flag, pev_classname, gItemFlagBlue);
+		set_pev(flag, pev_skin, 1);
+		entity_set_origin(flag, gSpawnFlagBlue);				
+	} else if (team == RED_TEAM) {
+		set_pev(flag, pev_classname, gItemFlagRed);
+		set_pev(flag, pev_skin, 2);
+		entity_set_origin(flag, gSpawnFlagBlue);		
+	}
 }
 
 /* Get data of entities from ag ctf map
