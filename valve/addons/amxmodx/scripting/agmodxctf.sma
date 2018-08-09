@@ -1,7 +1,8 @@
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
-//#include <hamsandwich>
+#include <hamsandwich>
+#include <hl>
 // #include <amxmisc>
 // #include <fun>
 // #include <xs>
@@ -10,6 +11,8 @@
 #define PLUGIN  "AG Mod X CTF"
 #define VERSION "1.0"
 #define AUTHOR  "rtxa"
+
+#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
 #define BLUE_TEAM 1
 #define RED_TEAM 2
@@ -50,6 +53,8 @@ public plugin_init() {
 
 	register_clcmd("dropflag", "CmdDropFlag");
 
+	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawn", true);
+
 	SpawnFlag(gSpawnFlagBlue, BLUE_TEAM);
 	SpawnFlag(gSpawnFlagRed, RED_TEAM);
 
@@ -66,6 +71,55 @@ public plugin_init() {
 	return PLUGIN_CONTINUE;
 }*/
 
+public FwPlayerSpawn(id) {
+	new team = hl_get_user_team(id);
+	new spawn;
+	server_print("Team %i", team);
+
+	if (team == BLUE_TEAM) {
+		if ((spawn = GetSpawn(BLUE_TEAM)) >= 0)
+			entity_set_origin(id, gSpawnsBlue[spawn]);
+		else
+			user_kill(id, true);
+	} else if (team == RED_TEAM)
+		if ((spawn = GetSpawn(RED_TEAM)) >= 0)
+			entity_set_origin(id, gSpawnsRed[spawn]);
+		else
+			user_kill(id, true);
+			
+	return HAM_IGNORED;
+}
+
+GetSpawn(team) {
+	new rnd, Float:rndSpawn[3], limit;
+	if (team == BLUE_TEAM) {
+		do {
+			rnd = random(gNumSpawnsBlue);
+			rndSpawn = gSpawnsBlue[rnd];
+
+			if (limit++ > 10)
+				return -1;
+		} while (!IsSpawnPointValid(rndSpawn))		
+	} else if (team == RED_TEAM) {
+		do {
+			rnd = random(gNumSpawnsRed);
+			rndSpawn = gSpawnsRed[rnd];
+
+			if (limit++ > 10)
+				return -1;
+		} while (!IsSpawnPointValid(rndSpawn))		
+	}
+
+	return rnd;
+}
+
+bool:IsSpawnPointValid(const Float:origin[3]) {
+	new ent;
+	while ((ent = find_ent_in_sphere(ent, origin, 10.0)))
+		return !IsPlayer(ent) ? true : false;
+	return true;
+}
+
 public FwRedFlagTouch() {
 	server_print("RedFlagTouched");
 }
@@ -75,6 +129,7 @@ public FwBlueFlagTouch() {
 }
 
 public CmdDropFlag(id, level, cid) {
+	server_print("numspawn blue: %i red: %i", gNumSpawnsBlue, gNumSpawnsRed);
 	return PLUGIN_HANDLED;
 }
 
@@ -105,57 +160,41 @@ public SpawnFlag(const Float:origin[3], team) {
 /* Get data of entities from ag ctf map
  */
 public pfn_keyvalue(entid) {	
-	new classname[16], key[8], value[42];
+	new classname[32], key[8], value[42];
 	copy_keyvalue(classname, sizeof classname, key, sizeof key, value, sizeof value);
 
 	new Float:origin[3];
-	if (equal(classname, gInfoPlayerBlue)) {
+
+	if (equal(classname, gInfoPlayerBlue)) { // info_player_team1
 		if (equal(key, "origin")) {
-			new arg[3][12]; // hold parsed origin
-			parse(value, arg[0], charsmax(arg[]), arg[1], charsmax(arg[]), arg[2], charsmax(arg[]));
-
-			for (new i; i < sizeof arg; i++)
-				origin[i] = str_to_float(arg[i]);
-
+			StrToVec(value, origin);
 			gSpawnsBlue[gNumSpawnsBlue] = origin;
-			gNumSpawnsRed++;
+			gNumSpawnsBlue++;
 		}
-	}
-
-	if (equal(classname, gInfoPlayerRed)) {
+	} else if (equal(classname, gInfoPlayerRed)) { // info_player_team2
 		if (equal(key, "origin")) {
-			new arg[3][12]; // hold parsed origin
-			parse(value, arg[0], charsmax(arg[]), arg[1], charsmax(arg[]), arg[2], charsmax(arg[]));
-
-			for (new i; i < sizeof arg; i++)
-				origin[i] = str_to_float(arg[i]);
-
+			StrToVec(value, origin);
 			gSpawnsRed[gNumSpawnsRed] = origin;
 			gNumSpawnsRed++;
 		}
-	}
-
-	if (equal(classname, gItemFlagBlue)) {
+	} else if (equal(classname, gItemFlagBlue)) { // item_flag_team1
 		if (equal(key, "origin")) {
-			new arg[3][12]; // hold parsed origin
-			parse(value, arg[0], charsmax(arg[]), arg[1], charsmax(arg[]), arg[2], charsmax(arg[]));
-
-			for (new i; i < sizeof arg; i++)
-				origin[i] = str_to_float(arg[i]);
-
+			StrToVec(value, origin);
 			gSpawnFlagBlue = origin;
 		}
-	}
-
-	if (equal(classname, gItemFlagRed)) {
+	} else if (equal(classname, gItemFlagRed)) { // item_flag_team2
 		if (equal(key, "origin")) {
-			new arg[3][12]; // hold parsed origin
-			parse(value, arg[0], charsmax(arg[]), arg[1], charsmax(arg[]), arg[2], charsmax(arg[]));
-
-			for (new i; i < sizeof arg; i++)
-				origin[i] = str_to_float(arg[i]);
-
+			StrToVec(value, origin);
 			gSpawnFlagRed = origin;
 		}
 	}
+}
+
+// the parsed string is in this format "500.000 128.050 300.2"
+Float:StrToVec(const string[], Float:vector[3]) {
+	new arg[3][12]; // hold parsed vector
+	parse(string, arg[0], charsmax(arg[]), arg[1], charsmax(arg[]), arg[2], charsmax(arg[]));
+
+	for (new i; i < sizeof arg; i++)
+		vector[i] = str_to_float(arg[i]);
 }
