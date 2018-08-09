@@ -14,6 +14,9 @@
 #define BLUE_TEAM 1
 #define RED_TEAM 2
 
+#define FLAG_BLUESKIN 0
+#define FLAG_REDSKIN 1
+
 enum _:FlagSequences {
 	FLAG_ONGROUND,
 	FLAG_NOTCARRIED,
@@ -46,6 +49,8 @@ public plugin_precache() {
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR)
 	register_clcmd("dropflag", "CmdDropFlag");
+	SpawnFlag(gSpawnFlagBlue, BLUE_TEAM);
+	SpawnFlag(gSpawnFlagRed, RED_TEAM);
 }
 
 public plugin_cfg() {
@@ -65,23 +70,28 @@ public CmdDropFlag(id, level, cid) {
 	return PLUGIN_HANDLED;
 }
 
-public SpawnFlag(const origin[3], team) {
+public SpawnFlag(const Float:origin[3], team) {
 	new flag = create_entity("info_target");
 
 	entity_set_model(flag, gFlagMdl);
-	set_pev(flag,pev_movetype,MOVETYPE_TOSS);
+	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
 	set_pev(flag, pev_solid, SOLID_TRIGGER);
 	set_pev(flag, pev_sequence, FLAG_NOTCARRIED);
+	set_pev(flag, pev_framerate, 1.0);
 
-	if (team == BLUE_TEAM) {
-		set_pev(flag, pev_classname, gItemFlagBlue);
-		set_pev(flag, pev_skin, 1);
-		entity_set_origin(flag, gSpawnFlagBlue);				
-	} else if (team == RED_TEAM) {
-		set_pev(flag, pev_classname, gItemFlagRed);
-		set_pev(flag, pev_skin, 2);
-		entity_set_origin(flag, gSpawnFlagBlue);		
+	switch (team) {
+		case BLUE_TEAM: {
+			set_pev(flag, pev_classname, gItemFlagBlue);
+			set_pev(flag, pev_skin, FLAG_BLUESKIN);
+			entity_set_origin(flag, gSpawnFlagBlue);
+		} case RED_TEAM: {
+			set_pev(flag, pev_classname, gItemFlagRed);
+			set_pev(flag, pev_skin, FLAG_REDSKIN);
+			entity_set_origin(flag, gSpawnFlagRed);		
+		}
 	}
+	
+	return flag;
 }
 
 /* Get data of entities from ag ctf map
