@@ -1,8 +1,8 @@
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
+//#include <hamsandwich>
 // #include <amxmisc>
-// #include <hamsandwich>
 // #include <fun>
 // #include <xs>
 // #include <sqlx>
@@ -33,7 +33,6 @@ new const gItemFlagRed[] = "item_flag_team2";
 
 new const gFlagMdl[] = "models/ctf/flag.mdl";
 
-
 new Float:gSpawnsBlue[64][3]; // [num][origin]
 new Float:gSpawnsRed[64][3]; // [num][origin]
 new gNumSpawnsRed;
@@ -48,22 +47,31 @@ public plugin_precache() {
 
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR)
+
 	register_clcmd("dropflag", "CmdDropFlag");
+
 	SpawnFlag(gSpawnFlagBlue, BLUE_TEAM);
 	SpawnFlag(gSpawnFlagRed, RED_TEAM);
+
+	register_touch(gItemFlagBlue, "player", "FwBlueFlagTouch");
+	register_touch(gItemFlagRed, "player", "FwRedFlagTouch");
 }
 
-public plugin_cfg() {
+/*public plugin_cfg() {
 	new mode[32];
 	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
 
 	if (!equal(mode, "ctf"))
 		return PLUGIN_HANDLED;
 	return PLUGIN_CONTINUE;
+}*/
+
+public FwRedFlagTouch() {
+	server_print("RedFlagTouched");
 }
 
-public FwFlagTouch() {
-
+public FwBlueFlagTouch() {
+	server_print("BlueFlagTouched");
 }
 
 public CmdDropFlag(id, level, cid) {
@@ -90,7 +98,7 @@ public SpawnFlag(const Float:origin[3], team) {
 			entity_set_origin(flag, gSpawnFlagRed);		
 		}
 	}
-	
+
 	return flag;
 }
 
