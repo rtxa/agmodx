@@ -34,6 +34,8 @@ new const gInfoPlayerRed[] = "info_player_team2";
 new const gItemFlagBlue[] = "item_flag_team1";
 new const gItemFlagRed[] = "item_flag_team2";
 
+new const gItemBaseBlue[] = "item_base_team1";
+new const gItemBaseRed[] = "item_base_team2";
 new const gFlagMdl[] = "models/ctf/flag.mdl";
 
 new gSpawnsBlue[64];
@@ -46,6 +48,8 @@ new Float:gOriginFlagBlue[3];
 new Float:gOriginFlagRed[3];
 new gFlagBlue;
 new gFlagRed;
+new gBaseBlue;
+new gBaseRed;
 
 public plugin_precache() {
 	precache_model(gFlagMdl);
@@ -243,6 +247,22 @@ public SpawnFlag(const Float:origin[3], team) {
 	}
 
 	return flag;
+}
+
+// we need a base for the flag so players can score points when they capture...
+public SpawnBaseFlag(const Float:origin[3], team) {
+	new base = create_entity("info_target");
+	if (team == BLUE_TEAM)
+		set_pev(base, pev_classname, gItemBaseBlue);
+	else if (team == RED_TEAM)
+		set_pev(base, pev_classname, gItemBaseRed);
+	
+	entity_set_model(base, gFlagMdl);
+	set_pev(base, pev_movetype, MOVETYPE_TOSS);
+	set_pev(base, pev_solid, SOLID_TRIGGER);
+	entity_set_origin(base, origin);
+
+	return base;
 }
 
 /* Get data of entities from ag ctf map
