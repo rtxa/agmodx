@@ -17,14 +17,14 @@
 #define BLUE_TEAM 1
 #define RED_TEAM 2
 
-#define FLAG_BLUESKIN 0
-#define FLAG_REDSKIN 1
+#define FLAG_SKIN_BLUE 0
+#define FLAG_SKIN_BLUE 1
 
-enum _:FlagSequences {
-	FLAG_ONGROUND,
-	FLAG_NOTCARRIED,
-	FLAG_CARRIED
-}
+#define FLAG_SEQ_NOTCARRIED 1
+#define FLAG_SEQ_CARRIED 2
+
+#define FLAG_STATUS_NOTCARRIED 0
+#define FLAG_STATUS_CARRIED 1
 
 // maybe we can reutilize some entities, but anyway keep it compatible with ag maps...
 // cs 1.6 uses info_player_start and info_player_deathmatch for team 1 and 2, and because in ag there is no team 3 and 4...
@@ -42,8 +42,10 @@ new gSpawnsRed[64];
 new gNumSpawnsRed;
 new gNumSpawnsBlue;
 
-new Float:gSpawnFlagBlue[3];
-new Float:gSpawnFlagRed[3];
+new Float:gOriginFlagBlue[3];
+new Float:gOriginFlagRed[3];
+new gFlagBlue;
+new gFlagRed;
 
 public plugin_precache() {
 	precache_model(gFlagMdl);
@@ -56,8 +58,8 @@ public plugin_init() {
 
 	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawn", true);
 
-	SpawnFlag(gSpawnFlagBlue, BLUE_TEAM);
-	SpawnFlag(gSpawnFlagRed, RED_TEAM);
+	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
+	gFlagRed = SpawnFlag(gOriginFlagRed, RED_TEAM);
 
 	register_touch(gItemFlagBlue, "player", "FwBlueFlagTouch");
 	register_touch(gItemFlagRed, "player", "FwRedFlagTouch");
@@ -86,22 +88,21 @@ public TeleportToSpawn(id, spawnEnt) {
 }
 
 public FwPlayerSpawn(id) {
-	new team = hl_get_user_team(id);
-	new spawn;
-	server_print("Team %i", team);
+	new spawn, team = hl_get_user_team(id);
 
-	if (team == BLUE_TEAM) {
-		if ((spawn = FindSpawnForPlayer(BLUE_TEAM)) >= 0)
-			TeleportToSpawn(id, gSpawnsBlue[spawn]);
-		else
-			user_kill(id, true);
-	} else if (team == RED_TEAM)
-		if ((spawn = FindSpawnForPlayer(RED_TEAM)) >= 0)
-			TeleportToSpawn(id, gSpawnsRed[spawn]);
-		else
-			user_kill(id, true);
-			
-	return HAM_IGNORED;
+	switch (team) {
+		case BLUE_TEAM: {
+			if ((spawn = FindSpawnForPlayer(BLUE_TEAM)) != 1)
+				TeleportToSpawn(id, gSpawnsBlue[spawn]);
+			else
+				user_kill(id, true);
+		} case RED_TEAM: {
+			if ((spawn = FindSpawnForPlayer(RED_TEAM)) != -1)
+				TeleportToSpawn(id, gSpawnsRed[spawn]);
+			else
+				user_kill(id, true);				
+		}
+	}
 }
 
 // we need to change the random respawn algorithm, we have to check how gamedll do it
@@ -146,17 +147,51 @@ bool:IsSpawnPointValid(spawnEnt) {
 	return true;
 }
 
-public FwRedFlagTouch() {
+public FwRedFlagTouch(touched, toucher) {
 	// attach flag to user, show message that team has pick up the flag
 	server_print("RedFlagTouched");
+	AttachFlagToPlayer(toucher, touched);
 }
 
-public FwBlueFlagTouch() {
+public FwBlueFlagTouch(touched, toucher) {
 	server_print("BlueFlagTouched");
+	AttachFlagToPlayer(toucher, touched);
+}
+
+AttachFlagToPlayer(id, flag) {
+	set_pev(flag, pev_movetype, MOVETYPE_FOLLOW);
+	set_pev(flag, pev_aiment, id);
+	set_pev(flag, pev_sequence, FLAG_SEQ_CARRIED);
+	set_pev(flag, pev_solid, SOLID_NOT);
+}
+
+
+ReturnFlagToBase(team) {
+	new ent;
+	if (team == BLUE_TEAM)
+		ent = gFlagBlue;
+	else if (team == RED_TEAM)
+		ent = gFlagRed;
+
+	RemoveFlag(ent);
+	entity_set_origin(ent, gOriginFlagRed);
+	drop_to_floor(ent);
+}
+
+PlayerIsCarringFlag() {
+
+}
+
+RemoveFlag(ent) {
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+	set_pev(ent, pev_solid, SOLID_TRIGGER);
+	set_pev(ent, pev_aiment, 0);
+	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 }
 
 public CmdDropFlag(id, level, cid) {
-	server_print("numspawn blue: %i red: %i", gNumSpawnsBlue, gNumSpawnsRed);
+	server_print("CmdDropFlag");
+	ReturnFlagToBase(hl_get_user_team(id)); 
 	return PLUGIN_HANDLED;
 }
 
@@ -166,19 +201,19 @@ public SpawnFlag(const Float:origin[3], team) {
 	entity_set_model(flag, gFlagMdl);
 	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
 	set_pev(flag, pev_solid, SOLID_TRIGGER);
-	set_pev(flag, pev_sequence, FLAG_NOTCARRIED);
+	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(flag, pev_framerate, 1.0);
 
 	switch (team) {
 		case BLUE_TEAM: {
-			entity_set_origin(flag, gSpawnFlagBlue);
+			entity_set_origin(flag, gOriginFlagBlue);
 			set_pev(flag, pev_classname, gItemFlagBlue);
-			set_pev(flag, pev_skin, FLAG_BLUESKIN);
+			set_pev(flag, pev_skin, FLAG_SKIN_BLUE);
 			set_ent_rendering(flag, kRenderFxGlowShell, 0, 0, 255, kRenderNormal, 30);
 		} case RED_TEAM: {
-			entity_set_origin(flag, gSpawnFlagRed);		
+			entity_set_origin(flag, gOriginFlagRed);		
 			set_pev(flag, pev_classname, gItemFlagRed);
-			set_pev(flag, pev_skin, FLAG_REDSKIN);
+			set_pev(flag, pev_skin, FLAG_SKIN_BLUE);
 			set_ent_rendering(flag, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
 		}
 	}
@@ -213,11 +248,11 @@ public pfn_keyvalue(entid) {
 		}
 	} else if (equal(classname, gItemFlagBlue)) { // item_flag_team1
 		if (equal(key, "origin")) {
-			gSpawnFlagBlue = vector;
+			gOriginFlagBlue = vector;
 		}
 	} else if (equal(classname, gItemFlagRed)) { // item_flag_team2
 		if (equal(key, "origin")) {
-			gSpawnFlagRed = vector;
+			gOriginFlagRed = vector;
 		}
 	}
 }
@@ -228,7 +263,7 @@ CreateCustomEnt(const classname[]) {
 	return ent;
 }
 
-// the parsed string is in this format "500.000 128.050 300.2"
+// the parsed string is in this format "x y z" e.g "128 0 256"
 Float:StrToVec(const string[], Float:vector[3]) {
 	new arg[3][12]; // hold parsed vector
 	parse(string, arg[0], charsmax(arg[]), arg[1], charsmax(arg[]), arg[2], charsmax(arg[]));
