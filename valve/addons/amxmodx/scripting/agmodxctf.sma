@@ -171,13 +171,15 @@ public SpawnFlag(const Float:origin[3], team) {
 
 	switch (team) {
 		case BLUE_TEAM: {
+			entity_set_origin(flag, gSpawnFlagBlue);
 			set_pev(flag, pev_classname, gItemFlagBlue);
 			set_pev(flag, pev_skin, FLAG_BLUESKIN);
-			entity_set_origin(flag, gSpawnFlagBlue);
+			set_ent_rendering(flag, kRenderFxGlowShell, 0, 0, 255, kRenderNormal, 30);
 		} case RED_TEAM: {
+			entity_set_origin(flag, gSpawnFlagRed);		
 			set_pev(flag, pev_classname, gItemFlagRed);
 			set_pev(flag, pev_skin, FLAG_REDSKIN);
-			entity_set_origin(flag, gSpawnFlagRed);		
+			set_ent_rendering(flag, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
 		}
 	}
 
