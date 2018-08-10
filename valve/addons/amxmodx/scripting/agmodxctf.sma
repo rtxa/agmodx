@@ -36,8 +36,9 @@ new const gItemFlagRed[] = "item_flag_team2";
 
 new const gFlagMdl[] = "models/ctf/flag.mdl";
 
-new Float:gSpawnsBlue[64][3]; // [num][origin]
-new Float:gSpawnsRed[64][3]; // [num][origin]
+new gSpawnsBlue[64];
+new gSpawnsRed[64];
+
 new gNumSpawnsRed;
 new gNumSpawnsBlue;
 
@@ -71,56 +72,82 @@ public plugin_init() {
 	return PLUGIN_CONTINUE;
 }*/
 
+public TeleportToSpawn(id, spawnEnt) {
+	new Float:origin[3], Float:angle[3];
+
+	// get origin and angle of spawn
+	pev(spawnEnt, pev_origin, origin);
+	pev(spawnEnt, pev_angles, angle);
+
+	// teleport it
+	entity_set_origin(id, origin);
+	set_pev(id, pev_angles, angle);
+	set_pev(id, pev_fixangle, 1);
+}
+
 public FwPlayerSpawn(id) {
 	new team = hl_get_user_team(id);
 	new spawn;
 	server_print("Team %i", team);
 
 	if (team == BLUE_TEAM) {
-		if ((spawn = GetSpawn(BLUE_TEAM)) >= 0)
-			entity_set_origin(id, gSpawnsBlue[spawn]);
+		if ((spawn = FindSpawnForPlayer(BLUE_TEAM)) >= 0)
+			TeleportToSpawn(id, gSpawnsBlue[spawn]);
 		else
 			user_kill(id, true);
 	} else if (team == RED_TEAM)
-		if ((spawn = GetSpawn(RED_TEAM)) >= 0)
-			entity_set_origin(id, gSpawnsRed[spawn]);
+		if ((spawn = FindSpawnForPlayer(RED_TEAM)) >= 0)
+			TeleportToSpawn(id, gSpawnsRed[spawn]);
 		else
 			user_kill(id, true);
 			
 	return HAM_IGNORED;
 }
 
-GetSpawn(team) {
-	new rnd, Float:rndSpawn[3], limit;
+// we need to change the random respawn algorithm, we have to check how gamedll do it
+// when looking for random spawn, avoid the last spawn until there are no more spawns
+FindSpawnForPlayer(team) {
+	new rnd, attemps;
+
 	if (team == BLUE_TEAM) {
 		do {
 			rnd = random(gNumSpawnsBlue);
-			rndSpawn = gSpawnsBlue[rnd];
 
-			if (limit++ > 10)
+			if (attemps++ > 10) {
+				for (new i; i < gNumSpawnsBlue; i++)
+					if (IsSpawnPointValid(gSpawnsBlue[i]))
+						return i;
 				return -1;
-		} while (!IsSpawnPointValid(rndSpawn))		
+			}
+		} while (!IsSpawnPointValid(gSpawnsBlue[rnd]))		
 	} else if (team == RED_TEAM) {
 		do {
 			rnd = random(gNumSpawnsRed);
-			rndSpawn = gSpawnsRed[rnd];
 
-			if (limit++ > 10)
+			if (attemps++ > 10) {
+				for (new i; i < gNumSpawnsRed; i++)
+					if (IsSpawnPointValid(gSpawnsRed[i]))
+						return i;
 				return -1;
-		} while (!IsSpawnPointValid(rndSpawn))		
+			}
+		} while (!IsSpawnPointValid(gSpawnsRed[rnd]))		
 	}
 
 	return rnd;
 }
 
-bool:IsSpawnPointValid(const Float:origin[3]) {
-	new ent;
+bool:IsSpawnPointValid(spawnEnt) {
+	new ent, Float:origin[3];
+	pev(spawnEnt, pev_origin, origin);
+
 	while ((ent = find_ent_in_sphere(ent, origin, 10.0)))
 		return !IsPlayer(ent) ? true : false;
+
 	return true;
 }
 
 public FwRedFlagTouch() {
+	// attach flag to user, show message that team has pick up the flag
 	server_print("RedFlagTouched");
 }
 
@@ -163,31 +190,40 @@ public pfn_keyvalue(entid) {
 	new classname[32], key[8], value[42];
 	copy_keyvalue(classname, sizeof classname, key, sizeof key, value, sizeof value);
 
-	new Float:origin[3];
+	new Float:vector[3];
+	StrToVec(value, vector);
 
 	if (equal(classname, gInfoPlayerBlue)) { // info_player_team1
 		if (equal(key, "origin")) {
-			StrToVec(value, origin);
-			gSpawnsBlue[gNumSpawnsBlue] = origin;
+			gSpawnsBlue[gNumSpawnsBlue] = CreateCustomEnt(gInfoPlayerBlue);
+			entity_set_origin(gSpawnsBlue[gNumSpawnsBlue], vector);
 			gNumSpawnsBlue++;
+		} else if (equal(key, "angles")) {
+			set_pev(gSpawnsBlue[gNumSpawnsBlue - 1], pev_angles, vector);
 		}
 	} else if (equal(classname, gInfoPlayerRed)) { // info_player_team2
 		if (equal(key, "origin")) {
-			StrToVec(value, origin);
-			gSpawnsRed[gNumSpawnsRed] = origin;
+			gSpawnsRed[gNumSpawnsRed] = CreateCustomEnt(gInfoPlayerRed);
+			entity_set_origin(gSpawnsRed[gNumSpawnsRed], vector);
 			gNumSpawnsRed++;
+		} else if (equal(key, "angles")) {
+			set_pev(gSpawnsRed[gNumSpawnsRed - 1], pev_angles, vector);
 		}
 	} else if (equal(classname, gItemFlagBlue)) { // item_flag_team1
 		if (equal(key, "origin")) {
-			StrToVec(value, origin);
-			gSpawnFlagBlue = origin;
+			gSpawnFlagBlue = vector;
 		}
 	} else if (equal(classname, gItemFlagRed)) { // item_flag_team2
 		if (equal(key, "origin")) {
-			StrToVec(value, origin);
-			gSpawnFlagRed = origin;
+			gSpawnFlagRed = vector;
 		}
 	}
+}
+
+CreateCustomEnt(const classname[]) {
+	new ent = create_entity("info_target");
+	set_pev(ent, pev_classname, classname);
+	return ent;
 }
 
 // the parsed string is in this format "500.000 128.050 300.2"
