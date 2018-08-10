@@ -36,6 +36,7 @@ new const gItemFlagRed[] = "item_flag_team2";
 
 new const gItemBaseBlue[] = "item_base_team1";
 new const gItemBaseRed[] = "item_base_team2";
+
 new const gFlagMdl[] = "models/ctf/flag.mdl";
 
 new gSpawnsBlue[64];
@@ -64,9 +65,13 @@ public plugin_init() {
 
 	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
 	gFlagRed = SpawnFlag(gOriginFlagRed, RED_TEAM);
+	gBaseBlue = SpawnBaseFlag(gOriginFlagBlue, BLUE_TEAM);
+	gBaseRed = SpawnBaseFlag(gOriginFlagRed, RED_TEAM);
 
 	register_touch(gItemFlagBlue, "player", "FwBlueFlagTouch");
 	register_touch(gItemFlagRed, "player", "FwRedFlagTouch");
+	register_touch(gItemBaseBlue, "player", "FwBaseFlagTouch");
+	register_touch(gItemBaseRed, "player", "FwBaseFlagTouch");
 }
 
 /*public plugin_cfg() {
@@ -78,6 +83,24 @@ public plugin_init() {
 	return PLUGIN_CONTINUE;
 }*/
 
+
+public FwBaseFlagTouch(touched, toucher) {
+	new team = hl_get_user_team(toucher);
+	if (IsPlayerCarryingFlag(toucher, team)) {
+		switch (team) {
+			case BLUE_TEAM: {
+				if (touched == gBaseBlue)
+					ReturnFlagToBase(gFlagRed, gOriginFlagRed);
+			} case RED_TEAM: {
+				if (touched == gBaseRed) {
+					ReturnFlagToBase(gFlagBlue, gOriginFlagBlue);
+				}
+			}
+		}
+		
+
+	}
+}
 
 public FwPlayerSpawn(id) {
 	new spawn, team = hl_get_user_team(id);
@@ -261,6 +284,7 @@ public SpawnBaseFlag(const Float:origin[3], team) {
 	set_pev(base, pev_movetype, MOVETYPE_TOSS);
 	set_pev(base, pev_solid, SOLID_TRIGGER);
 	entity_set_origin(base, origin);
+	set_pev(base, pev_effects, EF_NODRAW);
 
 	return base;
 }
