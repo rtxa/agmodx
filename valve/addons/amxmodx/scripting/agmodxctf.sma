@@ -18,7 +18,7 @@
 #define RED_TEAM 2
 
 #define FLAG_SKIN_BLUE 0
-#define FLAG_SKIN_BLUE 1
+#define FLAG_SKIN_RED 1
 
 #define FLAG_SEQ_NOTCARRIED 1
 #define FLAG_SEQ_CARRIED 2
@@ -74,18 +74,6 @@ public plugin_init() {
 	return PLUGIN_CONTINUE;
 }*/
 
-public TeleportToSpawn(id, spawnEnt) {
-	new Float:origin[3], Float:angle[3];
-
-	// get origin and angle of spawn
-	pev(spawnEnt, pev_origin, origin);
-	pev(spawnEnt, pev_angles, angle);
-
-	// teleport it
-	entity_set_origin(id, origin);
-	set_pev(id, pev_angles, angle);
-	set_pev(id, pev_fixangle, 1);
-}
 
 public FwPlayerSpawn(id) {
 	new spawn, team = hl_get_user_team(id);
@@ -103,6 +91,19 @@ public FwPlayerSpawn(id) {
 				user_kill(id, true);				
 		}
 	}
+}
+
+public TeleportToSpawn(id, spawnEnt) {
+	new Float:origin[3], Float:angle[3];
+
+	// get origin and angle of spawn
+	pev(spawnEnt, pev_origin, origin);
+	pev(spawnEnt, pev_angles, angle);
+
+	// teleport it
+	entity_set_origin(id, origin);
+	set_pev(id, pev_angles, angle);
+	set_pev(id, pev_fixangle, 1);
 }
 
 // we need to change the random respawn algorithm, we have to check how gamedll do it
@@ -150,12 +151,24 @@ bool:IsSpawnPointValid(spawnEnt) {
 public FwRedFlagTouch(touched, toucher) {
 	// attach flag to user, show message that team has pick up the flag
 	server_print("RedFlagTouched");
-	AttachFlagToPlayer(toucher, touched);
+
+	switch (hl_get_user_team(toucher)) {
+		case RED_TEAM: return PLUGIN_HANDLED; // later we have to add that player can return his flag to base or return flag after 30s
+		case BLUE_TEAM: AttachFlagToPlayer(toucher, touched);
+	}
+
+	return PLUGIN_CONTINUE;
 }
 
 public FwBlueFlagTouch(touched, toucher) {
 	server_print("BlueFlagTouched");
-	AttachFlagToPlayer(toucher, touched);
+
+	switch (hl_get_user_team(toucher)) {
+		case BLUE_TEAM: return PLUGIN_HANDLED;
+		case RED_TEAM: AttachFlagToPlayer(toucher, touched);
+	}
+
+	return PLUGIN_CONTINUE;	
 }
 
 AttachFlagToPlayer(id, flag) {
@@ -165,33 +178,43 @@ AttachFlagToPlayer(id, flag) {
 	set_pev(flag, pev_solid, SOLID_NOT);
 }
 
+ReturnFlagToBase(flag, const Float:origin[3]) {
+	server_print("ReturnFlagToBase");
+	set_pev(flag, pev_aiment, 0);
+	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
+	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(flag, pev_solid, SOLID_TRIGGER);
+	entity_set_origin(flag, origin);
+	drop_to_floor(flag);
+}
 
-ReturnFlagToBase(team) {
-	new ent;
+bool:IsPlayerCarryingFlag(id, team) {
+	server_print("IsPlayerCarringFlag");
+	new bool:status;
+	switch (team) {
+		case BLUE_TEAM: status = pev(gFlagRed, pev_aiment) == id ? true :  false;
+		case RED_TEAM:  status = pev(gFlagBlue, pev_aiment) == id ? true :  false;
+	}
+
+	return status;
+}
+
+// until i make a function to drop the flag, just return it to the base...
+public DropFlag(team) {
 	if (team == BLUE_TEAM)
-		ent = gFlagBlue;
+		ReturnFlagToBase(gFlagRed, gOriginFlagRed);
 	else if (team == RED_TEAM)
-		ent = gFlagRed;
-
-	RemoveFlag(ent);
-	entity_set_origin(ent, gOriginFlagRed);
-	drop_to_floor(ent);
-}
-
-PlayerIsCarringFlag() {
-
-}
-
-RemoveFlag(ent) {
-	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
-	set_pev(ent, pev_solid, SOLID_TRIGGER);
-	set_pev(ent, pev_aiment, 0);
-	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
+		ReturnFlagToBase(gFlagBlue, gOriginFlagBlue);
 }
 
 public CmdDropFlag(id, level, cid) {
 	server_print("CmdDropFlag");
-	ReturnFlagToBase(hl_get_user_team(id)); 
+
+	new team = hl_get_user_team(id);
+
+	if (IsPlayerCarryingFlag(id, team))
+		DropFlag(team);
+
 	return PLUGIN_HANDLED;
 }
 
@@ -213,7 +236,7 @@ public SpawnFlag(const Float:origin[3], team) {
 		} case RED_TEAM: {
 			entity_set_origin(flag, gOriginFlagRed);		
 			set_pev(flag, pev_classname, gItemFlagRed);
-			set_pev(flag, pev_skin, FLAG_SKIN_BLUE);
+			set_pev(flag, pev_skin, FLAG_SKIN_RED);
 			set_ent_rendering(flag, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
 		}
 	}
