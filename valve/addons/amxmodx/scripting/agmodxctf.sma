@@ -184,6 +184,7 @@ ReturnFlagToBase(flag, const Float:origin[3]) {
 	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
 	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(flag, pev_solid, SOLID_TRIGGER);
+	set_pev(flag, pev_angles, 0);
 	entity_set_origin(flag, origin);
 	drop_to_floor(flag);
 }
