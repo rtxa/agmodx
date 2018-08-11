@@ -62,8 +62,10 @@ public plugin_init() {
 		return;
 
 	register_clcmd("dropflag", "CmdDropFlag");
+	register_clcmd("spectate", "CmdSpectate");
 
 	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawn", true);
+	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
 
 	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
 	gFlagRed = SpawnFlag(gOriginFlagRed, RED_TEAM);
@@ -74,7 +76,18 @@ public plugin_init() {
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(ITEM_FLAG_BASE, "player", "FwBaseFlagTouch");
 }
+public client_disconnected(id) {
+	DropFlag(IsPlayerCarryingFlag(id));	
+}
 
+public CmdSpectate(id) {
+	set_task(0.1, "DropFlagSpec", id);
+}
+
+public DropFlagSpec(id) {
+	if (hl_get_user_spectator(id))
+		DropFlag(IsPlayerCarryingFlag(id));
+}
 public FwBaseFlagTouch(touched, toucher) {
 	new team = hl_get_user_team(toucher);
 
@@ -93,6 +106,10 @@ public FwBaseFlagTouch(touched, toucher) {
 			}
 		}
 	}
+}
+
+public FwPlayerKilled(victim, attacker) {
+	DropFlag(IsPlayerCarryingFlag(victim));
 }
 
 public FwPlayerSpawn(id) {
@@ -195,8 +212,8 @@ AttachFlagToPlayer(id, flag) {
 
 ReturnFlagToBase(flag, const Float:origin[3]) {
 	server_print("ReturnFlagToBase");
-	set_pev(flag, pev_aiment, 0);
 	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
+	set_pev(flag, pev_aiment, 0);
 	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(flag, pev_solid, SOLID_TRIGGER);
 	if (flag == gFlagBlue)
@@ -207,30 +224,28 @@ ReturnFlagToBase(flag, const Float:origin[3]) {
 	drop_to_floor(flag);
 }
 
-bool:IsPlayerCarryingFlag(id) {
+IsPlayerCarryingFlag(id) {
 	server_print("IsPlayerCarringFlag");
 
-	if (pev(gFlagBlue, pev_aiment) == id || pev(gFlagRed, pev_aiment) == id)
-		return true;
+	if (pev(gFlagBlue, pev_aiment) == id)
+		return BLUE_TEAM;
+	else if (pev(gFlagRed, pev_aiment) == id)
+		return RED_TEAM;
 	else
-		return false;
+		return 0;
 }
 
 // until i make a function to drop the flag, just return it to the base...
 public DropFlag(team) {
 	if (team == BLUE_TEAM)
-		ReturnFlagToBase(gFlagRed, gOriginFlagRed);
-	else if (team == RED_TEAM)
 		ReturnFlagToBase(gFlagBlue, gOriginFlagBlue);
+	else if (team == RED_TEAM)
+		ReturnFlagToBase(gFlagRed, gOriginFlagRed);
 }
 
 public CmdDropFlag(id, level, cid) {
 	server_print("CmdDropFlag");
-
-	new team = hl_get_user_team(id);
-
-	if (IsPlayerCarryingFlag(id))
-		DropFlag(team);
+	DropFlag(IsPlayerCarryingFlag(id));
 
 	return PLUGIN_HANDLED;
 }
