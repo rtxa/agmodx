@@ -28,15 +28,15 @@
 
 // maybe we can reutilize some entities, but anyway keep it compatible with ag maps...
 // cs 1.6 uses info_player_start and info_player_deathmatch for team 1 and 2, and because in ag there is no team 3 and 4...
-new const gInfoPlayerBlue[] = "info_player_team1";
-new const gInfoPlayerRed[] = "info_player_team2";
+new const INFO_PLAYER_BLUE[] = "info_player_team1";
+new const INFO_PLAYER_RED[] = "info_player_team2";
 
-new const gItemFlagBlue[] = "item_flag_team1";
-new const gItemFlagRed[] = "item_flag_team2";
+new const INFO_FLAG_BLUE[] = "item_flag_team1";
+new const INFO_FLAG_RED[] = "item_flag_team2";
 
-new const gItemBase[] = "item_base_team";
+new const ITEM_FLAG_BASE[] = "item_flag_base";
 
-new const gFlagMdl[] = "models/ctf/flag.mdl";
+new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 
 new gSpawnsBlue[64];
 new gSpawnsRed[64];
@@ -52,7 +52,7 @@ new gBaseBlue;
 new gBaseRed;
 
 public plugin_precache() {
-	precache_model(gFlagMdl);
+	precache_model(FLAG_MODEL);
 }
 
 public plugin_init() {
@@ -67,9 +67,9 @@ public plugin_init() {
 	gBaseBlue = SpawnBaseFlag(gOriginFlagBlue);
 	gBaseRed = SpawnBaseFlag(gOriginFlagRed);
 
-	register_touch(gItemFlagBlue, "player", "FwFlagTouch");
-	register_touch(gItemFlagRed, "player", "FwFlagTouch");
-	register_touch(gItemBase, "player", "FwBaseFlagTouch");
+	register_touch(INFO_FLAG_BLUE, "player", "FwFlagTouch");
+	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
+	register_touch(ITEM_FLAG_BASE, "player", "FwBaseFlagTouch");
 }
 
 /*public plugin_cfg() {
@@ -244,7 +244,7 @@ public CmdDropFlag(id, level, cid) {
 public SpawnFlag(const Float:origin[3], team) {
 	new flag = create_entity("info_target");
 
-	entity_set_model(flag, gFlagMdl);
+	entity_set_model(flag, FLAG_MODEL);
 	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
 	set_pev(flag, pev_solid, SOLID_TRIGGER);
 	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
@@ -253,12 +253,12 @@ public SpawnFlag(const Float:origin[3], team) {
 	switch (team) {
 		case BLUE_TEAM: {
 			entity_set_origin(flag, gOriginFlagBlue);
-			set_pev(flag, pev_classname, gItemFlagBlue);
+			set_pev(flag, pev_classname, INFO_FLAG_BLUE);
 			set_pev(flag, pev_skin, FLAG_SKIN_BLUE);
 			set_ent_rendering(flag, kRenderFxGlowShell, 0, 0, 255, kRenderNormal, 30);
 		} case RED_TEAM: {
 			entity_set_origin(flag, gOriginFlagRed);		
-			set_pev(flag, pev_classname, gItemFlagRed);
+			set_pev(flag, pev_classname, INFO_FLAG_RED);
 			set_pev(flag, pev_skin, FLAG_SKIN_RED);
 			set_ent_rendering(flag, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
 		}
@@ -270,9 +270,9 @@ public SpawnFlag(const Float:origin[3], team) {
 // we need a base for the flag so players can score points when they capture...
 public SpawnBaseFlag(const Float:origin[3]) {
 	new base = create_entity("info_target");
-	set_pev(base, pev_classname, gItemBase);
+	set_pev(base, pev_classname, ITEM_FLAG_BASE);
 	
-	entity_set_model(base, gFlagMdl);
+	entity_set_model(base, FLAG_MODEL);
 	set_pev(base, pev_movetype, MOVETYPE_TOSS);
 	set_pev(base, pev_solid, SOLID_TRIGGER);
 	entity_set_origin(base, origin);
@@ -290,27 +290,27 @@ public pfn_keyvalue(entid) {
 	new Float:vector[3];
 	StrToVec(value, vector);
 
-	if (equal(classname, gInfoPlayerBlue)) { // info_player_team1
+	if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
 		if (equal(key, "origin")) {
-			gSpawnsBlue[gNumSpawnsBlue] = CreateCustomEnt(gInfoPlayerBlue);
+			gSpawnsBlue[gNumSpawnsBlue] = CreateCustomEnt(INFO_PLAYER_BLUE);
 			entity_set_origin(gSpawnsBlue[gNumSpawnsBlue], vector);
 			gNumSpawnsBlue++;
 		} else if (equal(key, "angles")) {
 			set_pev(gSpawnsBlue[gNumSpawnsBlue - 1], pev_angles, vector);
 		}
-	} else if (equal(classname, gInfoPlayerRed)) { // info_player_team2
+	} else if (equal(classname, INFO_PLAYER_RED)) { // info_player_team2
 		if (equal(key, "origin")) {
-			gSpawnsRed[gNumSpawnsRed] = CreateCustomEnt(gInfoPlayerRed);
+			gSpawnsRed[gNumSpawnsRed] = CreateCustomEnt(INFO_PLAYER_RED);
 			entity_set_origin(gSpawnsRed[gNumSpawnsRed], vector);
 			gNumSpawnsRed++;
 		} else if (equal(key, "angles")) {
 			set_pev(gSpawnsRed[gNumSpawnsRed - 1], pev_angles, vector);
 		}
-	} else if (equal(classname, gItemFlagBlue)) { // item_flag_team1
+	} else if (equal(classname, INFO_FLAG_BLUE)) { // item_flag_team1
 		if (equal(key, "origin")) {
 			gOriginFlagBlue = vector;
 		}
-	} else if (equal(classname, gItemFlagRed)) { // item_flag_team2
+	} else if (equal(classname, INFO_FLAG_RED)) { // item_flag_team2
 		if (equal(key, "origin")) {
 			gOriginFlagRed = vector;
 		}
