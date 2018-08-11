@@ -85,7 +85,7 @@ public plugin_init() {
 public FwBaseFlagTouch(touched, toucher) {
 	new team = hl_get_user_team(toucher);
 
-	if (IsPlayerCarryingFlag(toucher, team)) {
+	if (IsPlayerCarryingFlag(toucher)) {
 		switch (team) {
 			case BLUE_TEAM: {
 				if (touched == gBaseBlue) {
@@ -211,15 +211,13 @@ ReturnFlagToBase(flag, const Float:origin[3]) {
 	drop_to_floor(flag);
 }
 
-bool:IsPlayerCarryingFlag(id, team) {
+bool:IsPlayerCarryingFlag(id) {
 	server_print("IsPlayerCarringFlag");
-	new bool:status;
-	switch (team) {
-		case BLUE_TEAM: status = pev(gFlagRed, pev_aiment) == id ? true :  false;
-		case RED_TEAM:  status = pev(gFlagBlue, pev_aiment) == id ? true :  false;
-	}
 
-	return status;
+	if (pev(gFlagBlue, pev_aiment) == id || pev(gFlagRed, pev_aiment) == id)
+		return true;
+	else
+		return false;
 }
 
 // until i make a function to drop the flag, just return it to the base...
@@ -235,7 +233,7 @@ public CmdDropFlag(id, level, cid) {
 
 	new team = hl_get_user_team(id);
 
-	if (IsPlayerCarryingFlag(id, team))
+	if (IsPlayerCarryingFlag(id))
 		DropFlag(team);
 
 	return PLUGIN_HANDLED;
