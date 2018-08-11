@@ -46,6 +46,9 @@ new gNumSpawnsBlue;
 
 new Float:gOriginFlagBlue[3];
 new Float:gOriginFlagRed[3];
+new Float:gAnglesFlagBlue[3];
+new Float:gAnglesFlagRed[3];
+
 new gFlagBlue;
 new gFlagRed;
 new gBaseBlue;
@@ -206,7 +209,10 @@ ReturnFlagToBase(flag, const Float:origin[3]) {
 	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
 	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(flag, pev_solid, SOLID_TRIGGER);
-	set_pev(flag, pev_angles, 0);
+	if (flag == gFlagBlue)
+		set_pev(flag, pev_angles, gAnglesFlagBlue);
+	else if (flag == gFlagRed)
+		set_pev(flag, pev_angles, gAnglesFlagRed);
 	entity_set_origin(flag, origin);
 	drop_to_floor(flag);
 }
@@ -258,11 +264,13 @@ public SpawnFlag(const Float:origin[3], team) {
 			set_pev(flag, pev_classname, INFO_FLAG_BLUE);
 			set_pev(flag, pev_skin, FLAG_SKIN_BLUE);
 			set_ent_rendering(flag, kRenderFxGlowShell, 0, 0, 255, kRenderNormal, 30);
+			set_pev(flag, pev_angles, gAnglesFlagBlue);
 		} case RED_TEAM: {
 			entity_set_origin(flag, gOriginFlagRed);		
 			set_pev(flag, pev_classname, INFO_FLAG_RED);
 			set_pev(flag, pev_skin, FLAG_SKIN_RED);
 			set_ent_rendering(flag, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
+			set_pev(flag, pev_angles, gAnglesFlagRed);
 		}
 	}
 
@@ -315,10 +323,14 @@ public pfn_keyvalue(entid) {
 	} else if (equal(classname, INFO_FLAG_BLUE)) { // item_flag_team1
 		if (equal(key, "origin")) {
 			gOriginFlagBlue = vector;
+		} else if (equal(key, "angles")) {
+			gAnglesFlagBlue = vector;
 		}
 	} else if (equal(classname, INFO_FLAG_RED)) { // item_flag_team2
 		if (equal(key, "origin")) {
 			gOriginFlagRed = vector;
+		} else if (equal(key, "angles")) {
+			gAnglesFlagRed = vector;
 		}
 	}
 }
