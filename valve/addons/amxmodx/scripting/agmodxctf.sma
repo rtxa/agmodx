@@ -34,8 +34,7 @@ new const gInfoPlayerRed[] = "info_player_team2";
 new const gItemFlagBlue[] = "item_flag_team1";
 new const gItemFlagRed[] = "item_flag_team2";
 
-new const gItemBaseBlue[] = "item_base_team1";
-new const gItemBaseRed[] = "item_base_team2";
+new const gItemBase[] = "item_base_team";
 
 new const gFlagMdl[] = "models/ctf/flag.mdl";
 
@@ -65,13 +64,12 @@ public plugin_init() {
 
 	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
 	gFlagRed = SpawnFlag(gOriginFlagRed, RED_TEAM);
-	gBaseBlue = SpawnBaseFlag(gOriginFlagBlue, BLUE_TEAM);
-	gBaseRed = SpawnBaseFlag(gOriginFlagRed, RED_TEAM);
+	gBaseBlue = SpawnBaseFlag(gOriginFlagBlue);
+	gBaseRed = SpawnBaseFlag(gOriginFlagRed);
 
 	register_touch(gItemFlagBlue, "player", "FwBlueFlagTouch");
 	register_touch(gItemFlagRed, "player", "FwRedFlagTouch");
-	register_touch(gItemBaseBlue, "player", "FwBaseFlagTouch");
-	register_touch(gItemBaseRed, "player", "FwBaseFlagTouch");
+	register_touch(gItemBase, "player", "FwBaseFlagTouch");
 }
 
 /*public plugin_cfg() {
@@ -89,16 +87,17 @@ public FwBaseFlagTouch(touched, toucher) {
 	if (IsPlayerCarryingFlag(toucher, team)) {
 		switch (team) {
 			case BLUE_TEAM: {
-				if (touched == gBaseBlue)
+				if (touched == gBaseBlue) {
 					ReturnFlagToBase(gFlagRed, gOriginFlagRed);
+					client_print(0, print_center, "EL equipo azul capturo la bandera");
+				}
 			} case RED_TEAM: {
 				if (touched == gBaseRed) {
 					ReturnFlagToBase(gFlagBlue, gOriginFlagBlue);
+					client_print(0, print_center, "El equipo rojo capturo la bandera");
 				}
 			}
 		}
-		
-
 	}
 }
 
@@ -181,7 +180,10 @@ public FwRedFlagTouch(touched, toucher) {
 
 	switch (hl_get_user_team(toucher)) {
 		case RED_TEAM: return PLUGIN_HANDLED; // later we have to add that player can return his flag to base or return flag after 30s
-		case BLUE_TEAM: AttachFlagToPlayer(toucher, touched);
+		case BLUE_TEAM: {
+		 	AttachFlagToPlayer(toucher, touched);
+		 	client_print(0, print_center, "La bandera del equipo rojo ha sido tomada");
+		}
 	}
 
 	return PLUGIN_CONTINUE;
@@ -192,7 +194,10 @@ public FwBlueFlagTouch(touched, toucher) {
 
 	switch (hl_get_user_team(toucher)) {
 		case BLUE_TEAM: return PLUGIN_HANDLED;
-		case RED_TEAM: AttachFlagToPlayer(toucher, touched);
+		case RED_TEAM: { 
+			AttachFlagToPlayer(toucher, touched);
+			client_print(0, print_center, "La bandera del equipo azul ha sido tomada");
+		}
 	}
 
 	return PLUGIN_CONTINUE;	
@@ -273,12 +278,9 @@ public SpawnFlag(const Float:origin[3], team) {
 }
 
 // we need a base for the flag so players can score points when they capture...
-public SpawnBaseFlag(const Float:origin[3], team) {
+public SpawnBaseFlag(const Float:origin[3]) {
 	new base = create_entity("info_target");
-	if (team == BLUE_TEAM)
-		set_pev(base, pev_classname, gItemBaseBlue);
-	else if (team == RED_TEAM)
-		set_pev(base, pev_classname, gItemBaseRed);
+	set_pev(base, pev_classname, gItemBase);
 	
 	entity_set_model(base, gFlagMdl);
 	set_pev(base, pev_movetype, MOVETYPE_TOSS);
