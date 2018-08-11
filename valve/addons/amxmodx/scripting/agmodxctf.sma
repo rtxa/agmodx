@@ -100,7 +100,7 @@ public FwPlayerSpawn(id) {
 
 	switch (team) {
 		case BLUE_TEAM: {
-			if ((spawn = FindSpawnForPlayer(BLUE_TEAM)) != 1)
+			if ((spawn = FindSpawnForPlayer(BLUE_TEAM)) != -1)
 				TeleportToSpawn(id, gSpawnsBlue[spawn]);
 			else
 				user_kill(id, true);
