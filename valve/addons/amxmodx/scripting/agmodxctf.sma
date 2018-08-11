@@ -248,6 +248,10 @@ public SpawnFlag(const Float:origin[3], team) {
 	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(flag, pev_framerate, 1.0);
 
+	new Float:mins[3] = { 4.0, 4.0, 0.0 };
+	new Float:maxs[3] = { 4.0, 4.0, 72.0 };
+	entity_set_size(flag, mins, maxs);
+
 	switch (team) {
 		case BLUE_TEAM: {
 			entity_set_origin(flag, gOriginFlagBlue);
@@ -275,6 +279,10 @@ public SpawnBaseFlag(const Float:origin[3]) {
 	set_pev(base, pev_solid, SOLID_TRIGGER);
 	entity_set_origin(base, origin);
 	set_pev(base, pev_effects, EF_NODRAW);
+
+	new Float:mins[3] = { -8.0, -8.0, 0.0 };
+	new Float:maxs[3] = { 8.0, 8.0, 8.0 };
+	entity_set_size(base, mins, maxs);
 
 	return base;
 }
