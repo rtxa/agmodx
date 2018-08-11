@@ -3,10 +3,6 @@
 #include <fakemeta>
 #include <hamsandwich>
 #include <hl>
-// #include <amxmisc>
-// #include <fun>
-// #include <xs>
-// #include <sqlx>
 
 #define PLUGIN  "AG Mod X CTF"
 #define VERSION "1.0"
@@ -26,8 +22,6 @@
 #define FLAG_STATUS_NOTCARRIED 0
 #define FLAG_STATUS_CARRIED 1
 
-// maybe we can reutilize some entities, but anyway keep it compatible with ag maps...
-// cs 1.6 uses info_player_start and info_player_deathmatch for team 1 and 2, and because in ag there is no team 3 and 4...
 new const INFO_PLAYER_BLUE[] = "info_player_team1";
 new const INFO_PLAYER_RED[] = "info_player_team2";
 
@@ -61,6 +55,12 @@ public plugin_precache() {
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR)
 
+	new mode[32];
+	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
+
+	if (!equal(mode, "ctf"))
+		return;
+
 	register_clcmd("dropflag", "CmdDropFlag");
 
 	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawn", true);
@@ -74,16 +74,6 @@ public plugin_init() {
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(ITEM_FLAG_BASE, "player", "FwBaseFlagTouch");
 }
-
-/*public plugin_cfg() {
-	new mode[32];
-	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
-
-	if (!equal(mode, "ctf"))
-		return PLUGIN_HANDLED;
-	return PLUGIN_CONTINUE;
-}*/
-
 
 public FwBaseFlagTouch(touched, toucher) {
 	new team = hl_get_user_team(toucher);
