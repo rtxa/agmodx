@@ -67,8 +67,8 @@ public plugin_init() {
 	gBaseBlue = SpawnBaseFlag(gOriginFlagBlue);
 	gBaseRed = SpawnBaseFlag(gOriginFlagRed);
 
-	register_touch(gItemFlagBlue, "player", "FwBlueFlagTouch");
-	register_touch(gItemFlagRed, "player", "FwRedFlagTouch");
+	register_touch(gItemFlagBlue, "player", "FwFlagTouch");
+	register_touch(gItemFlagRed, "player", "FwFlagTouch");
 	register_touch(gItemBase, "player", "FwBaseFlagTouch");
 }
 
@@ -84,6 +84,7 @@ public plugin_init() {
 
 public FwBaseFlagTouch(touched, toucher) {
 	new team = hl_get_user_team(toucher);
+
 	if (IsPlayerCarryingFlag(toucher, team)) {
 		switch (team) {
 			case BLUE_TEAM: {
@@ -174,33 +175,22 @@ bool:IsSpawnPointValid(spawnEnt) {
 	return true;
 }
 
-public FwRedFlagTouch(touched, toucher) {
-	// attach flag to user, show message that team has pick up the flag
-	server_print("RedFlagTouched");
+public FwFlagTouch(touched, toucher) {
+	server_print("FlagTouched");
 
-	switch (hl_get_user_team(toucher)) {
-		case RED_TEAM: return PLUGIN_HANDLED; // later we have to add that player can return his flag to base or return flag after 30s
-		case BLUE_TEAM: {
-		 	AttachFlagToPlayer(toucher, touched);
-		 	client_print(0, print_center, "La bandera del equipo rojo ha sido tomada");
-		}
-	}
+	new team = hl_get_user_team(toucher);
 
-	return PLUGIN_CONTINUE;
-}
-
-public FwBlueFlagTouch(touched, toucher) {
-	server_print("BlueFlagTouched");
-
-	switch (hl_get_user_team(toucher)) {
-		case BLUE_TEAM: return PLUGIN_HANDLED;
-		case RED_TEAM: { 
+	if (touched == gFlagBlue) {
+		if (team == RED_TEAM) {
 			AttachFlagToPlayer(toucher, touched);
-			client_print(0, print_center, "La bandera del equipo azul ha sido tomada");
+			client_print(0, print_center, "Blue flag has been taken!");
+		}
+	} else if (touched == gFlagRed) {
+		if (team == BLUE_TEAM) {
+			AttachFlagToPlayer(toucher, touched);
+			client_print(0, print_center, "Red flag has been taken!");
 		}
 	}
-
-	return PLUGIN_CONTINUE;	
 }
 
 AttachFlagToPlayer(id, flag) {
