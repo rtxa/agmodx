@@ -246,7 +246,14 @@ IsPlayerCarryingFlag(id) {
 }
 
 public DropFlag(id, team) {
-	new flag = team == BLUE_TEAM ? gFlagBlue : gFlagRed;
+	new flag;
+
+	if (team == BLUE_TEAM)
+		flag = gFlagBlue;
+	else if (team == RED_TEAM)
+		flag = gFlagRed
+	else
+		return;
 
 	new Float:velocity[3];
 	velocity_by_aim(id, 400, velocity);
