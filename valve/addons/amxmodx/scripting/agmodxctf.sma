@@ -91,20 +91,16 @@ public DropFlagSpec(id) {
 		DropFlag(id, IsPlayerCarryingFlag(id));
 }
 public FwBaseFlagTouch(touched, toucher) {
-	new team = hl_get_user_team(toucher);
-
-	if (IsPlayerCarryingFlag(toucher)) {
-		switch (team) {
-			case BLUE_TEAM: {
-				if (touched == gBaseBlue) {
-					ReturnFlagToBase(gFlagRed);
-					client_print(0, print_center, "EL equipo azul capturo la bandera");
-				}
-			} case RED_TEAM: {
-				if (touched == gBaseRed) {
-					ReturnFlagToBase(gFlagBlue);
-					client_print(0, print_center, "El equipo rojo capturo la bandera");
-				}
+	switch (IsPlayerCarryingFlag(toucher)) {
+		case BLUE_TEAM: {
+			if (touched == gBaseRed) {
+				ReturnFlagToBase(gFlagBlue);
+				client_print(0, print_center, "Red team has captured the flag");
+			}
+		} case RED_TEAM: {
+			if (touched == gBaseBlue) {
+				ReturnFlagToBase(gFlagRed);
+				client_print(0, print_center, "Blue team has captured the flag!");
 			}
 		}
 	}
