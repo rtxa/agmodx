@@ -1,6 +1,7 @@
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
+#include <fakemeta_util>
 #include <hamsandwich>
 #include <hl>
 
@@ -76,8 +77,9 @@ public plugin_init() {
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(ITEM_FLAG_BASE, "player", "FwBaseFlagTouch");
 }
+
 public client_disconnected(id) {
-	DropFlag(IsPlayerCarryingFlag(id));	
+	DropFlag(id, IsPlayerCarryingFlag(id));	
 }
 
 public CmdSpectate(id) {
@@ -86,7 +88,7 @@ public CmdSpectate(id) {
 
 public DropFlagSpec(id) {
 	if (hl_get_user_spectator(id))
-		DropFlag(IsPlayerCarryingFlag(id));
+		DropFlag(id, IsPlayerCarryingFlag(id));
 }
 public FwBaseFlagTouch(touched, toucher) {
 	new team = hl_get_user_team(toucher);
@@ -95,12 +97,12 @@ public FwBaseFlagTouch(touched, toucher) {
 		switch (team) {
 			case BLUE_TEAM: {
 				if (touched == gBaseBlue) {
-					ReturnFlagToBase(gFlagRed, gOriginFlagRed);
+					ReturnFlagToBase(gFlagRed);
 					client_print(0, print_center, "EL equipo azul capturo la bandera");
 				}
 			} case RED_TEAM: {
 				if (touched == gBaseRed) {
-					ReturnFlagToBase(gFlagBlue, gOriginFlagBlue);
+					ReturnFlagToBase(gFlagBlue);
 					client_print(0, print_center, "El equipo rojo capturo la bandera");
 				}
 			}
@@ -109,7 +111,7 @@ public FwBaseFlagTouch(touched, toucher) {
 }
 
 public FwPlayerKilled(victim, attacker) {
-	DropFlag(IsPlayerCarryingFlag(victim));
+	DropFlag(victim, IsPlayerCarryingFlag(victim));
 }
 
 public FwPlayerSpawn(id) {
@@ -188,6 +190,12 @@ bool:IsSpawnPointValid(spawnEnt) {
 public FwFlagTouch(touched, toucher) {
 	server_print("FlagTouched");
 
+	// block pick up when flag is in the air
+	if (fm_distance_to_floor(touched) != 0.0)
+		return PLUGIN_HANDLED;
+	else if (!is_user_alive(toucher))
+		return PLUGIN_HANDLED;
+
 	new team = hl_get_user_team(toucher);
 
 	if (touched == gFlagBlue) {
@@ -201,6 +209,7 @@ public FwFlagTouch(touched, toucher) {
 			client_print(0, print_center, "Red flag has been taken!");
 		}
 	}
+	return PLUGIN_HANDLED;
 }
 
 AttachFlagToPlayer(id, flag) {
@@ -210,17 +219,22 @@ AttachFlagToPlayer(id, flag) {
 	set_pev(flag, pev_solid, SOLID_NOT);
 }
 
-ReturnFlagToBase(flag, const Float:origin[3]) {
+ReturnFlagToBase(flag) {
 	server_print("ReturnFlagToBase");
+
 	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
 	set_pev(flag, pev_aiment, 0);
 	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(flag, pev_solid, SOLID_TRIGGER);
-	if (flag == gFlagBlue)
+
+	if (flag == gFlagBlue) {
+		entity_set_origin(flag, gOriginFlagBlue);	
 		set_pev(flag, pev_angles, gAnglesFlagBlue);
-	else if (flag == gFlagRed)
+	} else if (flag == gFlagRed) {
+		entity_set_origin(flag, gOriginFlagRed);
 		set_pev(flag, pev_angles, gAnglesFlagRed);
-	entity_set_origin(flag, origin);
+	}
+
 	drop_to_floor(flag);
 }
 
@@ -235,17 +249,23 @@ IsPlayerCarryingFlag(id) {
 		return 0;
 }
 
-// until i make a function to drop the flag, just return it to the base...
-public DropFlag(team) {
-	if (team == BLUE_TEAM)
-		ReturnFlagToBase(gFlagBlue, gOriginFlagBlue);
-	else if (team == RED_TEAM)
-		ReturnFlagToBase(gFlagRed, gOriginFlagRed);
+public DropFlag(id, team) {
+	new flag = team == BLUE_TEAM ? gFlagBlue : gFlagRed;
+
+	new Float:velocity[3];
+	velocity_by_aim(id, 400, velocity);
+
+	set_pev(flag, pev_angles, 0);
+	set_pev(flag, pev_velocity, velocity);
+	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
+	set_pev(flag, pev_aiment, 0);
+	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(flag, pev_solid, SOLID_TRIGGER);
 }
 
 public CmdDropFlag(id, level, cid) {
 	server_print("CmdDropFlag");
-	DropFlag(IsPlayerCarryingFlag(id));
+	DropFlag(id, IsPlayerCarryingFlag(id));
 
 	return PLUGIN_HANDLED;
 }
