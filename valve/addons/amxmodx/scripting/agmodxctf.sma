@@ -39,7 +39,7 @@ new const INFO_PLAYER_RED[] = "info_player_team2";
 new const INFO_FLAG_BLUE[] = "item_flag_team1";
 new const INFO_FLAG_RED[] = "item_flag_team2";
 
-new const ITEM_FLAG_BASE[] = "item_flag_base";
+new const INFO_CAPTURE_POINT[] = "info_capture_point";
 
 new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 
@@ -90,12 +90,12 @@ public plugin_init() {
 
 	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
 	gFlagRed = SpawnFlag(gOriginFlagRed, RED_TEAM);
-	gBaseBlue = SpawnBaseFlag(gOriginFlagBlue);
-	gBaseRed = SpawnBaseFlag(gOriginFlagRed);
+	gBaseBlue = SpawnCapturePoint(gOriginFlagBlue);
+	gBaseRed = SpawnCapturePoint(gOriginFlagRed);
 
 	register_touch(INFO_FLAG_BLUE, "player", "FwFlagTouch");
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
-	register_touch(ITEM_FLAG_BASE, "player", "FwBaseFlagTouch");
+	register_touch(INFO_CAPTURE_POINT, "player", "FwCapturePointTouch");
 
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
@@ -122,7 +122,6 @@ public AddPoints(id, points) {
 	write_short(hl_get_user_team(id));
 	message_end();
 }
-
 
 CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg[] = "") {
 	new teamName[16];
@@ -250,7 +249,7 @@ public DropFlagSpec(id) {
 		DropFlag(id, IsPlayerCarryingFlag(id));
 }
 
-public FwBaseFlagTouch(touched, toucher) {
+public FwCapturePointTouch(touched, toucher) {
 	switch (IsPlayerCarryingFlag(toucher)) {
 		case BLUE_TEAM: {
 			if (touched == gBaseRed) {
@@ -486,9 +485,9 @@ public SpawnFlag(const Float:origin[3], team) {
 }
 
 // we need a base for the flag so players can score points when they capture...
-public SpawnBaseFlag(const Float:origin[3]) {
+public SpawnCapturePoint(const Float:origin[3]) {
 	new base = create_entity("info_target");
-	set_pev(base, pev_classname, ITEM_FLAG_BASE);
+	set_pev(base, pev_classname, INFO_CAPTURE_POINT);
 	
 	entity_set_model(base, FLAG_MODEL);
 	set_pev(base, pev_movetype, MOVETYPE_TOSS);
