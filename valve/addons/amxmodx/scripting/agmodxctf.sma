@@ -389,13 +389,13 @@ ReturnFlagToBase(ent) {
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
 	if (ent == gFlagBlue) {
-		CtfTeamHudMessage(RED_TEAM, "CTF_FLAGBACK", "CTF_EFLAGBACK");
-		CtfTeamSpeak(RED_TEAM, "!CTF_FLAGBACK", "!CTF_EFLAGBACK");
+		CtfTeamHudMessage(RED_TEAM, "CTF_EFLAGBACK", "CTF_FLAGBACK");
+		CtfTeamSpeak(RED_TEAM, "!CTF_EFLAGBACK", "!CTF_FLAGBACK");
 		entity_set_origin(ent, gOriginFlagBlue);	
 		set_pev(ent, pev_angles, gAnglesFlagBlue);
 	} else if (ent == gFlagRed) {
-		CtfTeamHudMessage(BLUE_TEAM, "CTF_FLAGBACK", "CTF_EFLAGBACK");
-		CtfTeamSpeak(BLUE_TEAM, "!CTF_FLAGBACK", "!CTF_EFLAGBACK");
+		CtfTeamHudMessage(BLUE_TEAM, "CTF_EFLAGBACK", "CTF_FLAGBACK");
+		CtfTeamSpeak(BLUE_TEAM, "!CTF_EFLAGBACK", "!CTF_FLAGBACK");
 		entity_set_origin(ent, gOriginFlagRed);
 		set_pev(ent, pev_angles, gAnglesFlagRed);
 	}
