@@ -237,30 +237,30 @@ public FwFlagTouch(touched, toucher) {
 	return PLUGIN_HANDLED;
 }
 
-AttachFlagToPlayer(id, flag) {
-	set_pev(flag, pev_movetype, MOVETYPE_FOLLOW);
-	set_pev(flag, pev_aiment, id);
-	set_pev(flag, pev_sequence, FLAG_SEQ_CARRIED);
-	set_pev(flag, pev_solid, SOLID_NOT);
+AttachFlagToPlayer(id, ent) {
+	set_pev(ent, pev_movetype, MOVETYPE_FOLLOW);
+	set_pev(ent, pev_aiment, id);
+	set_pev(ent, pev_sequence, FLAG_SEQ_CARRIED);
+	set_pev(ent, pev_solid, SOLID_NOT);
 }
 
-ReturnFlagToBase(flag) {
+ReturnFlagToBase(ent) {
 	server_print("ReturnFlagToBase");
 
-	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
-	set_pev(flag, pev_aiment, 0);
-	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
-	set_pev(flag, pev_solid, SOLID_TRIGGER);
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+	set_pev(ent, pev_aiment, 0);
+	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
-	if (flag == gFlagBlue) {
-		entity_set_origin(flag, gOriginFlagBlue);	
-		set_pev(flag, pev_angles, gAnglesFlagBlue);
-	} else if (flag == gFlagRed) {
-		entity_set_origin(flag, gOriginFlagRed);
-		set_pev(flag, pev_angles, gAnglesFlagRed);
+	if (ent == gFlagBlue) {
+		entity_set_origin(ent, gOriginFlagBlue);	
+		set_pev(ent, pev_angles, gAnglesFlagBlue);
+	} else if (ent == gFlagRed) {
+		entity_set_origin(ent, gOriginFlagRed);
+		set_pev(ent, pev_angles, gAnglesFlagRed);
 	}
 
-	drop_to_floor(flag);
+	drop_to_floor(ent);
 }
 
 IsPlayerCarryingFlag(id) {
@@ -285,27 +285,27 @@ public TaskReturnFlagToBase(taskid) {
 }
 
 public DropFlag(id, team) {
-	new flag;
+	new ent;
 
 	if (team == BLUE_TEAM)
-		flag = gFlagBlue;
+		ent = gFlagBlue;
 	else if (team == RED_TEAM)
-		flag = gFlagRed
+		ent = gFlagRed
 	else
 		return;
 
-	remove_task(flag + TASK_RETURNFLAGTOBASE);
-	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", flag + TASK_RETURNFLAGTOBASE);
+	remove_task(ent + TASK_RETURNFLAGTOBASE);
+	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
 
 	new Float:velocity[3];
 	velocity_by_aim(id, 400, velocity);
 
-	set_pev(flag, pev_angles, 0);
-	set_pev(flag, pev_velocity, velocity);
-	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
-	set_pev(flag, pev_aiment, 0);
-	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
-	set_pev(flag, pev_solid, SOLID_TRIGGER);
+	set_pev(ent, pev_angles, 0);
+	set_pev(ent, pev_velocity, velocity);
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+	set_pev(ent, pev_aiment, 0);
+	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(ent, pev_solid, SOLID_TRIGGER);
 }
 
 public CmdDropFlag(id, level, cid) {
@@ -316,35 +316,35 @@ public CmdDropFlag(id, level, cid) {
 }
 
 public SpawnFlag(const Float:origin[3], team) {
-	new flag = create_entity("info_target");
+	new ent = create_entity("info_target");
 
-	entity_set_model(flag, FLAG_MODEL);
-	set_pev(flag, pev_movetype, MOVETYPE_TOSS);
-	set_pev(flag, pev_solid, SOLID_TRIGGER);
-	set_pev(flag, pev_sequence, FLAG_SEQ_NOTCARRIED);
-	set_pev(flag, pev_framerate, 1.0);
+	entity_set_model(ent, FLAG_MODEL);
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+	set_pev(ent, pev_solid, SOLID_TRIGGER);
+	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(ent, pev_framerate, 1.0);
 
 	new Float:mins[3] = { 4.0, 4.0, 0.0 };
 	new Float:maxs[3] = { 4.0, 4.0, 72.0 };
-	entity_set_size(flag, mins, maxs);
+	entity_set_size(ent, mins, maxs);
 
 	switch (team) {
 		case BLUE_TEAM: {
-			entity_set_origin(flag, gOriginFlagBlue);
-			set_pev(flag, pev_classname, INFO_FLAG_BLUE);
-			set_pev(flag, pev_skin, FLAG_SKIN_BLUE);
-			set_ent_rendering(flag, kRenderFxGlowShell, 0, 0, 255, kRenderNormal, 30);
-			set_pev(flag, pev_angles, gAnglesFlagBlue);
+			entity_set_origin(ent, gOriginFlagBlue);
+			set_pev(ent, pev_classname, INFO_FLAG_BLUE);
+			set_pev(ent, pev_skin, FLAG_SKIN_BLUE);
+			set_ent_rendering(ent, kRenderFxGlowShell, 0, 0, 255, kRenderNormal, 30);
+			set_pev(ent, pev_angles, gAnglesFlagBlue);
 		} case RED_TEAM: {
-			entity_set_origin(flag, gOriginFlagRed);		
-			set_pev(flag, pev_classname, INFO_FLAG_RED);
-			set_pev(flag, pev_skin, FLAG_SKIN_RED);
-			set_ent_rendering(flag, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
-			set_pev(flag, pev_angles, gAnglesFlagRed);
+			entity_set_origin(ent, gOriginFlagRed);		
+			set_pev(ent, pev_classname, INFO_FLAG_RED);
+			set_pev(ent, pev_skin, FLAG_SKIN_RED);
+			set_ent_rendering(ent, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
+			set_pev(ent, pev_angles, gAnglesFlagRed);
 		}
 	}
 
-	return flag;
+	return ent;
 }
 
 // we need a base for the flag so players can score points when they capture...
