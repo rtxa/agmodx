@@ -74,6 +74,7 @@ public plugin_precache() {
 
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
+
 	new mode[32];
 	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
 
@@ -82,7 +83,7 @@ public plugin_init() {
 
 	register_dictionary("agmodxctf.txt");
 
-	register_clcmd("dropflag", "CmdDropFlag");
+	register_clcmd("dropitems", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
 
 	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawn", true);
