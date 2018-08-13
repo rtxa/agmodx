@@ -55,6 +55,8 @@ new gFlagRed;
 new gBaseBlue;
 new gBaseRed;
 
+new gHudCtfMessage;
+
 new gCvarCapturePoints;
 new gCvarFlagReturnTime;
 
@@ -110,6 +112,90 @@ public AddPoints(id, points) {
 	write_short(0);
 	write_short(hl_get_user_team(id));
 	message_end();
+}
+
+CtfMessage(id, const playerMsg[], const teamMsg[], const nonTeamMsg[]) {
+	new player;
+
+	if (!equal(playerMsg, "")) {
+		set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 1.0);
+		ShowSyncHudMsg(id, gHudCtfMessage, playerMsg);
+	}
+
+
+	new playersTeam[32], numTeam;
+	get_players(playersTeam, numTeam, "ce", teamName);
+
+	new team, teamName[16];
+	team = hl_get_user_team(id, teamName, charsmax(teamName));
+
+	if (!equal(teamMsg, "")) {
+		for (new i; i < numTeam; i++) {
+			player = playersTeam[i];
+			if (player != id) {
+				set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 1.0);
+				ShowSyncHudMsg(player, gHudCtfMessage, teamMsg);
+			}
+		}
+	}
+
+	new players[32], num;
+	get_players(players, num, "c", teamName);
+
+	if (!equal(nonTeamMsg, "")) {
+		for (new i; i < num; i++) {
+			player = players[i];
+			for (new i; i < numTeam; i++) {
+				if (player != playersTeam[i]) {
+					set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 1.0);
+					ShowSyncHudMsg(player, gHudCtfMessage, nonTeamMsg);
+					break;
+				}
+			}
+		}
+	}
+
+}
+
+CtfSpeak(id, const playerSpk[], const teamSpk[], const nonTeamSpk[]) {
+	new player;
+
+	if (!equal(playerSpk, ""))
+		Speak(id, playerSpk);
+
+
+	new playersTeam[32], numTeam;
+	get_players(playersTeam, numTeam, "ce", teamName);
+
+	new team, teamName[16];
+	team = hl_get_user_team(id, teamName, charsmax(teamName));
+
+	if (!equal(teamSpk, "")) {
+		for (new i; i < numTeam; i++) {
+			player = playersTeam[i];
+			if (player != id)
+				Speak(player, teamSpk)
+		}
+	}
+
+	new players[32], num;
+	get_players(players, num, "c", teamName);
+
+	if (!equal(nonTeamSpk, "")) {
+		for (new i; i < num; i++) {
+			player = players[i];
+			for (new i; i < numTeam; i++) {
+				if (player != playersTeam[i]) {
+					Speak(player, nonTeamSpk);
+					break;
+				}
+			}
+		}
+	}
+}
+
+Speak(id, const speak[]) {
+	client_cmd(id, "speak %s", speak);
 }
 
 public DropFlagSpec(id) {
