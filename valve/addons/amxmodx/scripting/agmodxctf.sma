@@ -43,6 +43,8 @@ new const INFO_CAPTURE_POINT[] = "info_capture_point";
 
 new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 
+new const VOX_SOUNDS[][] = { "vox/endgame.wav", "vox/captured.wav", "vox/enemy.wav", "vox/flag.wav", "vox/returned.wav" };
+
 new gSpawnsBlue[64];
 new gSpawnsRed[64];
 
@@ -67,6 +69,9 @@ new gCvarFlagReturnTime;
 
 public plugin_precache() {
 	precache_model(FLAG_MODEL);
+	
+	for (new i; i < sizeof VOX_SOUNDS; i++)
+		precache_sound(VOX_SOUNDS[i]);
 
 	gCvarCapturePoints = create_cvar("sv_ag_ctf_capturepoints", "10");
 	gCvarFlagReturnTime = create_cvar("sv_ag_ctf_flag_returntime", "30");

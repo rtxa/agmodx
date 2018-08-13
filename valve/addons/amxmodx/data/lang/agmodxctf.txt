@@ -17,3 +17,15 @@ CTF_ELOSTFLAG = The ENEMY lost your FLAG!
 !CTF_EGOTFLAG = vox/buzwarn The enemy has(s5) your flag
 !CTF_FLAGBACK = vox/deeoo Your(e80) flag(e80) has(s10) returned
 !CTF_EFLAGBACK = vox/dadeda The enemy flag(e80) has(s5) returned
+
+[es]
+CTF_YOUCAP = Has capturado la bandera ENEMIGA.
+CTF_TEAMCAP = Tu equipo ha capturado^nla bandera ENEMIGA.
+CTF_THEYCAP = Tu bandera ha sido CAPTURADA.
+CTF_YOUGOTFLAG = Tienes la bandera ENEMIGA.^nLlevala a tus POSICIONES.
+CTF_GOTFLAG = Tu equipo ha TOMADO la bandera ENEMIGA.
+CTF_EGOTFLAG = Han tomado tu BANDERA
+CTF_FLAGBACK = Tu BANDERA ha sido DEVUELTA.
+CTF_EFLAGBACK = La bandera ENEMIGA ha sido DEVUELTA.
+CTF_LOSTFLAG = Tu equipo ha perdido la bandera ENEMIGA.
+CTF_ELOSTFLAG = El ENEMIGO ha perdido tu BANDERA.
