@@ -17,6 +17,8 @@ enum (+= 100) {
 
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
+#define HL_MAX_TEAMNAME_LENGTH 16
+
 #define BLUE_TEAM 1
 #define RED_TEAM 2
 
@@ -56,6 +58,7 @@ new gBaseBlue;
 new gBaseRed;
 
 new gHudCtfMessage;
+new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
 new gCvarCapturePoints;
 new gCvarFlagReturnTime;
@@ -91,7 +94,9 @@ public plugin_init() {
 	register_touch(INFO_FLAG_BLUE, "player", "FwFlagTouch");
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(ITEM_FLAG_BASE, "player", "FwBaseFlagTouch");
+
 	gHudCtfMessage = CreateHudSyncObj();
+	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
 }
 
 public client_disconnected(id) {
@@ -116,8 +121,8 @@ public AddPoints(id, points) {
 	message_end();
 }
 
+
 CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg[] = "") {
-	new player;
 
 	new teamName[16];
 	hl_get_user_team(id, teamName, charsmax(teamName));
@@ -130,6 +135,7 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
 	new playersTeam[32], numTeam;
 	get_players(playersTeam, numTeam, "ce", teamName);
 
+	new player;
 	if (!equal(teamMsg, "")) {
 		for (new i; i < numTeam; i++) {
 			player = playersTeam[i];
@@ -139,7 +145,7 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
 	}
 
 	new players[32], num;
-	get_players(players, num, "c", teamName);
+	get_players(players, num, "c");
 
 	if (!equal(nonTeamMsg, "")) {
 		for (new i; i < num; i++) {
@@ -151,8 +157,33 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
 	}
 }
 
-stock CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSpk[] = "") {
+CtfTeamHudMessage(team, const teamMsg[], nonTeamMsg[]) {
+	set_hudmessage(255, 128, 0, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
+
+	new playersTeam[32], numTeam;
+	get_players(playersTeam, numTeam, "ce", gTeamListModels[team - 1]);
+	server_print("gTeamListModels: %s", gTeamListModels[team - 1]);
+
+	if (!equal(teamMsg, ""))
+		for (new i; i < numTeam; i++)
+			ShowSyncHudMsg(playersTeam[i], gHudCtfMessage, "%L", LANG_PLAYER, teamMsg);
+
+	new players[32], num;
+	get_players(players, num, "c");
+
 	new player;
+	if (!equal(nonTeamMsg, "")) {
+		for (new i; i < num; i++) {
+			player = players[i];
+
+			if (!array_search(player, playersTeam, numTeam))		
+				ShowSyncHudMsg(player, gHudCtfMessage, "%L", LANG_PLAYER, nonTeamMsg);
+		}
+	}
+
+}
+
+stock CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSpk[] = "") {
 
 	if (!equal(playerSpk, ""))
 		Speak(id, playerSpk);
@@ -164,6 +195,7 @@ stock CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSp
 	get_players(playersTeam, numTeam, "ce", teamName);
 
 
+	new player;
 	if (!equal(teamSpk, "")) {
 		for (new i; i < numTeam; i++) {
 			player = playersTeam[i];
@@ -173,8 +205,30 @@ stock CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSp
 	}
 
 	new players[32], num;
-	get_players(players, num, "c", teamName);
+	get_players(players, num, "c");
 
+	if (!equal(nonTeamMsg, "")) {
+		for (new i; i < num; i++) {
+			player = players[i];
+
+			if (!array_search(player, playersTeam, numTeam))		
+				Speak(player, nonTeamSpk);
+		}
+	}
+}
+
+stock CtfTeamSpeak(team, const teamSpk[] = "", const nonTeamSpk[] = "") {
+	new playersTeam[32], numTeam;
+	get_players(playersTeam, numTeam, "ce", gTeamListModels[team - 1]);
+
+	if (!equal(teamSpk, ""))
+		for (new i; i < numTeam; i++)
+			Speak(playersTeam[i], teamSpk)
+
+	new players[32], num;
+	get_players(players, num, "c");
+
+	new player;
 	if (!equal(nonTeamMsg, "")) {
 		for (new i; i < num; i++) {
 			player = players[i];
@@ -326,9 +380,11 @@ ReturnFlagToBase(ent) {
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
 	if (ent == gFlagBlue) {
+		CtfTeamHudMessage(RED_TEAM, "CTF_FLAGBACK", "CTF_EFLAGBACK");
 		entity_set_origin(ent, gOriginFlagBlue);	
 		set_pev(ent, pev_angles, gAnglesFlagBlue);
 	} else if (ent == gFlagRed) {
+		CtfTeamHudMessage(BLUE_TEAM, "CTF_FLAGBACK", "CTF_EFLAGBACK");
 		entity_set_origin(ent, gOriginFlagRed);
 		set_pev(ent, pev_angles, gAnglesFlagRed);
 	}
@@ -360,7 +416,6 @@ public TaskReturnFlagToBase(taskid) {
 
 public DropFlag(id, team) {
 	new ent;
-
 	if (team == BLUE_TEAM)
 		ent = gFlagBlue;
 	else if (team == RED_TEAM)
@@ -368,7 +423,7 @@ public DropFlag(id, team) {
 	else
 		return;
 
-	CtfHudMessage(id, "CTF_LOSTFLAG", "CTF_LOSTFLAG", "CTF_ELOSTFLAG");
+	CtfTeamHudMessage(team, "CTF_ELOSTFLAG", "CTF_LOSTFLAG");
 
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
@@ -485,6 +540,16 @@ CreateCustomEnt(const classname[]) {
 	new ent = create_entity("info_target");
 	set_pev(ent, pev_classname, classname);
 	return ent;
+}
+
+public GetTeamListModels(output[][], size) {
+	new teamlist[192];
+	get_cvar_string("mp_teamlist", teamlist, charsmax(teamlist));
+
+	new nIdx, nLen = (1 + copyc(output[nIdx], size, teamlist, ';'));
+
+	while (nLen < strlen(teamlist) && ++nIdx < HL_MAX_TEAMS)
+		nLen += (1 + copyc(output[nIdx], size, teamlist[nLen], ';'));
 }
 
 // the parsed string is in this format "x y z" e.g "128 0 256"
