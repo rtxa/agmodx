@@ -69,12 +69,13 @@ public plugin_precache() {
 
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR)
-
 	new mode[32];
 	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
 
 	if (!equal(mode, "ctf"))
 		return;
+
+	register_dictionary("agmodxctf.txt");
 
 	register_clcmd("dropflag", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
@@ -124,17 +125,16 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
 	set_hudmessage(255, 128, 0, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
 
 	if (!equal(playerMsg, ""))
-		ShowSyncHudMsg(id, gHudCtfMessage, playerMsg);
+		ShowSyncHudMsg(id, gHudCtfMessage, "%L", LANG_PLAYER, playerMsg);
 
 	new playersTeam[32], numTeam;
 	get_players(playersTeam, numTeam, "ce", teamName);
-
 
 	if (!equal(teamMsg, "")) {
 		for (new i; i < numTeam; i++) {
 			player = playersTeam[i];
 			if (player != id)
-				ShowSyncHudMsg(player, gHudCtfMessage, teamMsg);
+				ShowSyncHudMsg(player, gHudCtfMessage, "%L", LANG_PLAYER, teamMsg);
 		}
 	}
 
@@ -144,25 +144,21 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
 	if (!equal(nonTeamMsg, "")) {
 		for (new i; i < num; i++) {
 			player = players[i];
-			for (new i; i < numTeam; i++) {
-				if (player != playersTeam[i]) {
-					ShowSyncHudMsg(player, gHudCtfMessage, nonTeamMsg);
-					break;
-				}
-			}
+
+			if (!array_search(player, playersTeam, numTeam))		
+				ShowSyncHudMsg(player, gHudCtfMessage, "%L", LANG_PLAYER, nonTeamMsg);
 		}
 	}
-
 }
 
-CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSpk[] = "") {
+stock CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSpk[] = "") {
 	new player;
 
 	if (!equal(playerSpk, ""))
 		Speak(id, playerSpk);
 
 	new teamName[16];
-	team = hl_get_user_team(id, teamName, charsmax(teamName));
+	hl_get_user_team(id, teamName, charsmax(teamName));
 
 	new playersTeam[32], numTeam;
 	get_players(playersTeam, numTeam, "ce", teamName);
@@ -179,20 +175,17 @@ CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSpk[] = 
 	new players[32], num;
 	get_players(players, num, "c", teamName);
 
-	if (!equal(nonTeamSpk, "")) {
+	if (!equal(nonTeamMsg, "")) {
 		for (new i; i < num; i++) {
 			player = players[i];
-			for (new i; i < numTeam; i++) {
-				if (player != playersTeam[i]) {
-					Speak(player, nonTeamSpk);
-					break;
-				}
-			}
+
+			if (!array_search(player, playersTeam, numTeam))		
+				Speak(player, nonTeamSpk);
 		}
 	}
 }
 
-Speak(id, const speak[]) {
+stock Speak(id, const speak[]) {
 	client_cmd(id, "speak %s", speak);
 }
 
@@ -207,13 +200,13 @@ public FwBaseFlagTouch(touched, toucher) {
 			if (touched == gBaseRed) {
 				ReturnFlagToBase(gFlagBlue);
 				AddPoints(toucher, get_pcvar_num(gCvarCapturePoints));
-				client_print(0, print_center, "Red team has captured the flag");
+				CtfHudMessage(toucher, "CTF_YOUCAP", "CTF_TEAMCAP", "CTF_THEYCAP");
 			}
 		} case RED_TEAM: {
 			if (touched == gBaseBlue) {
 				ReturnFlagToBase(gFlagRed);
 				AddPoints(toucher, get_pcvar_num(gCvarCapturePoints));
-				client_print(0, print_center, "Blue team has captured the flag!");
+				CtfHudMessage(toucher, "CTF_YOUCAP", "CTF_TEAMCAP", "CTF_THEYCAP");
 			}
 		}
 	}
@@ -308,15 +301,11 @@ public FwFlagTouch(touched, toucher) {
 	new team = hl_get_user_team(toucher);
 
 	if (touched == gFlagBlue) {
-		if (team == RED_TEAM) {
+		if (team == RED_TEAM)
 			TakeFlag(toucher, touched);
-			client_print(0, print_center, "Blue flag has been taken!");
-		}
 	} else if (touched == gFlagRed) {
-		if (team == BLUE_TEAM) {
+		if (team == BLUE_TEAM)
 			TakeFlag(toucher, touched);
-			client_print(0, print_center, "Red flag has been taken!");
-		}
 	}
 	return PLUGIN_HANDLED;
 }
@@ -330,7 +319,7 @@ AttachFlagToPlayer(id, ent) {
 
 ReturnFlagToBase(ent) {
 	server_print("ReturnFlagToBase");
-
+	
 	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_aiment, 0);
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
@@ -361,6 +350,7 @@ IsPlayerCarryingFlag(id) {
 public TakeFlag(id, ent) {
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	AttachFlagToPlayer(id, ent);
+	CtfHudMessage(id, "CTF_YOUGOTFLAG", "CTF_GOTFLAG", "CTF_EGOTFLAG");
 }
 
 public TaskReturnFlagToBase(taskid) {
@@ -377,6 +367,8 @@ public DropFlag(id, team) {
 		ent = gFlagRed
 	else
 		return;
+
+	CtfHudMessage(id, "CTF_LOSTFLAG", "CTF_LOSTFLAG", "CTF_ELOSTFLAG");
 
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
@@ -502,4 +494,12 @@ Float:StrToVec(const string[], Float:vector[3]) {
 
 	for (new i; i < sizeof arg; i++)
 		vector[i] = str_to_float(arg[i]);
+}
+
+bool:array_search(value, array[], size) {
+	new bool:match;
+	for (new i; i < size; i++)
+		if (array[i] == value)
+			match = true; 
+	return match;
 }

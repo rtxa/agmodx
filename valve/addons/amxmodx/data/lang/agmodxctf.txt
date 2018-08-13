@@ -1,0 +1,11 @@
+[en]
+CTF_YOUCAP = "You captured the ENEMY flag!"
+CTF_TEAMCAP = "Your team captured the ENEMY flag"
+CTF_THEYCAP = "Your flag was CAPTURED!"
+CTF_YOUGOTFLAG = "You have the ENEMY flag^nTake it to your BATTLEMENTS!"
+CTF_GOTFLAG = "Your team has TAKEN the ENEMY flag!"
+CTF_EGOTFLAG = "Your FLAG was taken!"
+CTF_FLAGBACK = "Your flag has RETURNED!"
+CTF_EFLAGBACK = "The ENEMY flag has RETURNED!"
+CTF_LOSTFLAG = "Your team lost the ENEMY flag!"
+CTF_ELOSTFLAG = "The ENEMY lost your FLAG!"
