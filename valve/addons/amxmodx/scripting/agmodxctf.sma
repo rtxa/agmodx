@@ -4,6 +4,7 @@
 #include <fakemeta_util>
 #include <hamsandwich>
 #include <hl>
+#include <fun>
 
 #define PLUGIN  "AG Mod X CTF"
 #define VERSION "1.0"
@@ -49,8 +50,12 @@ new gFlagRed;
 new gBaseBlue;
 new gBaseRed;
 
+new gCvarCapturePoints;
+
 public plugin_precache() {
 	precache_model(FLAG_MODEL);
+
+	gCvarCapturePoints = create_cvar("sv_ag_ctf_capturepoints", "10");
 }
 
 public plugin_init() {
@@ -86,20 +91,37 @@ public CmdSpectate(id) {
 	set_task(0.1, "DropFlagSpec", id);
 }
 
+public AddPoints(id, points) {
+	new frags = get_user_frags(id) + points;
+	set_user_frags(id, frags);
+
+	// show new score
+	message_begin(MSG_BROADCAST, get_user_msgid("ScoreInfo"));
+	write_byte(id);
+	write_short(frags);
+	write_short(hl_get_user_deaths(id));
+	write_short(0);
+	write_short(hl_get_user_team(id));
+	message_end();
+}
+
 public DropFlagSpec(id) {
 	if (hl_get_user_spectator(id))
 		DropFlag(id, IsPlayerCarryingFlag(id));
 }
+
 public FwBaseFlagTouch(touched, toucher) {
 	switch (IsPlayerCarryingFlag(toucher)) {
 		case BLUE_TEAM: {
 			if (touched == gBaseRed) {
 				ReturnFlagToBase(gFlagBlue);
+				AddPoints(toucher, get_pcvar_num(gCvarCapturePoints));
 				client_print(0, print_center, "Red team has captured the flag");
 			}
 		} case RED_TEAM: {
 			if (touched == gBaseBlue) {
 				ReturnFlagToBase(gFlagRed);
+				AddPoints(toucher, get_pcvar_num(gCvarCapturePoints));
 				client_print(0, print_center, "Blue team has captured the flag!");
 			}
 		}
