@@ -90,6 +90,7 @@ public plugin_init() {
 	register_touch(INFO_FLAG_BLUE, "player", "FwFlagTouch");
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(ITEM_FLAG_BASE, "player", "FwBaseFlagTouch");
+	gHudCtfMessage = CreateHudSyncObj();
 }
 
 public client_disconnected(id) {
@@ -114,28 +115,26 @@ public AddPoints(id, points) {
 	message_end();
 }
 
-CtfMessage(id, const playerMsg[], const teamMsg[], const nonTeamMsg[]) {
+CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg[] = "") {
 	new player;
 
-	if (!equal(playerMsg, "")) {
-		set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 1.0);
-		ShowSyncHudMsg(id, gHudCtfMessage, playerMsg);
-	}
+	new teamName[16];
+	hl_get_user_team(id, teamName, charsmax(teamName));
+	
+	set_hudmessage(255, 128, 0, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
 
+	if (!equal(playerMsg, ""))
+		ShowSyncHudMsg(id, gHudCtfMessage, playerMsg);
 
 	new playersTeam[32], numTeam;
 	get_players(playersTeam, numTeam, "ce", teamName);
 
-	new team, teamName[16];
-	team = hl_get_user_team(id, teamName, charsmax(teamName));
 
 	if (!equal(teamMsg, "")) {
 		for (new i; i < numTeam; i++) {
 			player = playersTeam[i];
-			if (player != id) {
-				set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 1.0);
+			if (player != id)
 				ShowSyncHudMsg(player, gHudCtfMessage, teamMsg);
-			}
 		}
 	}
 
@@ -147,7 +146,6 @@ CtfMessage(id, const playerMsg[], const teamMsg[], const nonTeamMsg[]) {
 			player = players[i];
 			for (new i; i < numTeam; i++) {
 				if (player != playersTeam[i]) {
-					set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 1.0);
 					ShowSyncHudMsg(player, gHudCtfMessage, nonTeamMsg);
 					break;
 				}
@@ -157,18 +155,18 @@ CtfMessage(id, const playerMsg[], const teamMsg[], const nonTeamMsg[]) {
 
 }
 
-CtfSpeak(id, const playerSpk[], const teamSpk[], const nonTeamSpk[]) {
+CtfSpeak(id, const playerSpk[] = "", const teamSpk[] = "", const nonTeamSpk[] = "") {
 	new player;
 
 	if (!equal(playerSpk, ""))
 		Speak(id, playerSpk);
 
+	new teamName[16];
+	team = hl_get_user_team(id, teamName, charsmax(teamName));
 
 	new playersTeam[32], numTeam;
 	get_players(playersTeam, numTeam, "ce", teamName);
 
-	new team, teamName[16];
-	team = hl_get_user_team(id, teamName, charsmax(teamName));
 
 	if (!equal(teamSpk, "")) {
 		for (new i; i < numTeam; i++) {
