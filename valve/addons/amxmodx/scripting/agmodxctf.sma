@@ -10,6 +10,11 @@
 #define VERSION "1.0"
 #define AUTHOR  "rtxa"
 
+// TaskIDs
+enum (+= 100) {
+	TASK_RETURNFLAGTOBASE = 1000,
+};
+
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
 #define BLUE_TEAM 1
@@ -51,11 +56,13 @@ new gBaseBlue;
 new gBaseRed;
 
 new gCvarCapturePoints;
+new gCvarFlagReturnTime;
 
 public plugin_precache() {
 	precache_model(FLAG_MODEL);
 
 	gCvarCapturePoints = create_cvar("sv_ag_ctf_capturepoints", "10");
+	gCvarFlagReturnTime = create_cvar("sv_ag_ctf_flag_returntime", "30");
 }
 
 public plugin_init() {
@@ -218,12 +225,12 @@ public FwFlagTouch(touched, toucher) {
 
 	if (touched == gFlagBlue) {
 		if (team == RED_TEAM) {
-			AttachFlagToPlayer(toucher, touched);
+			TakeFlag(toucher, touched);
 			client_print(0, print_center, "Blue flag has been taken!");
 		}
 	} else if (touched == gFlagRed) {
 		if (team == BLUE_TEAM) {
-			AttachFlagToPlayer(toucher, touched);
+			TakeFlag(toucher, touched);
 			client_print(0, print_center, "Red flag has been taken!");
 		}
 	}
@@ -267,6 +274,16 @@ IsPlayerCarryingFlag(id) {
 		return 0;
 }
 
+public TakeFlag(id, ent) {
+	remove_task(ent + TASK_RETURNFLAGTOBASE);
+	AttachFlagToPlayer(id, ent);
+}
+
+public TaskReturnFlagToBase(taskid) {
+	new ent = taskid - TASK_RETURNFLAGTOBASE;
+	ReturnFlagToBase(ent);
+}
+
 public DropFlag(id, team) {
 	new flag;
 
@@ -276,6 +293,9 @@ public DropFlag(id, team) {
 		flag = gFlagRed
 	else
 		return;
+
+	remove_task(flag + TASK_RETURNFLAGTOBASE);
+	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", flag + TASK_RETURNFLAGTOBASE);
 
 	new Float:velocity[3];
 	velocity_by_aim(id, 400, velocity);
