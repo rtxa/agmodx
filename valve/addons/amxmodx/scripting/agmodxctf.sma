@@ -1,4 +1,5 @@
 #include <amxmodx>
+#include <amxmisc>
 #include <engine>
 #include <fakemeta>
 #include <fakemeta_util>
@@ -80,6 +81,8 @@ public plugin_precache() {
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
+	register_concmd("ctf", "CmdChangeMode", ADMIN_BAN, "HELP_MODE, _, true");
+
 	new mode[32];
 	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
 
@@ -105,6 +108,23 @@ public plugin_init() {
 
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
+}
+
+public CmdChangeMode(id, level, cid) {
+	if (!cmd_access(id, level, cid, 0))
+	    return PLUGIN_HANDLED;
+
+	new arg[32];
+	read_argv(0, arg, charsmax(arg));
+
+	set_cvar_string("sv_ag_gamemode", arg); // set new mode
+
+	// we need to reload the map so cvars can take effect
+	new map[32];
+	get_mapname(map, charsmax(map));
+	server_cmd("changelevel %s", map);
+
+	return PLUGIN_HANDLED;
 }
 
 public client_disconnected(id) {
