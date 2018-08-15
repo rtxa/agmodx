@@ -153,7 +153,7 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
 	new teamName[16];
 	hl_get_user_team(id, teamName, charsmax(teamName));
 	
-	set_hudmessage(255, 128, 0, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
+	set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
 
 	if (!equal(playerMsg, ""))
 		ShowSyncHudMsg(id, gHudCtfMessage, "%L", LANG_PLAYER, playerMsg);
@@ -184,7 +184,7 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
 }
 
 CtfTeamHudMessage(team, const teamMsg[], nonTeamMsg[]) {
-	set_hudmessage(255, 128, 0, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
+	set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
 
 	new playersTeam[32], numTeam;
 	get_players(playersTeam, numTeam, "ce", gTeamListModels[team - 1]);
