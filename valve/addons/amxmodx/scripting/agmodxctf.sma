@@ -467,9 +467,7 @@ public SpawnFlag(const Float:origin[3], team) {
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_framerate, 1.0);
 
-	new Float:mins[3] = { 4.0, 4.0, 0.0 };
-	new Float:maxs[3] = { 4.0, 4.0, 72.0 };
-	entity_set_size(ent, mins, maxs);
+	entity_set_size(ent, Float:{ 4.0, 4.0, 0.0 }, Float:{ 4.0, 4.0, 72.0 });
 
 	switch (team) {
 		case BLUE_TEAM: {
@@ -492,20 +490,17 @@ public SpawnFlag(const Float:origin[3], team) {
 
 // we need a base for the flag so players can score points when they capture...
 public SpawnCapturePoint(const Float:origin[3]) {
-	new base = create_entity("info_target");
-	set_pev(base, pev_classname, INFO_CAPTURE_POINT);
+	new ent = create_entity("info_target");
+	set_pev(ent, pev_classname, INFO_CAPTURE_POINT);
 	
-	entity_set_model(base, FLAG_MODEL);
-	set_pev(base, pev_movetype, MOVETYPE_TOSS);
-	set_pev(base, pev_solid, SOLID_TRIGGER);
-	entity_set_origin(base, origin);
-	set_pev(base, pev_effects, EF_NODRAW);
+	entity_set_model(ent, FLAG_MODEL);
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+	set_pev(ent, pev_solid, SOLID_TRIGGER);
+	entity_set_origin(ent, origin);
+	set_pev(ent, pev_effects, EF_NODRAW);
+	entity_set_size(ent, Float:{ -8.0, -8.0, 0.0 }, Float:{ 8.0, 8.0, 8.0 });
 
-	new Float:mins[3] = { -8.0, -8.0, 0.0 };
-	new Float:maxs[3] = { 8.0, 8.0, 8.0 };
-	entity_set_size(base, mins, maxs);
-
-	return base;
+	return ent;
 }
 
 /* Get data of entities from ag ctf map
