@@ -754,10 +754,6 @@ public ResetWeaponClip(id) {
 		weapon = UserHasWeapon(id, HLW_SHOTGUN);
 		hl_set_weapon_ammo(weapon, 8);
 	}
-	if (get_pcvar_num(gCvarStartWeapons[START_HORNETGUN])) {
-		weapon = UserHasWeapon(id, HLW_HORNETGUN);
-		hl_set_weapon_ammo(weapon, 8);
-	}
 }
 
 // If user has the weapon, return the weapon id
