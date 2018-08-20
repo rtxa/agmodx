@@ -290,6 +290,24 @@ new const gNameStartWeapons[SIZE_WEAPONS][] = {
 	"sv_ag_start_tripmine",
 };
 
+// index array
+enum _:StartWeapons {
+	START_357,
+	START_9MMAR,
+	START_9MMHANDGUN,
+	START_CROSSBOW,
+	START_CROWBAR,
+	START_EGON,
+	START_GAUSS,
+	START_HGRENADE,
+	START_HORNETGUN,
+	START_RPG,
+	START_SATCHEL,
+	START_SHOTGUN,
+	START_SNARK,
+	START_TRIPMINE
+}
+
 // cvars names
 new const gNameStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_shotgun",
@@ -662,6 +680,7 @@ public PlayerKilled(victim, attacker) {
 		set_user_health(attacker, get_pcvar_num(gCvarStartHealth));
 		set_user_armor(attacker, get_pcvar_num(gCvarStartArmor));
 		GiveAmmo(attacker);
+		ResetWeaponClip(attacker);
 	}
 
 	// Last Team Standing and Last Man Standing
@@ -706,6 +725,46 @@ public GiveAmmo(id) {
 		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // some maps like bootbox dont like this if i dont put this condition
 			ag_set_user_bpammo(id, 310+i, get_pcvar_num(gCvarStartAmmo[i]));
 	}
+}
+
+public ResetWeaponClip(id) {
+	new weapon;
+	if (get_pcvar_num(gCvarStartWeapons[START_RPG])) {
+		weapon = UserHasWeapon(id, HLW_RPG);
+		hl_set_weapon_ammo(weapon, 1);
+	}
+	if (get_pcvar_num(gCvarStartWeapons[START_CROSSBOW])) {
+		weapon = UserHasWeapon(id, HLW_CROSSBOW);
+		hl_set_weapon_ammo(weapon, 5);
+	}
+	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
+		weapon = UserHasWeapon(id, HLW_MP5);
+		if (hl_get_weapon_ammo(weapon) < 25)
+			hl_set_weapon_ammo(weapon, 25);
+	}
+	if (get_pcvar_num(gCvarStartWeapons[START_9MMHANDGUN])) {
+		weapon = UserHasWeapon(id, HLW_GLOCK);
+		hl_set_weapon_ammo(weapon, 17);
+	}
+	if (get_pcvar_num(gCvarStartWeapons[START_357])) {
+		weapon = UserHasWeapon(id, HLW_PYTHON);
+		hl_set_weapon_ammo(weapon, 6);
+	}
+	if (get_pcvar_num(gCvarStartWeapons[START_SHOTGUN])) {
+		weapon = UserHasWeapon(id, HLW_SHOTGUN);
+		hl_set_weapon_ammo(weapon, 8);
+	}
+	if (get_pcvar_num(gCvarStartWeapons[START_HORNETGUN])) {
+		weapon = UserHasWeapon(id, HLW_HORNETGUN);
+		hl_set_weapon_ammo(weapon, 8);
+	}
+}
+
+// If user has the weapon, return the weapon id
+public UserHasWeapon(id, weapon) {
+	new classname[32];
+	get_weaponname(weapon, classname, charsmax(classname));
+	return find_ent_by_owner(0, classname, id);
 }
 
 /*
