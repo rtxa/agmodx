@@ -1347,7 +1347,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	replace_string(text, charsmax(text), "%a", fmt("%i", get_user_armor(sender)), false);
 
 	// replace all %p with longjump
-	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(sender) ? "On" : "Off", false);
+	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(sender) ? "Yes" : "No", false);
 
 	// replace all %l with location
 	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(sender, gLocationOrigin, gNumLocations)], false);
