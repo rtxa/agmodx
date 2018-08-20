@@ -679,7 +679,7 @@ public PlayerKilled(victim, attacker) {
 	if (is_user_alive(attacker) && gRestorePlayerEquipOnKill) {
 		set_user_health(attacker, get_pcvar_num(gCvarStartHealth));
 		set_user_armor(attacker, get_pcvar_num(gCvarStartArmor));
-		GiveAmmo(attacker);
+		ResetBpAmmo(attacker);
 		ResetWeaponClip(attacker);
 	}
 
@@ -717,10 +717,10 @@ SetPlayerEquipment(id) {
 	if (get_pcvar_bool(gCvarStartLongJump))
 		hl_set_user_longjump(id, true);
 
-	GiveAmmo(id);
+	ResetBpAmmo(id);
 }
 
-public GiveAmmo(id) {
+public ResetBpAmmo(id) {
 	for (new i; i < sizeof gCvarStartAmmo; i++) {
 		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // some maps like bootbox dont like this if i dont put this condition
 			ag_set_user_bpammo(id, 310+i, get_pcvar_num(gCvarStartAmmo[i]));
