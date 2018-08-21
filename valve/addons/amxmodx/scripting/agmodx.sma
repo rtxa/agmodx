@@ -1708,15 +1708,10 @@ public CmdChangeMode(id, level, cid) {
 
 	new arg[32];
 	read_argv(0, arg, charsmax(arg));
-
 	strtolower(arg);
 
-	if (TrieKeyExists(gTrieVoteList, arg))
-		set_pcvar_string(gCvarGameMode, arg); // set new mode
-
-	get_mapname(arg, charsmax(arg));
-	server_cmd("changelevel %s", arg); // we need to reload the map so cvars can take effect
-
+	ChangeMode(arg);
+	
 	return PLUGIN_CONTINUE;
 }
 
