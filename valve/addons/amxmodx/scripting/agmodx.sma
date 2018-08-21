@@ -1766,14 +1766,34 @@ stock PrintUserInfo(caller, target) {
 /* 
 * Vote system
 */
-public CreateVoteSystem() {
+CreateVoteSystem() {
 	gTrieVoteList = TrieCreate();
 
 	for (new i; i < sizeof gVoteList; i++)
 		TrieSetCell(gTrieVoteList, gVoteList[i], i);
 
-	for (new i; i < sizeof gVoteListModes; i++) 
-		TrieSetCell(gTrieVoteList, gVoteListModes[i], VOTE_MODE);
+	AddGameModesToVoteList();
+}
+
+AddGameModesToVoteList() {
+	new fileName[32];
+	new handleDir = open_dir("gamemodes", fileName, charsmax(fileName));
+
+	if (!handleDir)
+		return;
+
+	do {
+		new len = strlen(fileName) - 4;
+		if (len < 0) len = 0;
+
+		if (equali(fileName[len], ".cfg")) {
+			replace(fileName[len], charsmax(fileName), ".cfg", "");
+			strtolower(fileName);
+			TrieSetCell(gTrieVoteList, fileName, VOTE_MODE); 
+		}
+	} while (next_file(handleDir, fileName, charsmax(fileName)));
+
+	close_dir(handleDir);
 }
 
 public CmdVoteYes(id) {
