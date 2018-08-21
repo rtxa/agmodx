@@ -45,20 +45,14 @@ enum (+=100) {
 };
 
 new const gHelpList[][] = {
-	"agstart",
 	"agabort",
 	"agallow",
-	"agpause",
 	"agnextmap",
 	"agnextmode",
-	"arcade",
-	"arena",
-	"ffa",
-	"lms",
-	"lts",
+	"agpause",
+	"agstart",
 	"no",
 	"settings",
-	"tdm",
 	"vote",
 	"yes",
 };
@@ -144,6 +138,9 @@ new gHudShowTimeLeft;
 // agpause
 new bool:gIsPause;
 
+new gGameModeList[32][32];
+new gGameModeListNum;
+
 // restore score system: array index
 #define SCORE_FRAGS 0
 #define SCORE_DEATHS 1
@@ -199,16 +196,6 @@ new const gVoteList[][] = {
 	"mp_selfgauss",
 	"mp_timelimit",
 	"mp_weaponstay",
-};
-
-// this is used for check if user's vote is valid (this can be replaced with a dynamic array to block some modes)
-new const gVoteListModes[][] = {
-	"arena",
-	"tdm",
-	"arcade",
-	"lts",
-	"lms",
-	"ffa"
 };
 
 #define VOTE_YES 1
@@ -1446,6 +1433,19 @@ public CmdHelp(id, level, cid) {
 				console_print(id, "%i. %s %s", ++j, cmd, info);
 		}
 	}
+
+	for (new i; i < get_clcmdsnum(-1); i++) {
+		isInfoMl = false;
+		if (!get_clcmd(i, cmd, charsmax(cmd), flags, info, charsmax(info), ADMIN_BAN, isInfoMl)) 
+			continue;
+		for (new i; i < sizeof gHelpList; i++) {
+			if (isInfoMl)
+				LookupLangKey(info, charsmax(info), info, id);
+
+			if (equal(cmd, gGameModeList[i]))
+				console_print(id, "%i. %s %s", ++j, cmd, info);
+		}
+	}
 	console_print(id, "--------------------");
 }
 
@@ -1785,6 +1785,7 @@ AddGameModesToVoteList() {
 			strtolower(fileName);
 
 			register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true); // add cmd for gamemode
+			gGameModeList[gGameModeListNum++] = fileName;
 			TrieSetCell(gTrieVoteList, fileName, VOTE_MODE); // add gamemode to vote list
 		}
 	} while (next_file(handleDir, fileName, charsmax(fileName)));
@@ -1995,8 +1996,8 @@ GetUserVote(id, arg1[], arg2[], len) {
 VoteHelp(id) {
 	new i, j;
 	console_print(id, "%L", LANG_PLAYER, "VOTE_HELP");
-	for (i = 0; i < sizeof gVoteListModes; i++)
-		console_print(id, "%i. %s", ++j, gVoteListModes[i]);
+	for (i = 0; i < gGameModeListNum; i++)
+		console_print(id, "%i. %s", ++j, gGameModeList[i]);
 	for (i = 0; i < sizeof gVoteList; i++)
 		console_print(id, "%i. %s", ++j, gVoteList[i]);
 }
