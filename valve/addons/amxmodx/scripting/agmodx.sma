@@ -1674,18 +1674,16 @@ public CmdAgNextMode(id, level, cid) {
 	if (!cmd_access(id, level, cid, 0))
 	    return PLUGIN_HANDLED;
 
-	new arg[32], isValid;
+	new arg[32];
 	read_argv(1, arg, charsmax(arg));
 
-	for (new i; i < sizeof gVoteListModes; i++)
-		if (equal(arg, gVoteListModes[i])) {
-			set_pcvar_string(gCvarGameMode, gVoteListModes[i]); // set new mode
-			isValid = true;
-		}
+	strtolower(arg);
 
-	if (!isValid) {
+	if (TrieKeyExists(gTrieVoteList, arg))
+		set_pcvar_string(gCvarGameMode, arg); // set next mode
+	else
 		console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
-	}
+
 	return PLUGIN_CONTINUE;
 }
 
@@ -1711,9 +1709,10 @@ public CmdChangeMode(id, level, cid) {
 	new arg[32];
 	read_argv(0, arg, charsmax(arg));
 
-	for (new i; i < sizeof gVoteListModes; i++)
-		if (equal(arg, gVoteListModes[i]))
-			set_pcvar_string(gCvarGameMode, gVoteListModes[i]); // set new mode
+	strtolower(arg);
+
+	if (TrieKeyExists(gTrieVoteList, arg))
+		set_pcvar_string(gCvarGameMode, arg); // set new mode
 
 	get_mapname(arg, charsmax(arg));
 	server_cmd("changelevel %s", arg); // we need to reload the map so cvars can take effect
