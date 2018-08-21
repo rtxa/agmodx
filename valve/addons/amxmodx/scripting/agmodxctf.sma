@@ -46,6 +46,8 @@ new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 
 new const VOX_SOUNDS[][] = { "vox/endgame.wav", "vox/captured.wav", "vox/enemy.wav", "vox/flag.wav", "vox/returned.wav" };
 
+new gIsMapCtf;
+
 new gSpawnsBlue[64];
 new gSpawnsRed[64];
 
@@ -68,26 +70,32 @@ new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 new gCvarCapturePoints;
 new gCvarFlagReturnTime;
 
+IsCtfMode() {
+	new mode[32];
+	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
+
+	if (equal(mode, "ctf") && gIsMapCtf)
+		return;
+	else
+		set_fail_state("Map not supported for CTF.");
+}
+
 public plugin_precache() {
 	precache_model(FLAG_MODEL);
-	
+
 	for (new i; i < sizeof VOX_SOUNDS; i++)
 		precache_sound(VOX_SOUNDS[i]);
 
 	gCvarCapturePoints = create_cvar("sv_ag_ctf_capturepoints", "10");
 	gCvarFlagReturnTime = create_cvar("sv_ag_ctf_flag_returntime", "30");
+
+	return PLUGIN_CONTINUE;
 }
 
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	register_concmd("ctf", "CmdChangeMode", ADMIN_BAN, "HELP_MODE, _, true");
-
-	new mode[32];
-	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
-
-	if (!equal(mode, "ctf"))
-		return;
+	IsCtfMode();
 
 	register_dictionary("agmodxctf.txt");
 
@@ -108,23 +116,8 @@ public plugin_init() {
 
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
-}
 
-public CmdChangeMode(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
-
-	new arg[32];
-	read_argv(0, arg, charsmax(arg));
-
-	set_cvar_string("sv_ag_gamemode", arg); // set new mode
-
-	// we need to reload the map so cvars can take effect
-	new map[32];
-	get_mapname(map, charsmax(map));
-	server_cmd("changelevel %s", map);
-
-	return PLUGIN_HANDLED;
+	return PLUGIN_CONTINUE;
 }
 
 public client_disconnected(id) {
@@ -560,6 +553,7 @@ public pfn_keyvalue(entid) {
 		} else if (equal(key, "angles")) {
 			gAnglesFlagRed = vector;
 		}
+		gIsMapCtf = true;
 	}
 }
 
