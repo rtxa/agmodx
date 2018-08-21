@@ -500,12 +500,6 @@ public plugin_init() {
 	register_concmd("agstart", "CmdAgStart", ADMIN_BAN, "HELP_AGSTART", _, true);
 	register_concmd("agnextmode", "CmdAgNextMode", ADMIN_BAN, "HELP_AGNEXTMODE", _, true);
 	register_concmd("agnextmap", "CmdAgNextMap", ADMIN_BAN, "HELP_AGNEXTMAP", _, true);
-	register_concmd("arcade", "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true);
-	register_concmd("arena", "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true);
-	register_concmd("ffa", "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true);
-	register_concmd("lms", "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true);
-	register_concmd("lts", "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true);
-	register_concmd("tdm", "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true);
 	
 	register_clcmd("vote", "CmdVote", ADMIN_ALL, "HELP_VOTE", _, true);
 	register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "HELP_YES", _, true);
@@ -1787,9 +1781,12 @@ AddGameModesToVoteList() {
 		if (len < 0) len = 0;
 
 		if (equali(fileName[len], ".cfg")) {
+			trim(fileName);
 			replace(fileName[len], charsmax(fileName), ".cfg", "");
 			strtolower(fileName);
-			TrieSetCell(gTrieVoteList, fileName, VOTE_MODE); 
+
+			register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true); // add cmd for gamemode
+			TrieSetCell(gTrieVoteList, fileName, VOTE_MODE); // add gamemode to vote list
 		}
 	} while (next_file(handleDir, fileName, charsmax(fileName)));
 
