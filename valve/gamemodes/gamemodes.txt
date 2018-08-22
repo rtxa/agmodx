@@ -1,0 +1,75 @@
+Here are the gamemode configuration files.
+Feel free to add your own gamemode - just copy paste from one the existing ones.
+Some cvars were renamed to be more descriptive or removed.
+
+This is used for show the gamemode name on settings and change game description.
+sv_ag_gamename			"AG Arcade X"
+
+Set the game type, this will be used inside of ag mod x to do some actions for special modes (arena, lts, etc).
+sv_ag_gametype			"arcade"
+
+This set the health, ammo, and LJ with which player spawns.
+sv_ag_start_health			100
+sv_ag_start_armor			0
+sv_ag_start_longjump		0-1
+
+This set the weapons with which player spawns.
+sv_ag_start_357			0-1
+sv_ag_start_9mmar		0-1
+sv_ag_start_9mmhandgun	0-1
+sv_ag_start_crossbow	0-1
+sv_ag_start_crowbar		0-1
+sv_ag_start_egon		0-1
+sv_ag_start_gauss		0-1
+sv_ag_start_hgrenade	0-1
+sv_ag_start_hornetgun	0-1
+sv_ag_start_rpg			0-1
+sv_ag_start_satchel		0-1
+sv_ag_start_shotgun		0-1
+sv_ag_start_snark		0-1
+sv_ag_start_tripmine	0-1
+
+This set the ammo of weapons with which player spawns.
+sv_ag_start_ammo_shotgun	0
+sv_ag_start_ammo_9mm		0
+sv_ag_start_ammo_m203		0
+sv_ag_start_ammo_357		0
+sv_ag_start_ammo_gauss		0
+sv_ag_start_ammo_rpg		0
+sv_ag_start_ammo_crossbow	0
+sv_ag_start_ammo_tripmine	0
+sv_ag_start_ammo_satchel	0
+sv_ag_start_ammo_hgrenade	0
+sv_ag_start_ammo_snark		0
+
+This remove the weapons from the map.
+sv_ag_ban_357			0-1
+sv_ag_ban_9mmar			0-1
+sv_ag_ban_9mmhandgun	0-1
+sv_ag_ban_crossbow		0-1
+sv_ag_ban_crowbar		0-1
+sv_ag_ban_egon			0-1
+sv_ag_ban_gauss			0-1
+sv_ag_ban_handgrenade	0-1
+sv_ag_ban_hornetgun		0-1
+sv_ag_ban_rpg			0-1
+sv_ag_ban_satchel		0-1
+sv_ag_ban_shotgun		0-1
+sv_ag_ban_snark			0-1
+sv_ag_ban_tripmine		0-1
+
+This removes the ammunition from the map.
+sv_ag_ban_ammo_m203		0-1
+sv_ag_ban_ammo_9mm		0-1
+sv_ag_ban_ammo_shotgun	0-1
+sv_ag_ban_ammo_gauss	0-1
+sv_ag_ban_ammo_crossbow	0-1
+sv_ag_ban_ammo_rpg		0-1
+sv_ag_ban_ammo_357		0-1
+
+This remove the items and block the chargers from the map.
+sv_ag_ban_longjump		0-1
+sv_ag_ban_battery		0-1
+sv_ag_ban_healthkit		0-1
+sv_ag_ban_healthcharger	0-1
+sv_ag_ban_hevcharger	0-1
