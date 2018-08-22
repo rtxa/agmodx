@@ -107,8 +107,8 @@ public plugin_init() {
 
 	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
 	gFlagRed = SpawnFlag(gOriginFlagRed, RED_TEAM);
-	gBaseBlue = SpawnCapturePoint(gOriginFlagBlue);
-	gBaseRed = SpawnCapturePoint(gOriginFlagRed);
+	gBaseBlue = SpawnCapturePoint(gOriginFlagBlue, BLUE_TEAM);
+	gBaseRed = SpawnCapturePoint(gOriginFlagRed, RED_TEAM);
 
 	register_touch(INFO_FLAG_BLUE, "player", "FwFlagTouch");
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
@@ -502,16 +502,30 @@ public SpawnFlag(const Float:origin[3], team) {
 }
 
 // we need a base for the flag so players can score points when they capture...
-public SpawnCapturePoint(const Float:origin[3]) {
+public SpawnCapturePoint(const Float:origin[3], team) {
 	new ent = create_entity("info_target");
 	set_pev(ent, pev_classname, INFO_CAPTURE_POINT);
 	
 	entity_set_model(ent, FLAG_MODEL);
 	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
-	entity_set_origin(ent, origin);
-	set_pev(ent, pev_effects, EF_NODRAW);
+	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(ent, pev_framerate, 1.0);
+
 	entity_set_size(ent, Float:{ -8.0, -8.0, 0.0 }, Float:{ 8.0, 8.0, 8.0 });
+	set_ent_rendering(ent, kRenderFxNone, 0, 0, 0, kRenderTransAlpha, 90);
+
+	switch (team) {
+		case BLUE_TEAM: {
+			set_pev(ent, pev_skin, FLAG_SKIN_BLUE);
+			entity_set_origin(ent, gOriginFlagBlue);
+			set_pev(ent, pev_angles, gAnglesFlagBlue);
+		} case RED_TEAM: {
+			entity_set_origin(ent, gOriginFlagRed);		
+			set_pev(ent, pev_skin, FLAG_SKIN_RED);
+			set_pev(ent, pev_angles, gAnglesFlagRed);
+		}
+	}
 
 	return ent;
 }
