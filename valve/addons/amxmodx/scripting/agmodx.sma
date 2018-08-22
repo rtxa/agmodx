@@ -442,7 +442,6 @@ public plugin_precache() {
 
 	// Get it to show VGUI Team menu
 	gMsgVGUIMenu = get_user_msgid("VGUIMenu");
-
 	// Load mode cvars
 	new mode[32];
 	get_pcvar_string(gCvarGameType, mode, charsmax(mode));
@@ -506,6 +505,8 @@ public plugin_init() {
 	
 	// debug for arena, lts and lms
 	register_clcmd("userinfo", "CmdUserInfo");
+
+	register_event_ex("30", "EventIntermissionMode", RegisterEvent_Global);
 
 	// Chat and voice 
 	register_message(get_user_msgid("SayText"), "MsgSayText");
@@ -2245,11 +2246,7 @@ public CvarHudColorHook(pcvar, const old_value[], const new_value[]) {
 	SetHudColorCvarByString(new_value, gHudRed, gHudGreen, gHudBlue);
 }
 
-public StartIntermissionMode() {
-	new ent = create_entity("game_end");
-	if (is_valid_ent(ent))
-		ExecuteHamB(Ham_Use, ent, 0, 0, 1.0, 0.0);
-
+public EventIntermissionMode() {
 	gBlockCmdKill = true;
 	gBlockCmdSpec = true;
 	gBlockCmdDrop = true;
@@ -2257,7 +2254,13 @@ public StartIntermissionMode() {
 	for (new id = 1; id < MaxClients; id++) {
 		if (is_user_connected(id))
 			FreezePlayer(id);
-	}
+	}	
+}
+
+public StartIntermissionMode() {
+	new ent = create_entity("game_end");
+	if (is_valid_ent(ent))
+		ExecuteHamB(Ham_Use, ent, 0, 0, 1.0, 0.0);
 }
 
 public CacheTeamListModels(teamlist[][], size) {
