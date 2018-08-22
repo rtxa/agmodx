@@ -223,7 +223,7 @@ new gVoteOption;
 new gCvarDebugVote;
 new gCvarContact;
 new gCvarGameName;
-new gCvarGameMode;
+new gCvarGameType;
 new gCvarHudColor;
 new gCvarSpecTalk;
 new gCvarAllowVote;
@@ -401,7 +401,7 @@ public plugin_precache() {
 
 	// Gamemode cvars
 	gCvarGameName = create_cvar("sv_ag_gamename", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarGameType = create_cvar("sv_ag_gametype", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
 	gCvarStartArmor = create_cvar("sv_ag_start_armor", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
@@ -445,7 +445,7 @@ public plugin_precache() {
 
 	// Load mode cvars
 	new mode[32];
-	get_pcvar_string(gCvarGameMode, mode, charsmax(mode));
+	get_pcvar_string(gCvarGameType, mode, charsmax(mode));
 
 	server_cmd("exec gamemodes/%s.cfg", mode);
 
@@ -1680,7 +1680,7 @@ public CmdAgNextMode(id, level, cid) {
 	strtolower(arg);
 
 	if (TrieKeyExists(gTrieVoteList, arg))
-		set_pcvar_string(gCvarGameMode, arg); // set next mode
+		set_pcvar_string(gCvarGameType, arg); // set next mode
 	else
 		console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
 
@@ -1910,7 +1910,7 @@ public DoVote() {
 		case VOTE_AGABORT: 			AbortVersus();
 		case VOTE_AGALLOW: 			AllowPlayer(target);
 		case VOTE_AGNEXTMAP:		set_pcvar_string(gCvarAmxNextMap, gVoteArg2);
-		case VOTE_AGNEXTMODE:		set_pcvar_string(gCvarGameMode, gVoteArg2);
+		case VOTE_AGNEXTMODE:		set_pcvar_string(gCvarGameType, gVoteArg2);
 		case VOTE_AGPAUSE: 			PauseGame(caller);
 		case VOTE_AGSTART: 			StartVersus();
 		case VOTE_MAP: 				ChangeMap(gVoteArg2);
@@ -1998,7 +1998,7 @@ VoteHelp(id) {
 }
 
 public ChangeMode(const mode[]) {
-	set_pcvar_string(gCvarGameMode, mode); // set new mode
+	set_pcvar_string(gCvarGameType, mode); // set new mode
 
 	// we need to reload the map so cvars can take effect
 	new map[32];
@@ -2038,7 +2038,7 @@ public PlayTeam(caller) {
 
 StartMode() {
 	new arg[32];
-	get_pcvar_string(gCvarGameMode, arg, charsmax(arg));
+	get_pcvar_string(gCvarGameType, arg, charsmax(arg));
 	
 	if (equal(arg, "arena"))
 		StartArena();
