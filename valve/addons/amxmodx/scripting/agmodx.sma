@@ -2254,7 +2254,9 @@ public EventIntermissionMode() {
 	for (new id = 1; id < MaxClients; id++) {
 		if (is_user_connected(id))
 			FreezePlayer(id);
-	}	
+	}
+	disable_cvar_hook(gHookCvarTimeLimit);
+	set_pcvar_num(gCvarTimeLimit, gTimeLimit);
 }
 
 public StartIntermissionMode() {
