@@ -72,7 +72,7 @@ new gCvarFlagReturnTime;
 
 IsCtfMode() {
 	new mode[32];
-	get_cvar_string("sv_ag_gamemode", mode, charsmax(mode));
+	get_cvar_string("sv_ag_gametype", mode, charsmax(mode));
 
 	if (equal(mode, "ctf") && gIsMapCtf)
 		return;
@@ -527,7 +527,7 @@ public pfn_keyvalue(entid) {
 
 	if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
 		if (equal(key, "origin")) {
-			gSpawnsBlue[gNumSpawnsBlue] = CreateCustomEnt(INFO_PLAYER_BLUE);
+			gSpawnsBlue[gNumSpawnsBlue] = create_entity("info_player_deathmatch");
 			entity_set_origin(gSpawnsBlue[gNumSpawnsBlue], vector);
 			gNumSpawnsBlue++;
 		} else if (equal(key, "angles")) {
@@ -535,7 +535,7 @@ public pfn_keyvalue(entid) {
 		}
 	} else if (equal(classname, INFO_PLAYER_RED)) { // info_player_team2
 		if (equal(key, "origin")) {
-			gSpawnsRed[gNumSpawnsRed] = CreateCustomEnt(INFO_PLAYER_RED);
+			gSpawnsRed[gNumSpawnsRed] = create_entity("info_player_deathmatch");
 			entity_set_origin(gSpawnsRed[gNumSpawnsRed], vector);
 			gNumSpawnsRed++;
 		} else if (equal(key, "angles")) {
@@ -557,7 +557,7 @@ public pfn_keyvalue(entid) {
 	}
 }
 
-CreateCustomEnt(const classname[]) {
+stock CreateCustomEnt(const classname[]) {
 	new ent = create_entity("info_target");
 	set_pev(ent, pev_classname, classname);
 	return ent;
