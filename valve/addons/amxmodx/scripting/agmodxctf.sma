@@ -68,6 +68,7 @@ new gBaseRed;
 new gHudCtfMessage;
 new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
+new gCvarCtfDebug;
 new gCvarCapturePoints;
 new gCvarFlagReturnTime;
 
@@ -79,7 +80,7 @@ bool:IsCtfMode() {
 		return false;
 	else if (!gIsMapCtf)
 		set_fail_state("Map not supported for CTF.");
-		
+
 	return true;
 }
 
@@ -89,10 +90,9 @@ public plugin_precache() {
 	for (new i; i < sizeof VOX_SOUNDS; i++)
 		precache_sound(VOX_SOUNDS[i]);
 
+	gCvarCtfDebug = create_cvar("sv_ag_ctf_debug", "0");
 	gCvarCapturePoints = create_cvar("sv_ag_ctf_capturepoints", "10");
 	gCvarFlagReturnTime = create_cvar("sv_ag_ctf_flag_returntime", "30");
-
-	return PLUGIN_CONTINUE;
 }
 
 public plugin_init() {
@@ -377,7 +377,8 @@ bool:IsSpawnPointValid(spawnEnt) {
 }
 
 public FwFlagTouch(touched, toucher) {
-	server_print("FlagTouched");
+	if (get_pcvar_num(gCvarCtfDebug))
+		server_print("FlagTouched");
 
 	// block pick up when flag is in the air
 	if (fm_distance_to_floor(touched) != 0.0)
@@ -405,7 +406,8 @@ AttachFlagToPlayer(id, ent) {
 }
 
 ReturnFlagToBase(ent) {
-	server_print("ReturnFlagToBase");
+	if (get_pcvar_num(gCvarCtfDebug))
+		server_print("ReturnFlagToBase");
 	
 	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_aiment, 0);
@@ -428,7 +430,8 @@ ReturnFlagToBase(ent) {
 }
 
 IsPlayerCarryingFlag(id) {
-	server_print("IsPlayerCarringFlag");
+	if (get_pcvar_num(gCvarCtfDebug))
+		server_print("IsPlayerCarringFlag");
 
 	if (pev(gFlagBlue, pev_aiment) == id)
 		return BLUE_TEAM;
@@ -476,7 +479,8 @@ public DropFlag(id, team) {
 }
 
 public CmdDropFlag(id, level, cid) {
-	server_print("CmdDropFlag");
+	if (get_pcvar_num(gCvarCtfDebug))
+		server_print("CmdDropFlag");
 	DropFlag(id, IsPlayerCarryingFlag(id));
 
 	return PLUGIN_HANDLED;
