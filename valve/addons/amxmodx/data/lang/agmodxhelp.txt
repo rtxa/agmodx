@@ -12,7 +12,6 @@ HELP_NO = - vote no when a vote is running
 HELP_SETTINGS = - shows a splash hud with the current settings of the server.
 HELP_PLAYTEAM = <file>.wav - reproduce el nombre del sonido ingresado a todo el equipo.
 HELP_TIMELEFT = - muestra el tiempo restante de la partida
-HELP_MODE = - changes to that mode
 
 [es]
 HELP_HELP = - muestra la lista de comandos del AG Mod X
@@ -28,4 +27,3 @@ HELP_NO = - vota en contra cuando hay una votacion
 HELP_SETTINGS = - muestra los ajustes del AG Mod X
 HELP_PLAYTEAM = <file>.wav - reproduce el nombre del sonido ingresado a todo el equipo.
 HELP_TIMELEFT = - muestra el tiempo restante de la partida
-HELP_MODE = - cambia a ese modo

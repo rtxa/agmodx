@@ -139,6 +139,7 @@ new gHudShowTimeLeft;
 new bool:gIsPause;
 
 new gGameModeList[32][32];
+new gGameModeName[32];
 new gGameModeListNum;
 
 // restore score system: array index
@@ -222,7 +223,6 @@ new gVoteOption;
 // cvar pointers
 new gCvarDebugVote;
 new gCvarContact;
-new gCvarGameName;
 new gCvarGameMode;
 new gCvarGameType;
 new gCvarHudColor;
@@ -403,7 +403,6 @@ public plugin_precache() {
 	// Gamemode cvars
 	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarGameName = create_cvar("sv_ag_gamename", "", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
 	gCvarStartArmor = create_cvar("sv_ag_start_armor", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
@@ -540,11 +539,9 @@ public plugin_cfg() {
 	gCvarAmxNextMap = get_cvar_pointer("amx_nextmap");
 }
 
-// Change game description to show current AG mode  when you find servers (ex: AG TDM)
+// Gamemode name that should be displayed in server browser and in splash with server settings data
 public FwGameDescription() {
-	new name[32];
-	get_pcvar_string(gCvarGameName, name, charsmax(name));
-	forward_return(FMV_STRING, name);
+	forward_return(FMV_STRING, gGameModeName);
 	return FMRES_SUPERCEDE;
 }
 
@@ -1534,9 +1531,8 @@ public ShowSettings(id) {
 	set_task(5.0, "ShowNextMap", id + TASK_SHOWSETTINGS);
 
 	// right - top
-	get_pcvar_string(gCvarGameName, arg, charsmax(arg));
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -0.05, 0.02, 0, 0.0, 10.0, 0.2);
-	show_dhudmessage(id, "%L", LANG_PLAYER, "SETTINGS_VARS", arg, gTimeLimit, 
+	show_dhudmessage(id, "%L", LANG_PLAYER, "SETTINGS_VARS", gGameModeName, gTimeLimit, 
 		get_pcvar_num(gCvarFragLimit), 
 		get_pcvar_num(gCvarFriendlyFire) ? "On" : "Off", 
 		get_pcvar_num(gCvarForceRespawn) ? "On" : "Off",
@@ -1772,19 +1768,29 @@ LoadGameMode() {
 	if (!handleDir)
 		return;
 
+	new mode[32];
+	get_pcvar_string(gCvarGameMode, mode, charsmax(mode));
+
 	do {
 		// get index for file type
 		new len = strlen(fileName) - 4;
 		if (len < 0) len = 0;
 
 		if (equali(fileName[len], ".cfg")) {
-			new info[64];
-			read_file(fmt("gamemodes/%s", fileName), 1, info, charsmax(info)); // second line is help text displayed when someone types help in console.
-			replace_string(info, charsmax(info), "/", "");
+			new name[32], info[64];
+			
+			read_file(fmt("gamemodes/%s", fileName), 0, name, charsmax(name)); // first line specifies what game name that should be displayed in server browser and in splash with server settings data
+			read_file(fmt("gamemodes/%s", fileName), 1, info, charsmax(info)); // second line is help text displayed when someone types help in console
+			
+			replace_string(info, charsmax(info), "/", ""); // remove comments
+			replace_string(name, charsmax(name), "/", ""); // remove comments
 
 			trim(fileName);
 			replace(fileName[len], charsmax(fileName), ".cfg", "");
 			strtolower(fileName);
+
+			if (equal(mode, fileName))
+				gGameModeName = name;
 
 			register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, fmt("- %s", info)); // add cmd for gamemode
 			gGameModeList[gGameModeListNum++] = fileName;

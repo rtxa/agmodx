@@ -1,9 +1,10 @@
 Here are the gamemode configuration files.
 Feel free to add your own gamemode - just copy paste from one the existing ones.
-Some cvars were renamed to be more descriptive or removed.
+The first line specifies what game name that should be displayed in server browser and in splash with server settings data.
+The second line is a help text displayed when someone types help in console.
 
-This is used for show the gamemode name on settings and change game description.
-sv_ag_gamename			"AG Arcade X"
+-- New in ag mod x --
+Some cvars were renamed to be more descriptive or removed.
 
 Set the game type, this will be used inside of ag mod x to do some actions for special modes (arena, lts, etc).
 sv_ag_gametype			"arcade"
