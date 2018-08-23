@@ -528,6 +528,7 @@ public plugin_init() {
 
 	CreateVoteSystem();
 	StartTimeLeft();
+	LoadGameMode();
 	StartMode();
 }
 
@@ -1762,11 +1763,9 @@ CreateVoteSystem() {
 
 	for (new i; i < sizeof gVoteList; i++)
 		TrieSetCell(gTrieVoteList, gVoteList[i], i);
-
-	AddGameModesToVoteList();
 }
 
-AddGameModesToVoteList() {
+LoadGameMode() {
 	new fileName[32];
 	new handleDir = open_dir("gamemodes", fileName, charsmax(fileName));
 
@@ -1774,15 +1773,20 @@ AddGameModesToVoteList() {
 		return;
 
 	do {
+		// get index for file type
 		new len = strlen(fileName) - 4;
 		if (len < 0) len = 0;
 
 		if (equali(fileName[len], ".cfg")) {
+			new info[64];
+			read_file(fmt("gamemodes/%s", fileName), 1, info, charsmax(info)); // second line is help text displayed when someone types help in console.
+			replace_string(info, charsmax(info), "/", "");
+
 			trim(fileName);
 			replace(fileName[len], charsmax(fileName), ".cfg", "");
 			strtolower(fileName);
 
-			register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, "HELP_MODE", _, true); // add cmd for gamemode
+			register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, fmt("- %s", info)); // add cmd for gamemode
 			gGameModeList[gGameModeListNum++] = fileName;
 			TrieSetCell(gTrieVoteList, fileName, VOTE_MODE); // add gamemode to vote list
 		}
