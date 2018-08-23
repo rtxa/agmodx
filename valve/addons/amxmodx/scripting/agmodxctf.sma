@@ -46,7 +46,8 @@ new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 
 new const VOX_SOUNDS[][] = { "vox/endgame.wav", "vox/captured.wav", "vox/enemy.wav", "vox/flag.wav", "vox/returned.wav" };
 
-new gIsMapCtf;
+new bool:gEnableCtf;
+new bool:gIsMapCtf;
 
 new gSpawnsBlue[64];
 new gSpawnsRed[64];
@@ -70,14 +71,16 @@ new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 new gCvarCapturePoints;
 new gCvarFlagReturnTime;
 
-IsCtfMode() {
-	new mode[32];
-	get_cvar_string("sv_ag_gametype", mode, charsmax(mode));
+bool:IsCtfMode() {
+	new type[32];
+	get_cvar_string("sv_ag_gametype", type, charsmax(type));
 
-	if (equal(mode, "ctf") && gIsMapCtf)
-		return;
-	else
+	if (!equal(type, "ctf"))
+		return false;
+	else if (!gIsMapCtf)
 		set_fail_state("Map not supported for CTF.");
+		
+	return true;
 }
 
 public plugin_precache() {
@@ -95,7 +98,10 @@ public plugin_precache() {
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	IsCtfMode();
+	gEnableCtf = IsCtfMode();
+
+	if (!gEnableCtf)
+		return PLUGIN_HANDLED;
 
 	register_dictionary("agmodxctf.txt");
 
@@ -121,7 +127,12 @@ public plugin_init() {
 }
 
 public client_disconnected(id) {
-	DropFlag(id, IsPlayerCarryingFlag(id));	
+	if (!gEnableCtf)
+		return PLUGIN_HANDLED;
+
+	DropFlag(id, IsPlayerCarryingFlag(id));
+
+	return PLUGIN_CONTINUE;
 }
 
 public CmdSpectate(id) {
