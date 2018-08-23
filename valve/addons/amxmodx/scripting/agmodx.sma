@@ -539,6 +539,11 @@ public plugin_cfg() {
 	gCvarAmxNextMap = get_cvar_pointer("amx_nextmap");
 }
 
+public plugin_end() {
+	disable_cvar_hook(gHookCvarTimeLimit);
+	set_pcvar_num(gCvarTimeLimit, gTimeLimit);
+}
+
 // Gamemode name that should be displayed in server browser and in splash with server settings data
 public FwGameDescription() {
 	forward_return(FMV_STRING, gGameModeName);
@@ -2089,13 +2094,14 @@ BanGamemodeEnts() {
 
 	// block chargers
 	if (get_pcvar_num(gCvarBanHevCharger))
-		RegisterHam(Ham_Use, "func_recharge", "BlockChargers");
+		RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
 
 	if (get_pcvar_num(gCvarBanHealthCharger))
-		RegisterHam(Ham_Use, "func_healthcharger", "BlockChargers");	
+		RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");	
 }
 
-public BlockChargers() {
+public FwChargersUse() {
+	// block chargers
 	return HAM_SUPERCEDE;
 }
 
@@ -2267,8 +2273,6 @@ public EventIntermissionMode() {
 		if (is_user_connected(id))
 			FreezePlayer(id);
 	}
-	disable_cvar_hook(gHookCvarTimeLimit);
-	set_pcvar_num(gCvarTimeLimit, gTimeLimit);
 }
 
 public StartIntermissionMode() {
