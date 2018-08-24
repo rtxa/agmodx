@@ -1989,7 +1989,10 @@ GetUserVote(id, arg1[], arg2[], len) {
 				VOTE_MP_FRAGLIMIT, VOTE_MP_WEAPONSTAY, VOTE_MP_FORCERESPAWN, VOTE_MP_FOOTSTEPS, VOTE_MP_FLASHLIGHT:
 			valid = is_str_num(arg2) ? VOTE_VALID : VOTE_INVALID_NUMBER;
 		case VOTE_AGALLOW:
-			if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF))) {
+			if (equal(arg2, "")) { // allow yourself
+				get_user_name(id, arg2, len);
+				gVoteTargetUserId = get_user_userid(id);
+			} else if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF))) {
 				get_user_name(player, arg2, len);
 				gVoteTargetUserId = get_user_userid(player);
 			} else
