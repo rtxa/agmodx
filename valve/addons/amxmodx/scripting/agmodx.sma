@@ -710,7 +710,7 @@ SetPlayerEquipment(id) {
 public ResetBpAmmo(id) {
 	for (new i; i < sizeof gCvarStartAmmo; i++) {
 		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // some maps like bootbox dont like this if i dont put this condition
-			ag_set_user_bpammo(id, 310+i, get_pcvar_num(gCvarStartAmmo[i]));
+			hl_set_user_bpammo(id, 310+i, get_pcvar_num(gCvarStartAmmo[i]));
 	}
 }
 
@@ -790,7 +790,7 @@ public LmsMatchCountdown() {
 
 	if (gStartMatchTime == 0) {
 		new players[32], numPlayers;
-		ag_get_players(players, numPlayers);
+		get_players(players, numPlayers);
 
 		new player;
 		for (new i; i < numPlayers; i++) {
@@ -883,7 +883,7 @@ public LtsMatchCountdown() {
 
 	if (gStartMatchTime == 0) {
 		new players[32], numPlayers;
-		ag_get_players(players, numPlayers);
+		get_players(players, numPlayers);
 
 		new player;
 		for (new i; i < numPlayers; i++) {
@@ -2308,11 +2308,6 @@ bool:IsInWelcomeCam(id) {
 	return IsObserver(id) && !hl_get_user_spectator(id) && get_pdata_int(id, OFFSET_HUD) & (1 << 5 | 1 << 3); // HIDEHUD_WEAPONS | HIDEHUD_HEALTH
 }
 
-stock ag_get_players(players[MAX_PLAYERS], &numplayers) {
-	arrayset(players, 0, charsmax(players));
-	get_players(players, numplayers);
-}
-
 stock ag_get_team_alives(teamIndex) {
 	new num;
 	for (new id = 1; id <= MaxClients; id++)
@@ -2332,15 +2327,6 @@ stock ag_get_team_numplayers(teamIndex) {
 	}
 
 	return num;
-}
-
-/* Restock/remove ammo in a user's backpack.
- */
-stock ag_set_user_bpammo(client, weapon, ammo) {
-	if(weapon <= HLW_CROWBAR)
-		return;
-
-	set_pdata_int(client, weapon, ammo, EXTRAOFFSET);
 }
 
 stock ag_set_user_spectator(client, bool:spectator = true) {
