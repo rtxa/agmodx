@@ -710,7 +710,7 @@ SetPlayerEquipment(id) {
 public ResetBpAmmo(id) {
 	for (new i; i < sizeof gCvarStartAmmo; i++) {
 		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // some maps like bootbox dont like this if i dont put this condition
-			hl_set_user_bpammo(id, 310+i, get_pcvar_num(gCvarStartAmmo[i]));
+			ag_set_user_bpammo(id, 310+i, get_pcvar_num(gCvarStartAmmo[i]));
 	}
 }
 
@@ -2309,6 +2309,15 @@ bool:IsObserver(id) {
 
 bool:IsInWelcomeCam(id) {
 	return IsObserver(id) && !hl_get_user_spectator(id) && get_pdata_int(id, OFFSET_HUD) & (1 << 5 | 1 << 3); // HIDEHUD_WEAPONS | HIDEHUD_HEALTH
+}
+
+/* Restock/remove ammo in a user's backpack.
+ */
+stock ag_set_user_bpammo(client, weapon, ammo) {
+	if(weapon <= HLW_CROWBAR)
+		return;
+
+	set_pdata_int(client, weapon, ammo, EXTRAOFFSET);
 }
 
 stock ag_get_team_alives(teamIndex) {
