@@ -500,9 +500,8 @@ public plugin_init() {
 	register_clcmd("jointeam", "CmdJoinTeam"); // this will make work the vgui
 	register_clcmd("changeteam", "CmdChangeTeam");
 
-	// i create this cmds to set pausable to 0 or remove admin cvar access (can be both)
-	register_clcmd("pauseAgUser", "CmdPauseAgUser");
-	register_clcmd("pauseAgAdmin", "CmdPauseAgAdmin");
+	// i create this cmds to set pausable to 0
+	register_clcmd("pauseAg", "CmdPauseAg");
 	
 	// debug for arena, lts and lms
 	register_clcmd("userinfo", "CmdUserInfo");
@@ -2115,35 +2114,17 @@ public DisplayInfo(id) {
 }
 
 // We can't pause the game from the server because is not connected, unless you have created the sv in-game. "Can't pause, not connected."
-// So I found a way to make work pause, we need to give admin cvar access to the user, pause from him, then remove the admin access.
-// I hope that you can't do command injection
 PauseGame(id) {
-	// remove vote so it doesn't get blocked
 	RemoveVote();
 
 	set_cvar_num("pausable", 1);
+	console_cmd(id, "pause; pauseAg");
 
-	if (get_user_flags(id) & ADMIN_CVAR) {
-		client_cmd(id, "pause; pauseAgAdmin");
-	} else {
-		set_user_flags(id, ADMIN_CVAR);
-		client_cmd(id, "pause; pauseAgUser");
-	}
-
-	if (gIsPause)
-		gIsPause = false;
-	else
-		gIsPause = true;
+	gIsPause = gIsPause ? false : true;
 }
 
-public CmdPauseAgUser(id) {
-	remove_user_flags(id, ADMIN_CVAR);
+public CmdPauseAg(id) {
 	set_cvar_num("pausable", 0);	
-	return PLUGIN_HANDLED;
-}
-
-public CmdPauseAgAdmin(id) {
-	set_cvar_num("pausable", 0);
 	return PLUGIN_HANDLED;
 }
 
