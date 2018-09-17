@@ -744,7 +744,7 @@ public ResetWeaponClip(id) {
 }
 
 // If user has the weapon (HLW enum from hlsdk_const.inc), return the weapon entity index.
-public GetUserWeaponEnt(id, weapon) {
+public GetUserWeaponEntId(id, weapon) {
 	new classname[32];
 	get_weaponname(weapon, classname, charsmax(classname));
 	return find_ent_by_owner(0, classname, id);
