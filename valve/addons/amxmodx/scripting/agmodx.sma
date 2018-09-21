@@ -27,7 +27,7 @@
 #include <hl>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.1 Build 7/8/2018"
+#define VERSION "Beta 1.2 Build 21/9/2018"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -118,8 +118,6 @@ new bool:gIsLmsMode;
 
 // arena vars
 new Array:gArenaQueue;
-new gNameWinner[MAX_NAME_LENGTH];
-new gNameLooser[MAX_NAME_LENGTH];
 new gMatchWinner;
 new gMatchLooser;
 
@@ -579,7 +577,8 @@ public client_disconnected(id) {
 		new frags = get_user_frags(id);
 		new deaths = hl_get_user_deaths(id);
 		SaveScore(id, frags, deaths);
-		console_print(0, "%L", LANG_PLAYER, "MATCH_LEAVE", authid, frags, deaths);
+		client_print(0, print_console, "%L", LANG_PLAYER, "MATCH_LEAVE", id, frags, deaths);
+		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
 	}
 
 	return PLUGIN_HANDLED;
@@ -652,11 +651,9 @@ public PlayerKilled(victim, attacker) {
 			ArrayPushCell(gArenaQueue, gMatchLooser);
 		}
 
-		get_user_name(gMatchWinner, gNameWinner, charsmax(gNameWinner));
-
 		// Show winner
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", gNameWinner);
+		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", gMatchWinner);
 
 		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
 	}
@@ -819,18 +816,16 @@ public EndMatchLms() {
 	if (task_exists(TASK_STARTMATCH))
 		return;
 
-	new alive[MAX_PLAYERS], numAlives;
+	new alive[MAX_PLAYERS], numAlives, player;
 	get_players(alive, numAlives, "a");
 
 	switch (numAlives) {
 		case 1: {
-			set_user_godmode(alive[0], true);
+			player = alive[0];
+			set_user_godmode(player, true);
 
-			new name[MAX_NAME_LENGTH];
-			get_user_name(alive[0], name, charsmax(name));
-
-			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", name);
+			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5); 
+			ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", player);
 
 			set_task(5.0, "StartMatchLms", TASK_STARTMATCH);	
 		} 
@@ -965,11 +960,6 @@ public StartArena() {
 
 		gMatchWinner = ArrayGetCell(gArenaQueue, 0);
 		gMatchLooser = ArrayGetCell(gArenaQueue, 1);
-
-		get_user_name(gMatchWinner, gNameWinner, charsmax(gNameWinner));
-		get_user_name(gMatchLooser, gNameLooser, charsmax(gNameLooser));
-
-		//server_print("(StartArena) Last Winner %i vs New %i", gMatchWinner, gMatchLooser);
 		
 		gStartMatchTime = 5;
 		ArenaCountdown();
@@ -1010,7 +1000,7 @@ public ArenaCountdown() {
 	PlaySound(0, gBeepSnd);
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_STARTARENA", gNameWinner, gNameLooser, gStartMatchTime);
+	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_STARTARENA", gMatchWinner, gMatchLooser, gStartMatchTime);
 }
 
 public EndArena(id) {
@@ -1021,11 +1011,9 @@ public EndArena(id) {
 		if (id == gMatchWinner)
 			gMatchWinner = gMatchLooser;
 
-		get_user_name(gMatchWinner, gNameWinner, charsmax(gNameWinner));
-
 		// Show winner
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", gNameWinner);
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2); 
+		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", gMatchWinner);
 
 		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match	
 	}
@@ -1057,7 +1045,7 @@ public PrintArenaQueue() {
 }
 
 public CmdTimeLeft(id) {
-	console_print(id, "timeleft: %i:%02i", 
+	client_print(id, print_console, "timeleft: %i:%02i", 
 		gTimeLeft == TIMELEFT_SETUNLIMITED ? 0 : gTimeLeft / 60, // minutes
 		gTimeLeft == TIMELEFT_SETUNLIMITED ? 0 : gTimeLeft % 60); // seconds
 }
@@ -1425,7 +1413,7 @@ public CmdHelp(id, level, cid) {
 	new cmd[32], info[128], flags, bool:isInfoMl;
 	new j;
 
-	console_print(id, "----- Ag Mod X -----");
+	client_print(id, print_console, "----- Ag Mod X -----");
 	for (new i; i < get_clcmdsnum(-1); i++) {
 		isInfoMl = false;
 		if (!get_clcmd(i, cmd, charsmax(cmd), flags, info, charsmax(info), ADMIN_BAN, isInfoMl)) 
@@ -1435,7 +1423,7 @@ public CmdHelp(id, level, cid) {
 				LookupLangKey(info, charsmax(info), info, id);
 
 			if (equal(cmd, gHelpList[i]))
-				console_print(id, "%i. %s %s", ++j, cmd, info);
+				client_print(id, print_console, "%i. %s %s", ++j, cmd, info);
 		}
 	}
 
@@ -1448,10 +1436,10 @@ public CmdHelp(id, level, cid) {
 				LookupLangKey(info, charsmax(info), info, id);
 
 			if (equal(cmd, gGameModeList[i]))
-				console_print(id, "%i. %s %s", ++j, cmd, info);
+				client_print(id, print_console, "%i. %s %s", ++j, cmd, info);
 		}
 	}
-	console_print(id, "--------------------");
+	client_print(id, print_console, "--------------------");
 }
 
 public CmdSpectate(id) {
@@ -1547,11 +1535,7 @@ public CmdAgPause(id, level, cid) {
 	if (!cmd_access(id, level, cid, 0))
 	    return PLUGIN_HANDLED;
 
-	new name[32], authid[32];
-	get_user_name(id, name, charsmax(name));
-	get_user_authid(id, authid, charsmax(authid));
-
-	log_amx("Agpause: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
+	log_amx("Agpause: %N", id);
 
 	RemoveVote();
 	PauseGame(id);
@@ -1562,11 +1546,7 @@ public CmdAgStart(id, level, cid) {
 	if (!cmd_access(id, level, cid, 0))
 	    return PLUGIN_HANDLED;
 
-	new name[32], authid[32];
-	get_user_name(id, name, charsmax(name));
-	get_user_authid(id, authid, charsmax(authid));
-
-	log_amx("Agstart: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
+	log_amx("Agstart: %N", id);
 
 	new arg[32];
 	read_argv(1, arg, charsmax(arg));
@@ -1608,11 +1588,7 @@ public CmdAgAbort(id, level, cid) {
 	if (!cmd_access(id, level, cid, 0))
 	    return PLUGIN_HANDLED;
 
-	new name[32], authid[32];
-	get_user_name(id, name, charsmax(name));
-	get_user_authid(id, authid, charsmax(authid));
-
-	log_amx("Agabort: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
+	log_amx("Agabort: %N", id);
 
 	AbortVersus();
 
@@ -1639,11 +1615,7 @@ public CmdAgAllow(id, level, cid) {
 
 	AllowPlayer(player);
 
-	new name[32], authid[32];
-	get_user_name(id, name, charsmax(name));
-	get_user_authid(id, authid, charsmax(authid));
-
-	log_amx("Agallow: ^"%s<%d><%s>^"", name, get_user_userid(id), authid);
+	log_amx("Agallow: %N to %N", id, player);
 
 	return PLUGIN_HANDLED;
 }
@@ -1653,22 +1625,16 @@ public AllowPlayer(id) {
 		return PLUGIN_HANDLED;
 
 	if (hl_get_user_spectator(id)) {
-		new authid[32], name[32];
-		get_user_authid(id, authid, charsmax(authid));
-
 		// create a key for this new guy so i can save his score when he gets disconnect...
-		SaveScore(id, 0, 0);
+		SaveScore(id);
 
 		ag_set_user_spectator(id, false);
 
 		ResetScore(id);
 
-		get_user_name(id, name, charsmax(name));
-
-		client_print(0, print_chat,"* %L", LANG_PLAYER, "MATCH_ALLOW", name);
-
+		client_print(0, print_console,"%L", LANG_PLAYER, "MATCH_ALLOW", id);
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, -1.0, 0, 0.0, 5.0); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_ALLOW", name);	
+		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_ALLOW", id);	
 	}
 
 	return PLUGIN_HANDLED;
@@ -1686,7 +1652,7 @@ public CmdAgNextMode(id, level, cid) {
 	if (TrieKeyExists(gTrieVoteList, arg))
 		set_pcvar_string(gCvarGameMode, arg); // set next mode
 	else
-		console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
+		client_print(id, print_console, "%L", LANG_PLAYER, "INVALID_MODE");
 
 	return PLUGIN_CONTINUE;
 }
@@ -1701,7 +1667,7 @@ public CmdAgNextMap(id, level, cid) {
 	if (is_map_valid(arg))
 		set_pcvar_string(gCvarAmxNextMap, arg); // set new mode
 	else
-		console_print(id, "%L", LANG_PLAYER, "INVALID_MAP");
+		client_print(id, print_console, "%L", LANG_PLAYER, "INVALID_MAP");
 
 	return PLUGIN_CONTINUE;
 }
@@ -1840,10 +1806,10 @@ public CmdVote(id) {
 	new Float:timeleft = gVoteFailedTime - get_gametime();
 
 	if (timeleft > 0.0) {	
-		console_print(id, "%L", LANG_PLAYER, "VOTE_DELAY", floatround(timeleft, floatround_floor));
+		client_print(id, print_console, "%L", LANG_PLAYER, "VOTE_DELAY", floatround(timeleft, floatround_floor));
 		return PLUGIN_HANDLED;
 	} else if (gVoteStarted) {
-		console_print(id, "%L", LANG_PLAYER, "VOTE_RUNNING");
+		client_print(id, print_console, "%L", LANG_PLAYER, "VOTE_RUNNING");
 		return PLUGIN_HANDLED;
 	}
 
@@ -1998,23 +1964,27 @@ GetUserVote(id, arg1[], arg2[], len) {
 				return VOTE_INVALID; // cmd_target shows his own error message.
 	}
 
+	new mlKey[32];
+
 	switch (valid) {
-		case VOTE_INVALID: 			console_print(id, "%L", LANG_PLAYER, "VOTE_INVALID");
-		case VOTE_INVALID_MAP: 		console_print(id, "%L", LANG_PLAYER, "INVALID_MAP");
-		case VOTE_INVALID_MODE: 	console_print(id, "%L", LANG_PLAYER, "INVALID_MODE");
-		case VOTE_INVALID_NUMBER: 	console_print(id, "%L", LANG_PLAYER, "INVALID_NUMBER");
+		case VOTE_INVALID: 			mlKey = "VOTE_INVALID";
+		case VOTE_INVALID_MAP: 		mlKey = "INVALID_MAP";
+		case VOTE_INVALID_MODE: 	mlKey = "INVALID_MODE";
+		case VOTE_INVALID_NUMBER: 	mlKey = "INVALID_NUMBER";
 	}
+
+	client_print(id, print_console, "%L", LANG_PLAYER, mlKey);
 
 	return valid == VOTE_VALID ? vote : VOTE_INVALID;
 }
 
 VoteHelp(id) {
 	new i, j;
-	console_print(id, "%L", LANG_PLAYER, "VOTE_HELP");
+	client_print(id, print_console, "%L", LANG_PLAYER, "VOTE_HELP");
 	for (i = 0; i < gGameModeListNum; i++)
-		console_print(id, "%i. %s", ++j, gGameModeList[i]);
+		client_print(id, print_console, "%i. %s", ++j, gGameModeList[i]);
 	for (i = 0; i < sizeof gVoteList; i++)
-		console_print(id, "%i. %s", ++j, gVoteList[i]);
+		client_print(id, print_console, "%i. %s", ++j, gVoteList[i]);
 }
 
 public ChangeMode(const mode[]) {
