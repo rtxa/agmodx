@@ -473,7 +473,6 @@ public plugin_init() {
 	register_forward(FM_GetGameDescription, "FwGameDescription");
 
 	// player's hooks
-	register_forward(FM_ClientKill, "PlayerKill");
 	RegisterHam(Ham_Killed, "player", "PlayerKilled");
 	RegisterHam(Ham_Spawn, "player", "PlayerPostSpawn", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
@@ -622,10 +621,10 @@ public PlayerPostSpawn(id) {
 		SetPlayerEquipment(id); // note: this doesn't have effect on pre spawn
 }
 
-public PlayerKill(id) {
+public client_kill() {
 	if (gBlockCmdKill)
-		return FMRES_SUPERCEDE;
-	return FMRES_IGNORED;
+		return PLUGIN_HANDLED;
+	return PLUGIN_CONTINUE;
 }
 
 public PlayerKilled(victim, attacker) {
