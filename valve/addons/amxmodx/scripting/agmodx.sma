@@ -106,6 +106,7 @@ new Float:gPlayTeamDelayTime[33];
 new bool:gBlockCmdKill;
 new bool:gBlockCmdSpec;
 new bool:gBlockCmdDrop;
+new bool:gBlockPlayerSpawn;
 new bool:gSendVictimToSpec;
 new bool:gSendConnectingToSpec;
 new bool:gRestorePlayerEquipOnKill;
@@ -605,7 +606,7 @@ public client_remove(id) {
 
 public PlayerPreSpawn(id) {
 	// if player has to spec, don't let him spawn...
-	if (task_exists(TASK_SENDVICTIMTOSPEC + id))
+	if (task_exists(TASK_SENDVICTIMTOSPEC + id) || gBlockPlayerSpawn)
 		return HAM_SUPERCEDE;
 	return HAM_IGNORED;
 }
@@ -1157,6 +1158,7 @@ public StartVersus() {
 	gBlockCmdDrop = true;
 	gBlockCmdKill = true;
 	gSendConnectingToSpec = true;
+	gBlockPlayerSpawn = true; // if player is dead on agstart countdown, he will be able to spawn...
 
 	// reset score and freeze players who are going to play versus
 	for (new id = 1; id <= MaxClients; id++) {
@@ -1193,6 +1195,7 @@ public StartVersusCountdown() {
 
 		gBlockCmdDrop = false;
 		gBlockCmdKill = false;
+		gBlockPlayerSpawn = false;
 
 		// message holds a lot of time to avoid flickering, so I remove it manually
 		ClearSyncHud(0, gHudShowMatch);
