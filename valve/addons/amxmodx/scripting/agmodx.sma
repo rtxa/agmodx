@@ -1974,8 +1974,9 @@ GetUserVote(id, arg1[], arg2[], len) {
 		case VOTE_INVALID_MODE: 	mlKey = "INVALID_MODE";
 		case VOTE_INVALID_NUMBER: 	mlKey = "INVALID_NUMBER";
 	}
-
-	client_print(id, print_console, "%L", LANG_PLAYER, mlKey);
+	
+	if (valid != VOTE_VALID)
+		client_print(id, print_console, "%L", LANG_PLAYER, mlKey);
 
 	return valid == VOTE_VALID ? vote : VOTE_INVALID;
 }
