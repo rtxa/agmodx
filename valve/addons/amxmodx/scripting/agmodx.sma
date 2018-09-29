@@ -2008,7 +2008,9 @@ public ChangeMap(const map[]) {
 } 
 
 PlaySound(id, const sound[]) {
-	client_cmd(id, "spk %s", sound);
+	new snd[128];
+	RemoveExtension(sound, snd, charsmax(snd), ".wav"); // // Remove .wav file extension (console starts to print "missing sound file _period.wav" for every sound)
+	client_cmd(id, "spk %s", snd);
 }
 
 public PlayTeam(caller) {
@@ -2017,7 +2019,7 @@ public PlayTeam(caller) {
 	else 
 		return PLUGIN_HANDLED;
 
-	new sound[32];
+	new sound[128];
 	read_argv(1, sound, charsmax(sound));
 
 	new team = hl_get_user_team(caller);
@@ -2344,4 +2346,13 @@ stock swap(&x, &y) {
 	x = x + y;
 	y = x - y;
 	x = x -y;
+}
+
+stock RemoveExtension(const input[], output[], length, const ext[]) {
+	copy(output, length, input);
+
+	new idx = strlen(input) - strlen(ext);
+	if (idx < 0) return 0;
+	
+	return replace(output[idx], length, ext, "");
 }
