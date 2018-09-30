@@ -551,7 +551,7 @@ public FwGameDescription() {
 }
 
 public client_putinserver(id) {
-	new authid[32];
+	new authid[MAX_AUTHID_LENGTH];
 	get_user_authid(id, authid, charsmax(authid));
 
 	// restore score by authid
@@ -569,7 +569,7 @@ public client_putinserver(id) {
 }
 
 public client_disconnected(id) {
-	new authid[32];
+	new authid[MAX_AUTHID_LENGTH];
 	get_user_authid(id, authid, charsmax(authid));
 
 	remove_task(TASK_SENDTOSPEC + id);
@@ -1448,7 +1448,7 @@ public CmdHelp(id, level, cid) {
 }
 
 public CmdSpectate(id) {
-	new authid[32];
+	new authid[MAX_AUTHID_LENGTH];
 	get_user_authid(id, authid, charsmax(authid));
 
 	if (ScoreExists(authid)) { // let user spectate if he is playing a versus
@@ -2179,7 +2179,7 @@ public bool:ScoreExists(const authid[]) {
 
 // save score by authid
 SaveScore(id, frags = 0, deaths = 0) {
-	new authid[32], score[2];
+	new authid[MAX_AUTHID_LENGTH], score[2];
 
 	get_user_authid(id, authid, charsmax(authid));
 
