@@ -84,8 +84,6 @@ new const gBeepSnd[] = "fvox/beep";
 // Team models (this is used to fix team selection from VGUI Viewport)
 new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
-new gMsgVGUIMenu;
-
 // Location system
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
@@ -444,9 +442,6 @@ public plugin_precache() {
 	get_pcvar_string(gCvarHudColor, color, charsmax(color));
 	SetHudColorCvarByString(color, gHudRed, gHudGreen, gHudBlue);
 
-	// Get it to show VGUI Team menu
-	gMsgVGUIMenu = get_user_msgid("VGUIMenu");
-
 	// Load mode cvars
 	new mode[32];
 	get_pcvar_string(gCvarGameMode, mode, charsmax(mode));
@@ -581,7 +576,7 @@ public client_disconnected(id) {
 		new frags = get_user_frags(id);
 		new deaths = hl_get_user_deaths(id);
 		SaveScore(id, frags, deaths);
-		client_print(0, print_console, "%L", LANG_PLAYER, "MATCH_LEAVE", id, frags, deaths);
+		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
 		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
 	}
 
@@ -636,13 +631,12 @@ public client_kill() {
 }
 
 public PlayerKilled(victim, attacker) {
-	//server_print("Victim %i attacker %i", victim, attacker);
 	if (gSendVictimToSpec)
 		set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
 
 	// Arena
 	if (gIsArenaMode) {
-		if (victim != attacker && IsPlayer(attacker)) { // what happens if victim die by fall?
+		if (victim != attacker && IsPlayer(attacker)) { // check if attacker is player in case he dies by fall
 			gMatchWinner = attacker;
 			gMatchLooser = victim;
 		} else if (gMatchWinner == victim)
@@ -763,7 +757,7 @@ public StartMatchLms() {
 
 	if (get_playersnum() < 2) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WAITING");
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
 		set_task(5.0, "StartMatchLms", TASK_STARTMATCH);
 		return;
 	}
@@ -804,7 +798,7 @@ public LmsMatchCountdown() {
 	PlaySound(0, gBeepSnd);
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_START", gStartMatchTime);
+	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartMatchTime);
 }
 
 public EndMatchLms() {
@@ -820,13 +814,13 @@ public EndMatchLms() {
 			set_user_godmode(player, true);
 
 			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", player);
+			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", player);
 
 			set_task(5.0, "StartMatchLms", TASK_STARTMATCH);	
 		} 
 		case 0: {
 			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_DRAW");
+			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
 
 			set_task(5.0, "StartMatchLms", TASK_STARTMATCH);
 		}
@@ -854,7 +848,7 @@ public StartMatchLts() {
 
 	if (get_playersnum() < 2 || numBlue < 1 || numRed < 1) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WAITING");
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
 		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
 		return;
 	}
@@ -895,7 +889,7 @@ public LtsMatchCountdown() {
 	PlaySound(0, gBeepSnd);
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_START", gStartMatchTime);
+	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartMatchTime);
 }
 
 SetGodModeAlives() {
@@ -919,29 +913,20 @@ public EndMatchLts() {
 	
 	if (numAlivesBlue == 0 && numAlivesRed > 0) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER_RED");
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER_RED");
 		SetGodModeAlives();
 		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
 	} else if (numAlivesRed == 0 && numAlivesBlue > 0) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER_BLUE");
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER_BLUE");
 		SetGodModeAlives();
 		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
 	} else if (numAlivesRed == 0 && numAlivesBlue == 0) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_DRAW");
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
 		SetGodModeAlives();
 		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
 	}	
-}
-
-stock AutoTeamBalance() {}
-stock AutoAssing() {}
-
-stock PlayerTeleportSplash(id) {
-	new origin[3];
-	get_user_origin(id, origin);
-	te_create_teleport_splash(origin);
 }
 
 /* 
@@ -967,7 +952,7 @@ public StartArena() {
 		
 	} else { // Wait for more players...
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WAITING");
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
 		
 		set_task(5.0, "StartArena", TASK_STARTMATCH);	
 	}
@@ -1004,8 +989,8 @@ public ArenaCountdown() {
 	PlaySound(0, gBeepSnd);
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_STARTARENA", gMatchWinner, gMatchLooser, gStartMatchTime);
-	
+	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_STARTARENA", gMatchWinner, gMatchLooser, gStartMatchTime);
+
 	set_task(1.0, "ArenaCountdown", TASK_STARTMATCH);
 }
 
@@ -1120,7 +1105,7 @@ public ShowTimeLeft() {
 			ShowSyncHudMsg(0, gHudShowTimeLeft, "%i:%02i", gTimeLeft / 60, gTimeLeft % 60);
 	} else {
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01); // flicks the hud with out this, maybe is a bug
-		ShowSyncHudMsg(0, gHudShowTimeLeft, "%L", LANG_PLAYER, "TIMER_UNLIMITED");
+		ShowSyncHudMsg(0, gHudShowTimeLeft, "%l", "TIMER_UNLIMITED");
 	}
 
 	return PLUGIN_CONTINUE;
@@ -1135,7 +1120,7 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 
 	if (timeLimit == 0) {
 		if (gVersusStarted && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // block start versus with unlimited time
-			client_print(0, print_center, "%L", LANG_PLAYER, "MATCH_DENY_CHANGEUNLIMITED");
+			client_print(0, print_center, "%l", "MATCH_DENY_CHANGEUNLIMITED");
 		} else {
 			gTimeLeft = TIMELEFT_SETUNLIMITED;
 			gTimeLimit = timeLimit;
@@ -1156,10 +1141,10 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 */
 public StartVersus() {
 	if (get_playersnum() < get_pcvar_num(gCvarAgStartMinPlayers)) {
-		client_print(0, print_center, "%L", LANG_PLAYER, "MATCH_MINPLAYERS", get_pcvar_num(gCvarAgStartMinPlayers));
+		client_print(0, print_center, "%l", "MATCH_MINPLAYERS", get_pcvar_num(gCvarAgStartMinPlayers));
 		return;
 	} else if (gTimeLimit <= 0 && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // block start versus with mp_timelimit 0
-		client_print(0, print_center, "%L", LANG_PLAYER, "MATCH_DENY_STARTUNLIMITED");
+		client_print(0, print_center, "%l", "MATCH_DENY_STARTUNLIMITED");
 		return;
 	}
 
@@ -1233,7 +1218,7 @@ public StartVersusCountdown() {
 	PlaySound(0, gBeepSnd);
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 15.0, 0.2, 0.5);
-	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_START", gStartVersusTime);
+	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartVersusTime);
 }
 
 /* 
@@ -1314,7 +1299,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 		} else {
 			if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk)) {
 				if (sender == receiver)
-					client_print(sender, print_chat, "%L", LANG_PLAYER, "SPEC_CANTTALK");
+					client_print(sender, print_chat, "%l", "SPEC_CANTTALK");
 				return PLUGIN_HANDLED;
 			} else
 				format(text, charsmax(text), "^x02(S)%s", text); // Spectator
@@ -1484,7 +1469,12 @@ public CmdChangeTeam(id) {
 }
 
 public ShowVGUITeamMenu(id) {
-	message_begin(MSG_ONE, gMsgVGUIMenu, _, id);
+	static msgVGUIMenu;
+
+	if (!msgVGUIMenu)
+		msgVGUIMenu = get_user_msgid("VGUIMenu");
+
+	message_begin(MSG_ONE, get_user_msgid("VGUIMenu"), _, id);
 	write_byte(2);
 	message_end();
 }
@@ -1515,7 +1505,7 @@ public ShowNextMap(taskid) {
 	get_pcvar_string(gCvarAmxNextMap, map, charsmax(map));
 
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.055, 0, 0.0, 5.0, 0.2);
-	show_dhudmessage(id, "%L", LANG_PLAYER, "SETTINGS_NEXTMAP", map);
+	show_dhudmessage(id, "%l", "SETTINGS_NEXTMAP", map);
 }
 
 // We need to use director hud msg because there aren't enough hud channels, unless we make a better gui that use less channels
@@ -1538,12 +1528,12 @@ public ShowSettings(id) {
 	// center - top 
 	get_mapname(arg, charsmax(arg));
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.055, 0, 0.0, 4.5, 0.2);
-	show_dhudmessage(id, "%L", LANG_PLAYER, "SETTINGS_CURRENTMAP", arg);
+	show_dhudmessage(id, "%l", "SETTINGS_CURRENTMAP", arg);
 	set_task(5.0, "ShowNextMap", id + TASK_SHOWSETTINGS);
 
 	// right - top
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -0.05, 0.02, 0, 0.0, 10.0, 0.2);
-	show_dhudmessage(id, "%L", LANG_PLAYER, "SETTINGS_VARS", gGameModeName, gTimeLimit, 
+	show_dhudmessage(id, "%l", "SETTINGS_VARS", gGameModeName, gTimeLimit, 
 		get_pcvar_num(gCvarFragLimit), 
 		get_pcvar_num(gCvarFriendlyFire) ? "On" : "Off", 
 		get_pcvar_num(gCvarForceRespawn) ? "On" : "Off",
@@ -1651,9 +1641,9 @@ public AllowPlayer(id) {
 
 		ResetScore(id);
 
-		client_print(0, print_console,"%L", LANG_PLAYER, "MATCH_ALLOW", id);
+		client_print(0, print_console, "%l", "MATCH_ALLOW", id);
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, -1.0, 0, 0.0, 5.0); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_ALLOW", id);	
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_ALLOW", id);	
 	}
 
 	return PLUGIN_HANDLED;
@@ -1671,7 +1661,7 @@ public CmdAgNextMode(id, level, cid) {
 	if (TrieKeyExists(gTrieVoteList, arg))
 		set_pcvar_string(gCvarGameMode, arg); // set next mode
 	else
-		client_print(id, print_console, "%L", LANG_PLAYER, "INVALID_MODE");
+		client_print(id, print_console, "%l", "INVALID_MODE");
 
 	return PLUGIN_CONTINUE;
 }
@@ -1686,7 +1676,7 @@ public CmdAgNextMap(id, level, cid) {
 	if (is_map_valid(arg))
 		set_pcvar_string(gCvarAmxNextMap, arg); // set new mode
 	else
-		client_print(id, print_console, "%L", LANG_PLAYER, "INVALID_MAP");
+		client_print(id, print_console, "%l", "INVALID_MAP");
 
 	return PLUGIN_CONTINUE;
 }
@@ -1825,10 +1815,10 @@ public CmdVote(id) {
 	new Float:timeleft = gVoteFailedTime - get_gametime();
 
 	if (timeleft > 0.0) {	
-		client_print(id, print_console, "%L", LANG_PLAYER, "VOTE_DELAY", floatround(timeleft, floatround_floor));
+		client_print(id, print_console, "%l", "VOTE_DELAY", floatround(timeleft, floatround_floor));
 		return PLUGIN_HANDLED;
 	} else if (gVoteStarted) {
-		client_print(id, print_console, "%L", LANG_PLAYER, "VOTE_RUNNING");
+		client_print(id, print_console, "%l", "VOTE_RUNNING");
 		return PLUGIN_HANDLED;
 	}
 
@@ -1884,7 +1874,7 @@ public ShowVote() {
 		DenyVote();
 	} else { // in progress
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, get_pcvar_float(gCvarVoteDuration) * 2, 0.2);
-		ShowSyncHudMsg(0, gHudShowVote, "%L", LANG_PLAYER, "VOTE_START", gVoteArg1, gVoteArg2, gVoteCallerName, numVoteFor, numVoteAgainst, numUndecided);
+		ShowSyncHudMsg(0, gHudShowVote, "%l", "VOTE_START", gVoteArg1, gVoteArg2, gVoteCallerName, numVoteFor, numVoteAgainst, numUndecided);
 	}
 }
 
@@ -1894,10 +1884,10 @@ public DoVote() {
 
 	// show vote is accepted
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 10.0);
-	ShowSyncHudMsg(0, gHudShowVote, "%L", LANG_PLAYER, "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
+	ShowSyncHudMsg(0, gHudShowVote, "%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
 
 	// sometimes  hud doesnt show, show old style vote too
-	client_print(0, print_center, "%L", LANG_PLAYER, "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
+	client_print(0, print_center, "%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
 	
 	RemoveVote();
 
@@ -1939,10 +1929,10 @@ public DenyVote() {
 	gVoteFailedTime = get_gametime() + get_pcvar_num(gCvarVoteFailedTime);
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 10.0);
-	ShowSyncHudMsg(0, gHudShowVote, "%L", LANG_PLAYER, "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
+	ShowSyncHudMsg(0, gHudShowVote, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
 
 	// sometimes  hud doesnt show, so show old style vote too
-	client_print(0, print_center, "%L", LANG_PLAYER, "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
+	client_print(0, print_center, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
 }
 
 public RemoveVote() {
@@ -1993,14 +1983,14 @@ GetUserVote(id, arg1[], arg2[], len) {
 	}
 	
 	if (valid != VOTE_VALID)
-		client_print(id, print_console, "%L", LANG_PLAYER, mlKey);
+		client_print(id, print_console, "%l", mlKey);
 
 	return valid == VOTE_VALID ? vote : VOTE_INVALID;
 }
 
 VoteHelp(id) {
 	new i, j;
-	client_print(id, print_console, "%L", LANG_PLAYER, "VOTE_HELP");
+	client_print(id, print_console, "%l", "VOTE_HELP");
 	for (i = 0; i < gGameModeListNum; i++)
 		client_print(id, print_console, "%i. %s", ++j, gGameModeList[i]);
 	for (i = 0; i < sizeof gVoteList; i++)
@@ -2101,8 +2091,8 @@ public FwChargersUse() {
 
 // Advertise about the use of some commands in AG mod x
 public DisplayInfo(id) {
-	client_print(id, print_chat, "%L", LANG_PLAYER, "DISPLAY_INFO1");
-	client_print(id, print_chat, "%L", LANG_PLAYER, "DISPLAY_INFO2");
+	client_print(id, print_chat, "%l", "DISPLAY_INFO1");
+	client_print(id, print_chat, "%l", "DISPLAY_INFO2");
 }
 
 // We can't pause the game from the server because is not connected, unless you have created the sv in-game. "Can't pause, not connected."
@@ -2360,10 +2350,16 @@ stock ag_set_user_spectator(client, bool:spectator = true) {
 	}
 }
 
+stock PlayerTeleportSplash(id) {
+	new origin[3];
+	get_user_origin(id, origin);
+	te_create_teleport_splash(origin);
+}
+
 stock swap(&x, &y) {
 	x = x + y;
 	y = x - y;
-	x = x -y;
+	x = x - y;
 }
 
 stock RemoveExtension(const input[], output[], length, const ext[]) {
