@@ -2234,6 +2234,7 @@ public EventIntermissionMode() {
 	gBlockCmdKill = true;
 	gBlockCmdSpec = true;
 	gBlockCmdDrop = true;
+	gVersusStarted = false; // allow specs at the end to talk
 
 	for (new id = 1; id < MaxClients; id++) {
 		if (is_user_connected(id))
