@@ -596,7 +596,11 @@ public client_remove(id) {
 	}
 
 	if (gIsArenaMode) {
-		EndArena(id);
+		if (GetNumAlives() < 2)
+			if (id == gMatchWinner) {
+				gMatchWinner = gMatchLooser;
+				EndArena();
+			}
 	} else if (gIsLtsMode) {
 		EndMatchLts();
 	} else if (gIsLmsMode) {
@@ -642,23 +646,10 @@ public PlayerKilled(victim, attacker) {
 			gMatchLooser = victim;
 		} else if (gMatchWinner == victim)
 			swap(gMatchWinner, gMatchLooser);
+			
+		SendToEndOfQueue(gArenaQueue, gMatchLooser);
 
-		//server_print("(PlayerKilled) Winner: %i; Looser: %i", gMatchWinner, gMatchLooser);
-		if (is_user_connected(gMatchWinner))
-			set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
-
-		// Send looser to the end of the queue
-		new idx =  ArrayFindValue(gArenaQueue, gMatchLooser);
-		if (idx != -1) {
-			ArrayDeleteItem(gArenaQueue, idx);
-			ArrayPushCell(gArenaQueue, gMatchLooser);
-		}
-
-		// Show winner
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", gMatchWinner);
-
-		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+		set_task(1.0, "EndArena");
 	}
 
 	// Arcade
@@ -960,10 +951,10 @@ public StartArena() {
 
 	if (get_playersnum() > 1) {
 		CountArenaQueue();
-
+		
 		gMatchWinner = ArrayGetCell(gArenaQueue, 0);
 		gMatchLooser = ArrayGetCell(gArenaQueue, 1);
-		
+
 		gStartMatchTime = 5;
 		ArenaCountdown();
 		set_task(1.0, "ArenaCountdown", TASK_STARTMATCH, _, _,"b");
@@ -1006,20 +997,23 @@ public ArenaCountdown() {
 	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_STARTARENA", gMatchWinner, gMatchLooser, gStartMatchTime);
 }
 
-public EndArena(id) {
+public EndArena() {
 	if (task_exists(TASK_STARTMATCH))
 		return;
+
+	new alives = GetNumAlives();
+
+	if (alives < 2)
+		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+
+	// Show winner	
+	if (alives == 1) { 
+		if (is_user_connected(gMatchWinner))
+			set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
 		
-	if (GetNumAlives() < 2) {
-		if (id == gMatchWinner)
-			gMatchWinner = gMatchLooser;
-
-		// Show winner
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WINNER", gMatchWinner);
-
-		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match	
-	}
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", gMatchWinner);
+	}	
 }
 
 /* This will add to the queue newly connected players and it will remove disconnected players
@@ -1038,6 +1032,14 @@ public CountArenaQueue() {
 			if (isUserConnected)
 				ArrayPushCell(gArenaQueue, id);
 		}
+	}
+}
+
+SendToEndOfQueue(Array:handle, id) {
+	new idx = ArrayFindValue(handle, id);
+	if (idx != -1) {
+		ArrayDeleteItem(handle, idx);
+		ArrayPushCell(handle, id);
 	}
 }
 
