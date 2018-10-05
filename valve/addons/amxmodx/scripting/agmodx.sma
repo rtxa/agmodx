@@ -25,6 +25,7 @@
 #include <fun>
 #include <hamsandwich>
 #include <hl>
+#include <msgstocks>
 
 #define PLUGIN  "AG Mod X"
 #define VERSION "Beta 1.2 Build 21/9/2018"
@@ -937,6 +938,12 @@ public EndMatchLts() {
 stock AutoTeamBalance() {}
 stock AutoAssing() {}
 
+stock PlayerTeleportSplash(id) {
+	new origin[3];
+	get_user_origin(id, origin);
+	te_create_teleport_splash(origin);
+}
+
 /* 
 * Arena Mode
 */
@@ -951,13 +958,13 @@ public StartArena() {
 
 	if (get_playersnum() > 1) {
 		CountArenaQueue();
-		
+
 		gMatchWinner = ArrayGetCell(gArenaQueue, 0);
 		gMatchLooser = ArrayGetCell(gArenaQueue, 1);
 
 		gStartMatchTime = 5;
 		ArenaCountdown();
-		set_task(1.0, "ArenaCountdown", TASK_STARTMATCH, _, _,"b");
+		
 	} else { // Wait for more players...
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
 		ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_WAITING");
@@ -984,6 +991,9 @@ public ArenaCountdown() {
 
 		ag_set_user_spectator(gMatchLooser, false);
 
+		PlayerTeleportSplash(gMatchWinner);
+		PlayerTeleportSplash(gMatchLooser);
+
 		ClearField();
 
 		remove_task(TASK_STARTMATCH);
@@ -995,6 +1005,8 @@ public ArenaCountdown() {
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
 	ShowSyncHudMsg(0, gHudShowMatch, "%L", LANG_PLAYER, "MATCH_STARTARENA", gMatchWinner, gMatchLooser, gStartMatchTime);
+	
+	set_task(1.0, "ArenaCountdown", TASK_STARTMATCH);
 }
 
 public EndArena() {
