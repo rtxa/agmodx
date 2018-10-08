@@ -1219,7 +1219,7 @@ public StartVersusCountdown() {
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 15.0, 0.2, 0.5);
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartVersusTime);
-	
+
 	set_task(1.0, "StartVersusCountdown", TASK_STARTVERSUS);
 }
 
@@ -1501,25 +1501,13 @@ public CmdDrop() {
 	return PLUGIN_CONTINUE;
 }
 
-public ShowNextMap(taskid) {
-	new id = taskid - TASK_SHOWSETTINGS;
-
-	new map[32];
-	get_pcvar_string(gCvarAmxNextMap, map, charsmax(map));
-
-	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.055, 0, 0.0, 5.0, 0.2);
-	show_dhudmessage(id, "%l", "SETTINGS_NEXTMAP", map);
-}
-
 // We need to use director hud msg because there aren't enough hud channels, unless we make a better gui that use less channels
 // We are limited to 128 characters, so that is bad for multilingual or to show more settings ...
 public ShowSettings(id) {
 	// avoid hud overlap
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
 		return;
-
-	set_task(10.0, "ShowSettings", id + TASK_SHOWSETTINGS); // this will stop hud overlap
-	
+		
 	new arg[32], started[64];
 
 	// left - top
@@ -1528,12 +1516,6 @@ public ShowSettings(id) {
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.02, 0, 0.0, 10.0, 0.2);
 	show_dhudmessage(id, "AG Mod X %s^n%s^n^n%s", VERSION, arg, gVersusStarted ? started : "");
 
-	// center - top 
-	get_mapname(arg, charsmax(arg));
-	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.055, 0, 0.0, 4.5, 0.2);
-	show_dhudmessage(id, "%l", "SETTINGS_CURRENTMAP", arg);
-	set_task(5.0, "ShowNextMap", id + TASK_SHOWSETTINGS);
-
 	// right - top
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -0.05, 0.02, 0, 0.0, 10.0, 0.2);
 	show_dhudmessage(id, "%l", "SETTINGS_VARS", gGameModeName, gTimeLimit, 
@@ -1541,6 +1523,8 @@ public ShowSettings(id) {
 		get_pcvar_num(gCvarFriendlyFire) ? "On" : "Off", 
 		get_pcvar_num(gCvarForceRespawn) ? "On" : "Off",
 		get_pcvar_num(gCvarSelfGauss) ? "On" : "Off");
+
+	set_task(10.0, "ShowSettings", id + TASK_SHOWSETTINGS); // this will stop hud overlap
 }
 
 public CmdAgPause(id, level, cid) {
