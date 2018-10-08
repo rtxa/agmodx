@@ -763,9 +763,7 @@ public StartMatchLms() {
 	}
 
 	gStartMatchTime = 5;
-	LmsMatchCountdown();
-	set_task(1.0, "LmsMatchCountdown", TASK_STARTMATCH, _, _,"b");
-
+	LmsMatchCountdown();	
 }
 
 public LmsMatchCountdown() {
@@ -799,6 +797,8 @@ public LmsMatchCountdown() {
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartMatchTime);
+
+	set_task(1.0, "LmsMatchCountdown", TASK_STARTMATCH);
 }
 
 public EndMatchLms() {
@@ -855,8 +855,6 @@ public StartMatchLts() {
 
 	gStartMatchTime = 5;
 	LtsMatchCountdown();
-	set_task(1.0, "LtsMatchCountdown", TASK_STARTMATCH, _, _,"b");
-
 }
 
 public LtsMatchCountdown() {
@@ -890,6 +888,8 @@ public LtsMatchCountdown() {
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartMatchTime);
+
+	set_task(1.0, "LtsMatchCountdown", TASK_STARTMATCH);
 }
 
 SetGodModeAlives() {
@@ -1182,7 +1182,6 @@ public StartVersus() {
 
 	gStartVersusTime = 10;
 	StartVersusCountdown();
-	set_task(1.0, "StartVersusCountdown", TASK_STARTVERSUS, _, _,"b");
 }
 
 public StartVersusCountdown() {
@@ -1220,6 +1219,8 @@ public StartVersusCountdown() {
 
 	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 15.0, 0.2, 0.5);
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartVersusTime);
+	
+	set_task(1.0, "StartVersusCountdown", TASK_STARTVERSUS);
 }
 
 /* 
