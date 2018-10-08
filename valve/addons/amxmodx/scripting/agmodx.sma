@@ -1339,13 +1339,41 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 		replace_string(text, charsmax(text), "%w", weaponName, false);
 	}
 
-	// replace all %q with total ammo (ammo and backpack ammo) of current weapon
-	replace_string(text, charsmax(text), "%q", fmt("%i", ammo < 0 ? bpammo : ammo + bpammo), false); // if the weapon only has bpammo, ammo will return -1, replace it with 0
+	// replace all %q with ammo of current weapon
+	new ammoMsg[16], arGrenades;
+
+	if (weaponid == HLW_MP5)
+		arGrenades = get_pdata_int(sender, OFFSET_AMMO_ARGRENADE, EXTRAOFFSET);
+
+	FormatAmmo(weaponid, ammo, bpammo, arGrenades, ammoMsg, charsmax(ammoMsg));
+	replace_string(text, charsmax(text), "%q", ammoMsg, false); 
 
 	// send final message
 	set_msg_arg_string(2, text);
 
 	return PLUGIN_CONTINUE;
+}
+
+stock FormatAmmo(weaponid, ammo, bpammo, arGrenades, output[], len) {
+	new formatOption;
+	switch (weaponid) {
+		case HLW_NONE: 		formatOption = 0;
+		case HLW_CROWBAR:	formatOption = 0;
+		case HLW_CROSSBOW: 	formatOption = 2;
+		case HLW_GLOCK: 	formatOption = 2;
+		case HLW_MP5: 		formatOption = 3;
+		case HLW_PYTHON: 	formatOption = 2;
+		case HLW_RPG: 		formatOption = 2;
+		case HLW_SHOTGUN: 	formatOption = 2;
+		default: 			formatOption = 1;
+	}
+
+	switch (formatOption) {
+		case 0: copy(output, len, ""); 
+		case 1: copy(output, len, fmt("%i", ammo < 0 ? bpammo : ammo + bpammo));
+		case 2: copy(output, len, fmt("%i/%i", ammo, bpammo));
+		case 3: copy(output, len, fmt("%i/%i/%i", ammo, bpammo, arGrenades));
+	}
 }
 
 /*
