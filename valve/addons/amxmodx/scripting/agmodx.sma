@@ -790,7 +790,7 @@ public LmsMatchCountdown() {
 
 		EndMatchLms();
 
-		RespawnAll();
+		RespawnItems();
 
 		return;
 	}
@@ -881,7 +881,7 @@ public LtsMatchCountdown() {
 
 		EndMatchLts();
 
-		RespawnAll();
+		RespawnItems();
 
 		return;
 	}
@@ -1174,9 +1174,10 @@ public StartVersus() {
 		}
 	}
 
-	// prepare the match field
+	// Reset map
 	ClearField();
-	RespawnAll();
+	ClearCorpses();
+	RespawnItems();
 	ResetChargers();
 
 	gStartVersusTime = 10;
@@ -2129,7 +2130,7 @@ public ResetChargers() {
 }
 
 // This will respawn all weapons, ammo and items of the map to prepare for a new match (agstart)
-public RespawnAll() {
+public RespawnItems() {
 	new classname[32];
 	for (new i; i < global_get(glb_maxEntities); i++) {
 		if (pev_valid(i)) {
@@ -2173,6 +2174,11 @@ public ClearField() {
 		set_pev(entid, pev_dmg, 0);
 }
 
+stock ClearCorpses() {
+	new ent;
+	while ((ent = find_ent_by_class(ent, "bodyque")))
+		entity_set_origin(ent, Float:{4096.0, 4096.0, 4096.0});
+}
 
 /*
 * Restore Score
