@@ -1239,6 +1239,7 @@ public AbortVersus() {
 	gBlockCmdDrop = false;
 	gBlockCmdKill = false;
 	gSendConnectingToSpec = false;
+	gBlockPlayerSpawn = false;
 
 	for (new id = 1; id <= MaxClients; id++) {
 		if (is_user_alive(id)) {
