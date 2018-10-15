@@ -1536,13 +1536,18 @@ public ShowSettings(id) {
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
 		return;
 		
-	new arg[32], started[64];
+	new arg[32];
 
 	// left - top
 	get_pcvar_string(gCvarContact, arg, charsmax(arg));
-	formatex(started, charsmax(started), "%L", id, "MATCH_STARTED");
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.02, 0, 0.0, 10.0, 0.2);
-	show_dhudmessage(id, "AG Mod X %s^n%s^n^n%s", VERSION, arg, gVersusStarted ? started : "");
+	show_dhudmessage(id, "AG Mod X %s^n%s", VERSION, arg);
+
+	// center - top
+	if (gVersusStarted) {
+		set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.02, 0, 0.0, 10.0, 0.2);
+		show_dhudmessage(id, "^n%l", "MATCH_STARTED");
+	}
 
 	// right - top
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -0.05, 0.02, 0, 0.0, 10.0, 0.2);
