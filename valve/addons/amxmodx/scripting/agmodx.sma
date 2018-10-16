@@ -787,7 +787,7 @@ public LmsMatchCountdown() {
 
 		EndMatchLms();
 
-		RespawnItems();
+		ResetMap();
 
 		return;
 	}
@@ -878,7 +878,7 @@ public LtsMatchCountdown() {
 
 		EndMatchLts();
 
-		RespawnItems();
+		ResetMap();
 
 		return;
 	}
@@ -975,7 +975,7 @@ public ArenaCountdown() {
 
 		ag_set_user_spectator(gMatchLooser, false);
 
-		ClearField();
+		ResetMap();
 
 		remove_task(TASK_STARTMATCH);
 
@@ -1171,13 +1171,17 @@ public StartVersus() {
 	}
 
 	// Reset map
-	ClearField();
-	ClearCorpses();
-	RespawnItems();
-	ResetChargers();
+	ResetMap();
 
 	gStartVersusTime = 10;
 	StartVersusCountdown();
+}
+
+stock ResetMap() {
+	ClearField();
+	ClearCorpses();
+	RespawnItems();
+	ResetChargers();	
 }
 
 public StartVersusCountdown() {
