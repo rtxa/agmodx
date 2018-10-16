@@ -25,7 +25,6 @@
 #include <fun>
 #include <hamsandwich>
 #include <hl>
-#include <msgstocks>
 
 #define PLUGIN  "AG Mod X"
 #define VERSION "Beta 1.2 Build 21/9/2018"
@@ -975,9 +974,6 @@ public ArenaCountdown() {
 			hl_user_spawn(gMatchWinner);
 
 		ag_set_user_spectator(gMatchLooser, false);
-
-		PlayerTeleportSplash(gMatchWinner);
-		PlayerTeleportSplash(gMatchLooser);
 
 		ClearField();
 
@@ -2374,12 +2370,6 @@ stock ag_set_user_spectator(client, bool:spectator = true) {
 			message_end();
 		}
 	}
-}
-
-stock PlayerTeleportSplash(id) {
-	new origin[3];
-	get_user_origin(id, origin);
-	te_create_teleport_splash(origin);
 }
 
 stock swap(&x, &y) {
