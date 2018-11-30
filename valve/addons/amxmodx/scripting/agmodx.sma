@@ -1428,11 +1428,14 @@ public GetLocations(name[][], size, Float:origin[][], &numLocs) {
 	}
 }
 
-// return the index of the nearest location from an array
+// return the index of the nearest location for the player from an array
 public FindNearestLocation(id, Float:locOrigin[][3], numLocs) {
 	new Float:userOrigin[3], Float:nearestOrigin[3], idxNearestLoc;
 	
 	pev(id, pev_origin, userOrigin);
+
+	// initialize nearest origin with the first location
+	nearestOrigin = locOrigin[0];
 	
 	for (new i; i < numLocs; i++) {
 		if (vector_distance(userOrigin, locOrigin[i]) <= vector_distance(userOrigin, nearestOrigin)) {
