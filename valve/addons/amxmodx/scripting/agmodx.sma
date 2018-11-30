@@ -261,7 +261,7 @@ new gCvarBanHealthCharger;
 new gCvarReplaceEgonWithAmmo;
 
 // cvars names
-new const gNameStartWeapons[SIZE_WEAPONS][] = {
+new const gAgStartWeapons[SIZE_WEAPONS][] = {
 	"sv_ag_start_357",
 	"sv_ag_start_9mmar",
 	"sv_ag_start_9mmhandgun",
@@ -279,7 +279,7 @@ new const gNameStartWeapons[SIZE_WEAPONS][] = {
 };
 
 // index array
-enum _:StartWeapons {
+enum _:AgStartWeapons {
 	START_357,
 	START_9MMAR,
 	START_9MMHANDGUN,
@@ -297,7 +297,7 @@ enum _:StartWeapons {
 }
 
 // cvars names
-new const gNameStartAmmo[SIZE_AMMO][] = {
+new const gAgStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_shotgun",
 	"sv_ag_start_ammo_9mm",
 	"sv_ag_start_ammo_m203",
@@ -312,7 +312,7 @@ new const gNameStartAmmo[SIZE_AMMO][] = {
 };
 
 // cvars names
-new const gNameBanWeapons[SIZE_BANWEAPONS][] = {
+new const gAgBanWeapons[SIZE_BANWEAPONS][] = {
 	"sv_ag_ban_357",
 	"sv_ag_ban_9mmar",
 	"sv_ag_ban_9mmhandgun",
@@ -330,7 +330,7 @@ new const gNameBanWeapons[SIZE_BANWEAPONS][] = {
 };	
 
 // cvars names
-new const gNameBanAmmo[SIZE_AMMOENTS][] = {
+new const gAgBanAmmo[SIZE_AMMOENTS][] = {
 	"sv_ag_ban_ammo_357",		
 	"sv_ag_ban_ammo_9mm",
 	"sv_ag_ban_ammo_9mm",	
@@ -414,13 +414,13 @@ public plugin_precache() {
 	gCvarReplaceEgonWithAmmo = create_cvar("sv_ag_replace_egonwithammo", "0");
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
-		gCvarStartWeapons[i] = create_cvar(gNameStartWeapons[i], "0", FCVAR_SERVER);
+		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0", FCVAR_SERVER);
 	for (new i; i < sizeof gCvarStartAmmo; i++)
-		gCvarStartAmmo[i] = create_cvar(gNameStartAmmo[i], "0", FCVAR_SERVER);
+		gCvarStartAmmo[i] = create_cvar(gAgStartAmmo[i], "0", FCVAR_SERVER);
 	for (new i; i < sizeof gCvarBanWeapons; i++)
-		gCvarBanWeapons[i] = create_cvar(gNameBanWeapons[i], "0", FCVAR_SERVER);
+		gCvarBanWeapons[i] = create_cvar(gAgBanWeapons[i], "0", FCVAR_SERVER);
 	for (new i; i < sizeof gCvarBanAmmo; i++)
-		gCvarBanAmmo[i] = create_cvar(gNameBanAmmo[i], "0", FCVAR_SERVER);
+		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0", FCVAR_SERVER);
 
 	// Multiplayer cvars
 	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
