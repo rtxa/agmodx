@@ -27,7 +27,7 @@
 #include <hl>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.2 Build 21/9/2018"
+#define VERSION "Beta 1.3"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -1532,6 +1532,11 @@ public CmdDrop() {
 	return PLUGIN_CONTINUE;
 }
 
+// I made this function for foreigners so they can differentiate the order of the month and the day...
+GetPluginBuildDate(output[], len) {
+	format_time(output, len, "%d %b %Y", parse_time(__DATE__, "%D")); // 15 Nov 2018
+}
+
 // We need to use director hud msg because there aren't enough hud channels, unless we make a better gui that use less channels
 // We are limited to 128 characters, so that is bad for multilingual or to show more settings ...
 public ShowSettings(id) {
@@ -1539,12 +1544,13 @@ public ShowSettings(id) {
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
 		return;
 		
-	new arg[32];
+	new arg[32], buildDate[32];
 
 	// left - top
+	GetPluginBuildDate(buildDate, charsmax(buildDate));
 	get_pcvar_string(gCvarContact, arg, charsmax(arg));
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.02, 0, 0.0, 10.0, 0.2);
-	show_dhudmessage(id, "AG Mod X %s^n%s", VERSION, arg);
+	show_dhudmessage(id, "AG Mod X %s Build %s^n%s", VERSION, buildDate, arg);
 
 	// center - top
 	if (gVersusStarted) {
