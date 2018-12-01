@@ -49,6 +49,9 @@ new const VOX_SOUNDS[][] = { "vox/endgame.wav", "vox/captured.wav", "vox/enemy.w
 new bool:gEnableCtf;
 new bool:gIsMapCtf;
 
+new gBlueScore;
+new gRedScore;
+
 new gSpawnsBlue[64];
 new gSpawnsRed[64];
 
@@ -120,11 +123,27 @@ public plugin_init() {
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(INFO_CAPTURE_POINT, "player", "FwCapturePointTouch");
 
+
+	register_message(get_user_msgid("ScoreInfo"), "MsgScoreInfo");
+
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
 
 	return PLUGIN_CONTINUE;
 }
+
+// i want to show only flag capture points in scoreboard, but
+// teamscore function from gamedll is not overridden the team points (sum of all players frags) correctly 
+// this is the best solution i could found by the moment
+public MsgScoreInfo() {
+	UpdateTeamScore();
+}
+
+UpdateTeamScore(id = 0) {
+	hl_set_teamscore(gTeamListModels[BLUE_TEAM - 1], gBlueScore, id);	
+	hl_set_teamscore(gTeamListModels[RED_TEAM - 1], gRedScore, id);	
+}
+
 
 public client_disconnected(id) {
 	if (!gEnableCtf)
@@ -140,11 +159,16 @@ public CmdSpectate(id) {
 }
 
 public AddPoints(id, points) {
+	static scoreInfo;
+
+	if (!scoreInfo)
+		scoreInfo = get_user_msgid("ScoreInfo");
+
 	new frags = get_user_frags(id) + points;
 	set_user_frags(id, frags);
-
+	
 	// show new score
-	message_begin(MSG_BROADCAST, get_user_msgid("ScoreInfo"));
+	message_begin(MSG_BROADCAST, scoreInfo);
 	write_byte(id);
 	write_short(frags);
 	write_short(hl_get_user_deaths(id));
@@ -279,19 +303,30 @@ public DropFlagSpec(id) {
 		DropFlag(id, IsPlayerCarryingFlag(id));
 }
 
+
 public FwCapturePointTouch(touched, toucher) {
 	switch (IsPlayerCarryingFlag(toucher)) {
-		case BLUE_TEAM: {
+		case BLUE_TEAM: { // Captured Blue Team flag
 			if (touched == gBaseRed) {
 				ReturnFlagToBase(gFlagBlue);
-				AddPoints(toucher, get_pcvar_num(gCvarCapturePoints));
+
+				new points = get_pcvar_num(gCvarCapturePoints);
+				AddPoints(toucher, points);
+				gRedScore += points;
+				UpdateTeamScore();
+
 				CtfHudMessage(toucher, "CTF_YOUCAP", "CTF_TEAMCAP", "CTF_THEYCAP");
 				CtfSpeak(toucher, "!CTF_YOUCAP", "!CTF_TEAMCAP", "!CTF_THEYCAP");
 			}
-		} case RED_TEAM: {
+		} case RED_TEAM: { // Captured Red Team flag
 			if (touched == gBaseBlue) {
 				ReturnFlagToBase(gFlagRed);
-				AddPoints(toucher, get_pcvar_num(gCvarCapturePoints));
+
+				new points = get_pcvar_num(gCvarCapturePoints);
+				AddPoints(toucher, points);
+				gBlueScore += points;
+				UpdateTeamScore();
+
 				CtfHudMessage(toucher, "CTF_YOUCAP", "CTF_TEAMCAP", "CTF_THEYCAP");
 				CtfSpeak(toucher, "!CTF_YOUCAP", "!CTF_TEAMCAP", "!CTF_THEYCAP");
 			}
@@ -588,6 +623,19 @@ stock CreateCustomEnt(const classname[]) {
 	new ent = create_entity("info_target");
 	set_pev(ent, pev_classname, classname);
 	return ent;
+}
+
+stock hl_set_teamscore(teamName[], points, id = 0) {
+	static teamScore;
+
+	if (!teamScore)
+		teamScore = get_user_msgid("TeamScore");
+
+	message_begin(id == 0 ? MSG_BROADCAST : MSG_ONE, teamScore, _, id);
+	write_string(teamName);
+	write_short(points); // capture points
+	write_short(0); // score is only for flags captures, so deaths is always 0
+	message_end();
 }
 
 public GetTeamListModels(output[][], size) {
