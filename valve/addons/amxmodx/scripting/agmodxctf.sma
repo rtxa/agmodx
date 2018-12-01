@@ -18,6 +18,8 @@ enum (+= 100) {
 	TASK_RETURNFLAGTOBASE = 1000,
 };
 
+#define OFFSET_PHYSHICSFLAG 193
+
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
 #define HL_MAX_TEAMNAME_LENGTH 16
@@ -339,12 +341,17 @@ public FwPlayerKilled(victim, attacker) {
 }
 
 public FwPlayerSpawnPost(id) {
+	if (IsInWelcomeCam(id))
+		return HAM_IGNORED;
+
 	new ent = FindPlayerTeamSpawn(id);
-	
+
 	if (ent)
 		TeleportToSpawn(id, ent);
 	else
 		user_kill(id, true);
+
+	return HAM_IGNORED;
 }
 
 public TeleportToSpawn(id, spawnEnt) {
@@ -663,4 +670,13 @@ bool:array_search(value, array[], size) {
 		if (array[i] == value)
 			match = true; 
 	return match;
+}
+
+bool:IsObserver(id) {
+	return get_pdata_int(id, OFFSET_PHYSHICSFLAG) & PFLAG_OBSERVER > 0 ? true : false;
+}
+
+
+bool:IsInWelcomeCam(id) {
+	return IsObserver(id) && !hl_get_user_spectator(id) && get_pdata_int(id, OFFSET_HUD) & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
 }
