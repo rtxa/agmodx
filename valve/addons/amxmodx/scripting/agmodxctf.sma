@@ -108,7 +108,7 @@ public plugin_init() {
 	register_clcmd("dropitems", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
 
-	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawn", true);
+	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawnPost", true);
 	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
 
 	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
@@ -303,22 +303,13 @@ public FwPlayerKilled(victim, attacker) {
 	DropFlag(victim, IsPlayerCarryingFlag(victim));
 }
 
-public FwPlayerSpawn(id) {
-	new spawn, team = hl_get_user_team(id);
-
-	switch (team) {
-		case BLUE_TEAM: {
-			if ((spawn = FindSpawnForPlayer(BLUE_TEAM)) != -1)
-				TeleportToSpawn(id, gSpawnsBlue[spawn]);
-			else
-				user_kill(id, true);
-		} case RED_TEAM: {
-			if ((spawn = FindSpawnForPlayer(RED_TEAM)) != -1)
-				TeleportToSpawn(id, gSpawnsRed[spawn]);
-			else
-				user_kill(id, true);				
-		}
-	}
+public FwPlayerSpawnPost(id) {
+	new ent = FindPlayerTeamSpawn(id);
+	
+	if (ent)
+		TeleportToSpawn(id, ent);
+	else
+		user_kill(id, true);
 }
 
 public TeleportToSpawn(id, spawnEnt) {
@@ -334,44 +325,51 @@ public TeleportToSpawn(id, spawnEnt) {
 	set_pev(id, pev_fixangle, 1);
 }
 
-// we need to change the random respawn algorithm, we have to check how gamedll do it
-// when looking for random spawn, avoid the last spawn until there are no more spawns
-FindSpawnForPlayer(team) {
-	new rnd, attemps;
+FindPlayerTeamSpawn(id) {
+	new team, rndIdx, attempts;
+	team = hl_get_user_team(id);
 
-	if (team == BLUE_TEAM) {
-		do {
-			rnd = random(gNumSpawnsBlue);
+	switch (team) {
+		case BLUE_TEAM: {
+			do {
+				rndIdx = random(gNumSpawnsBlue);
 
-			if (attemps++ > 10) {
-				for (new i; i < gNumSpawnsBlue; i++)
-					if (IsSpawnPointValid(gSpawnsBlue[i]))
-						return i;
-				return -1;
-			}
-		} while (!IsSpawnPointValid(gSpawnsBlue[rnd]));	
-	} else if (team == RED_TEAM) {
-		do {
-			rnd = random(gNumSpawnsRed);
+				if (attempts++ > 10) {
+					for (new i; i < gNumSpawnsBlue; i++)
+						if (IsSpawnPointValid(id, gSpawnsBlue[i]))
+							return gSpawnsBlue[i];
+					return 0;
+				}
+			} while (!IsSpawnPointValid(id, gSpawnsBlue[rndIdx]));
+			return gSpawnsBlue[rndIdx];
+		}
+		case RED_TEAM: {
+			do {
+				rndIdx = random(gNumSpawnsRed);
 
-			if (attemps++ > 10) {
-				for (new i; i < gNumSpawnsRed; i++)
-					if (IsSpawnPointValid(gSpawnsRed[i]))
-						return i;
-				return -1;
-			}
-		} while (!IsSpawnPointValid(gSpawnsRed[rnd]));
+				if (attempts++ > 10) {
+					for (new i; i < gNumSpawnsRed; i++)
+						if (IsSpawnPointValid(id, gSpawnsRed[i]))
+							return gSpawnsRed[i];
+					return 0;
+				}
+			} while (!IsSpawnPointValid(id, gSpawnsRed[rndIdx]));
+			return gSpawnsRed[rndIdx];
+		}
+		default: {
+		 	return 0;
+		}
 	}
-
-	return rnd;
+	return 0;
 }
 
-bool:IsSpawnPointValid(spawnEnt) {
+bool:IsSpawnPointValid(id, spawnEnt) {
 	new ent, Float:origin[3];
 	pev(spawnEnt, pev_origin, origin);
 
 	while ((ent = find_ent_in_sphere(ent, origin, 10.0)))
-		return !IsPlayer(ent) ? true : false;
+		if (IsPlayer(ent) && ent != id)
+			return false;
 
 	return true;
 }
