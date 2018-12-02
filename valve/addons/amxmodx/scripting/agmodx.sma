@@ -2330,14 +2330,18 @@ stock ag_get_team_alives(teamIndex) {
 
 // when user spectates, his teams is 0, so you have to check his model..
 stock ag_get_team_numplayers(teamIndex) {
-	new num, model[16];
-	for (new id = 1; id <= MaxClients; id++){
-		hl_get_user_model(id, model, charsmax(model));
-		if (equali(model, gTeamListModels[teamIndex])) // equal with case ignoring, sometimes a player set his model to barNey...
-			num++;
+	new players[MAX_PLAYERS], numPlayers;
+	get_players(players, numPlayers);
+
+	new model[16], numTeam;
+	for (new i; i < numPlayers; i++) {
+		hl_get_user_model(players[i], model, charsmax(model));
+		// ignore case, sometimes a player set his model to barNey...
+		if (equali(model, gTeamListModels[teamIndex - 1])) 
+			numTeam++; 
 	}
 
-	return num;
+	return numTeam;
 }
 
 stock ag_set_user_spectator(client, bool:spectator = true) {
