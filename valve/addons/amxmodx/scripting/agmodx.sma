@@ -454,10 +454,6 @@ public plugin_precache() {
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	// doesn't work in plugin_precache :/
-	if (get_pcvar_num(gCvarReplaceEgonWithAmmo))
-		ReplaceEgonWithAmmo();
-
 	// Cache models from teamlist
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS); // This will fix VGUI Viewport
 	CacheTeamListModels(gTeamListModels, HL_MAX_TEAMS);
@@ -2083,6 +2079,10 @@ StartMode() {
 		StartMatchLts();
 	else if (equal(arg, "lms"))
 		StartMatchLms();
+	
+	// doesn't work in plugin_precache :/
+	if (get_pcvar_num(gCvarReplaceEgonWithAmmo))
+		ReplaceEgonWithAmmo();
 	
 	BanGamemodeEnts();
 
