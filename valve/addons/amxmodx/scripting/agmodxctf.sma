@@ -48,7 +48,7 @@ new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 
 new const VOX_SOUNDS[][] = { "vox/endgame.wav", "vox/captured.wav", "vox/enemy.wav", "vox/flag.wav", "vox/returned.wav" };
 
-new bool:gEnableCtf;
+new bool:gIsCtfMode;
 new bool:gIsMapCtf;
 
 new gBlueScore;
@@ -81,10 +81,12 @@ bool:IsCtfMode() {
 	new type[32];
 	get_cvar_string("sv_ag_gametype", type, charsmax(type));
 
-	if (!equal(type, "ctf"))
+	if (!equal(type, "ctf")) {
 		return false;
-	else if (!gIsMapCtf)
-		set_fail_state("Map not supported for CTF.");
+	} else if (!gIsMapCtf) {
+		log_amx("Map not supported for CTF.");
+		return false;
+	}
 
 	return true;
 }
@@ -103,10 +105,10 @@ public plugin_precache() {
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	gEnableCtf = IsCtfMode();
+	gIsCtfMode = IsCtfMode();
 
-	if (!gEnableCtf)
-		return PLUGIN_HANDLED;
+	if (!gIsCtfMode)
+		return;
 
 	register_dictionary("agmodxctf.txt");
 
@@ -130,8 +132,6 @@ public plugin_init() {
 
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
-
-	return PLUGIN_CONTINUE;
 }
 
 // i want to show only flag capture points in scoreboard, but
@@ -148,7 +148,7 @@ UpdateTeamScore(id = 0) {
 
 
 public client_disconnected(id) {
-	if (!gEnableCtf)
+	if (!gIsCtfMode)
 		return PLUGIN_HANDLED;
 
 	DropFlag(id, IsPlayerCarryingFlag(id));
