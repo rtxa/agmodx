@@ -73,6 +73,8 @@ new const gCountSnd[][] = {
 
 new const gBeepSnd[] = "fvox/beep";
 
+#define ARRAY_NOMATCHES -1 // i use this with ArrayFindValue
+
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
 #define OFFSET_PHYSHICSFLAG 193
@@ -635,12 +637,14 @@ public PlayerPreKilled(victim, attacker) {
 
 	// Arena
 	if (gIsArenaMode) {
-		if (!PlayerKilledHimself(victim, attacker)) { 
+		if (PlayerKilledHimself(victim, attacker)) { 
 			gMatchLooser = victim;
 		} else if (gMatchWinner == victim)
 			swap(gMatchWinner, gMatchLooser);
-			
-		SendToEndOfQueue(gArenaQueue, gMatchLooser);
+		
+		// send looser to the end of the queue
+		ArrayDeleteCell(gArenaQueue, gMatchLooser);
+		ArrayPushCell(gArenaQueue, gMatchLooser);
 
 		set_task(1.0, "EndArena");
 	}
@@ -1017,31 +1021,23 @@ public EndArena() {
 	}	
 }
 
-/* This will add to the queue newly connected players and it will remove disconnected players
+/* This add new players to the queue and removes the disconnected players.
  */
 public CountArenaQueue() {
-	new isUserConnected, arrayIdx;
-
-	for (new id = 1; id <= MaxClients; id++) {
-		isUserConnected = is_user_connected(id);
-		arrayIdx = ArrayFindValue(gArenaQueue, id);
-
-		if (arrayIdx != -1) { // player is in the queue?
-			if (!isUserConnected) // he has disconnected? then remove it of the queue
-				ArrayDeleteItem(gArenaQueue, arrayIdx);
-		} else { // is a new player? then add it to the queue
-			if (isUserConnected)
+	for (new id = 1; id <= MaxClients; id++) { 
+		if (is_user_connected(id)) {
+			if (ArrayFindValue(gArenaQueue, id) == ARRAY_NOMATCHES)
 				ArrayPushCell(gArenaQueue, id);
+		} else {
+			ArrayDeleteCell(gArenaQueue, id);
 		}
 	}
 }
 
-SendToEndOfQueue(Array:handle, id) {
-	new idx = ArrayFindValue(handle, id);
-	if (idx != -1) {
+ArrayDeleteCell(Array:handle, value) {
+	new idx = ArrayFindValue(handle, value);
+	if (idx != ARRAY_NOMATCHES)
 		ArrayDeleteItem(handle, idx);
-		ArrayPushCell(handle, id);
-	}
 }
 
 public PrintArenaQueue() {
