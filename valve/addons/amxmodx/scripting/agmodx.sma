@@ -535,6 +535,10 @@ public plugin_cfg() {
 public plugin_end() {
 	disable_cvar_hook(gHookCvarTimeLimit);
 	set_pcvar_num(gCvarTimeLimit, gTimeLimit);
+
+	ArrayDestroy(gArenaQueue);
+	TrieDestroy(gTrieVoteList);
+	TrieDestroy(gTrieScoreAuthId);
 }
 
 // Gamemode name that should be displayed in server browser and in splash with server settings data
@@ -2083,7 +2087,7 @@ StartMode() {
 	// doesn't work in plugin_precache :/
 	if (get_pcvar_num(gCvarReplaceEgonWithAmmo))
 		ReplaceEgonWithAmmo();
-	
+
 	BanGamemodeEnts();
 
 	SetGameModePlayerEquip(); //  set an equipment when user spawns
