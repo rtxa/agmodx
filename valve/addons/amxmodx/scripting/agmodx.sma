@@ -637,7 +637,8 @@ public PlayerPreKilled(victim, attacker) {
 
 	// Arena
 	if (gIsArenaMode) {
-		if (PlayerKilledHimself(victim, attacker)) { 
+		if (victim != attacker && IsPlayer(attacker)) {
+			gMatchWinner = attacker;
 			gMatchLooser = victim;
 		} else if (gMatchWinner == victim)
 			swap(gMatchWinner, gMatchLooser);
@@ -1008,18 +1009,24 @@ public EndArena() {
 
 	new alives = GetNumAlives();
 
-	if (alives < 2)
+	if (alives < 2) {
 		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
 
-	// Show winner	
-	if (alives == 1) { 
-		if (is_user_connected(gMatchWinner))
-			set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
-		
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", gMatchWinner);
-	}	
+		if (alives == 1) { // Show winner
+			if (is_user_connected(gMatchWinner))
+				set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
+			
+			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2); 
+			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", gMatchWinner);
+		} else { // No winners
+			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
+			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
+		}
+	}
+
 }
+
+
 
 /* This add new players to the queue and removes the disconnected players.
  */
