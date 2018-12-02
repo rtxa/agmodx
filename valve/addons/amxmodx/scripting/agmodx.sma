@@ -471,7 +471,7 @@ public plugin_init() {
 	register_forward(FM_GetGameDescription, "FwGameDescription");
 
 	// player's hooks
-	RegisterHam(Ham_Killed, "player", "PlayerKilled");
+	RegisterHam(Ham_Killed, "player", "PlayerPreKilled");
 	RegisterHam(Ham_Spawn, "player", "PlayerPostSpawn", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
 
@@ -629,14 +629,13 @@ public client_kill() {
 	return PLUGIN_CONTINUE;
 }
 
-public PlayerKilled(victim, attacker) {
+public PlayerPreKilled(victim, attacker) {
 	if (gSendVictimToSpec)
 		set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
 
 	// Arena
 	if (gIsArenaMode) {
-		if (victim != attacker && IsPlayer(attacker)) { // check if attacker is player in case he dies by fall
-			gMatchWinner = attacker;
+		if (!PlayerKilledHimself(victim, attacker)) { 
 			gMatchLooser = victim;
 		} else if (gMatchWinner == victim)
 			swap(gMatchWinner, gMatchLooser);
@@ -655,10 +654,19 @@ public PlayerKilled(victim, attacker) {
 	}
 
 	// Last Team Standing and Last Man Standing
-	if (gIsLtsMode)
+	if (gIsLtsMode) {
+		if (!PlayerKilledHimself(victim, attacker))
+		player_teleport_splash(victim);
 		EndMatchLts();
-	else if (gIsLmsMode)
+	} else if (gIsLmsMode) {
+		if (!PlayerKilledHimself(victim, attacker))
+			player_teleport_splash(victim);
 		EndMatchLms();
+	}
+}
+
+stock bool:PlayerKilledHimself(victim, attacker) {
+	return (!IsPlayer(attacker) || victim == attacker); // attacker can be worldspawn if player dies by fall
 }
 
 /*
@@ -2402,4 +2410,21 @@ stock RemoveExtension(const input[], output[], length, const ext[]) {
 	if (idx < 0) return 0;
 	
 	return replace(output[idx], length, ext, "");
+}
+
+stock player_teleport_splash(id) {
+	if (!is_user_connected(id))
+		return 0;
+
+	new origin[3];
+	get_user_origin(id, origin);
+
+	message_begin(MSG_BROADCAST, SVC_TEMPENTITY);
+	write_byte(TE_TELEPORT);
+	write_coord(origin[0]);
+	write_coord(origin[1]);
+	write_coord(origin[2]);
+	message_end();
+
+	return 1;
 }
