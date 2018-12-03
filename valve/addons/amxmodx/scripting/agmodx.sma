@@ -784,10 +784,9 @@ public LmsMatchCountdown() {
 	PlaySound(0, gCountSnd[gStartMatchTime]);
 
 	if (gStartMatchTime == 0) {
-		new players[32], numPlayers;
+		new players[32], numPlayers, player;
 		get_players(players, numPlayers);
 
-		new player;
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
 			if (hl_get_user_spectator(player))
@@ -818,7 +817,7 @@ public EndMatchLms() {
 		return;
 
 	new alive[MAX_PLAYERS], numAlives, player;
-	get_players(alive, numAlives, "a");
+	get_players_ex(alive, numAlives, GetPlayers_ExcludeDead);
 
 	switch (numAlives) {
 		case 1: {
@@ -875,10 +874,9 @@ public LtsMatchCountdown() {
 	PlaySound(0, gCountSnd[gStartMatchTime]);
 
 	if (gStartMatchTime == 0) {
-		new players[32], numPlayers;
+		new players[32], numPlayers, player;
 		get_players(players, numPlayers);
 
-		new player;
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
 			if (hl_get_user_spectator(player))
@@ -905,12 +903,14 @@ public LtsMatchCountdown() {
 }
 
 SetGodModeAlives() {
-	for (new id = 1; id <= MaxClients; id++)
-		if (is_user_alive(id))
-			set_user_godmode(id, true);
+	new players[MAX_PLAYERS], numPlayers;
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
+
+	for (new i; i < numPlayers; i++)
+		set_user_godmode(players[i], true);
 }
 
-public GetNumAlives() {
+stock GetNumAlives() {
 	new alives[32], numAlives;
 	get_players(alives, numAlives, "a");
 	return numAlives;
@@ -1169,15 +1169,16 @@ public StartVersus() {
 	gBlockPlayerSpawn = true; // if player is dead on agstart countdown, he will be able to spawn...
 
 	// reset score and freeze players who are going to play versus
-	for (new id = 1; id <= MaxClients; id++) {
-		if (!is_user_connected(id))
-			continue;
+	new players[MAX_PLAYERS], numPlayers, player;
+	get_players(players, numPlayers);
 
-		if (IsInWelcomeCam(id)) // send to spec players in welcome cam 
-			ag_set_user_spectator(id);
-		else if (!hl_get_user_spectator(id)) {
-			ResetScore(id);
-			FreezePlayer(id);
+	for (new i; i < numPlayers; i++) {
+		player = players[i];
+		if (IsInWelcomeCam(player)) { // send to spec players in welcome cam 
+			ag_set_user_spectator(player);
+		} else if (!hl_get_user_spectator(player)) {
+			ResetScore(player);
+			FreezePlayer(player);
 		}
 	}
 
@@ -1212,11 +1213,15 @@ public StartVersusCountdown() {
 		// message holds a lot of time to avoid flickering, so I remove it manually
 		ClearSyncHud(0, gHudShowMatch);
 
-		for (new id = 1; id <= MaxClients; id++) {
-			if (is_user_connected(id) && !hl_get_user_spectator(id)) {
-				SaveScore(id);
-				hl_user_spawn(id);
-				set_task(0.5, "ShowSettings", id);
+		new players[MAX_PLAYERS], numPlayers, player;
+		get_players(players, numPlayers);
+
+		for (new i; i < numPlayers; i++) {
+			player = players[i];
+			if (!hl_get_user_spectator(player)) {
+				SaveScore(player);
+				hl_user_spawn(player);
+				set_task(0.5, "ShowSettings", player);
 			}
 		}
 
@@ -1253,12 +1258,15 @@ public AbortVersus() {
 	gSendConnectingToSpec = false;
 	gBlockPlayerSpawn = false;
 
-	for (new id = 1; id <= MaxClients; id++) {
-		if (is_user_alive(id)) {
-			//ClearSyncHud(0, gHudShowMatch);
-			FreezePlayer(id, false);
-		} else if (hl_get_user_spectator(id))
-			ag_set_user_spectator(id, false);
+	new players[32], numPlayers, player;
+	get_players(players, numPlayers);
+
+	for (new i; i < numPlayers; i++) {
+		player = players[i];
+		if (is_user_alive(player))
+			FreezePlayer(player, false);
+		else if (hl_get_user_spectator(player))
+			ag_set_user_spectator(player, false);
 	}
 }
 
@@ -2070,9 +2078,14 @@ public PlayTeam(caller) {
 	read_argv(1, sound, charsmax(sound));
 
 	new team = hl_get_user_team(caller);
-	for (new id = 1; id < MaxClients; id++) {
-		if (is_user_alive(id) && team == hl_get_user_team(id) )
-			PlaySound(id, sound);
+
+	new players[32], numPlayers, player;
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
+
+	for (new i; i < numPlayers; i++) {
+		player = players[i];
+		if (team == hl_get_user_team(player))
+			PlaySound(player, sound);
 	}
 
 	return PLUGIN_HANDLED;
@@ -2285,9 +2298,11 @@ public EventIntermissionMode() {
 	gBlockCmdDrop = true;
 	gVersusStarted = false; // allow specs at the end to talk
 
-	for (new id = 1; id < MaxClients; id++) {
-		if (is_user_connected(id))
-			FreezePlayer(id);
+	new players[MAX_PLAYERS], numPlayers;
+	get_players(players, numPlayers);
+
+	for (new i; i < numPlayers; i++) {
+		FreezePlayer(players[i]); // sometimes in intermission mode, player can move...
 	}
 }
 
@@ -2335,9 +2350,12 @@ stock ag_set_user_bpammo(client, weapon, ammo) {
 }
 
 stock ag_get_team_alives(teamIndex) {
+	new players[MAX_PLAYERS], numPlayers;
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
+
 	new num;
-	for (new id = 1; id <= MaxClients; id++)
-		if (is_user_alive(id) && hl_get_user_team(id) == teamIndex)
+	for (new i; i < numPlayers; i++)
+		if (hl_get_user_team(players[i]) == teamIndex)
 			num++;
 
 	return num;
