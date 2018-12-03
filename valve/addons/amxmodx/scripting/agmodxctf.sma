@@ -60,11 +60,6 @@ new gSpawnsRed[64];
 new gNumSpawnsRed;
 new gNumSpawnsBlue;
 
-new Float:gOriginFlagBlue[3];
-new Float:gOriginFlagRed[3];
-new Float:gAnglesFlagBlue[3];
-new Float:gAnglesFlagRed[3];
-
 new gFlagBlue;
 new gFlagRed;
 new gBaseBlue;
@@ -118,10 +113,10 @@ public plugin_init() {
 	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawnPost", true);
 	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
 
-	gFlagBlue = SpawnFlag(gOriginFlagBlue, BLUE_TEAM);
-	gFlagRed = SpawnFlag(gOriginFlagRed, RED_TEAM);
-	gBaseBlue = SpawnCapturePoint(gOriginFlagBlue, BLUE_TEAM);
-	gBaseRed = SpawnCapturePoint(gOriginFlagRed, RED_TEAM);
+	SpawnFlag(gFlagBlue);
+	SpawnFlag(gFlagRed);
+	gBaseBlue = SpawnCapturePoint(gFlagBlue);
+	gBaseRed = SpawnCapturePoint(gFlagRed);
 
 	register_touch(INFO_FLAG_BLUE, "player", "FwFlagTouch");
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
@@ -445,28 +440,59 @@ AttachFlagToPlayer(id, ent) {
 	set_pev(ent, pev_solid, SOLID_NOT);
 }
 
+GetFlagTeam(ent) {
+	new classname[32];
+	pev(ent, pev_classname, classname, charsmax(classname));
+	if (equal(classname, INFO_FLAG_BLUE))
+		return BLUE_TEAM;
+	else if (equal(classname, INFO_FLAG_RED)) 
+		return RED_TEAM;
+	else
+		return -1;
+}
+
+SetFlagStartOrigin(ent, Float:origin[3]) {
+	set_pev(ent, pev_vuser1, origin);
+}
+
+SetFlagStartAngles(ent, Float:angles[3]) {
+	set_pev(ent, pev_vuser2, angles);
+}
+
+GetFlagStartOrigin(ent, Float:origin[3]) {
+	pev(ent, pev_vuser1, origin);
+}
+
+GetFlagStartAngles(ent, Float:angles[3]) {
+	pev(ent, pev_vuser2, angles);
+}
+
 ReturnFlagToBase(ent) {
 	if (get_pcvar_num(gCvarCtfDebug))
 		server_print("ReturnFlagToBase");
 	
+	new Float:origin[3], Float:angles[3];
+	GetFlagStartOrigin(ent, origin);
+	GetFlagStartAngles(ent, angles);
+
+	entity_set_origin(ent, origin);
+	set_pev(ent, pev_angles, angles);
 	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_aiment, 0);
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
-	if (ent == gFlagBlue) {
-		CtfTeamHudMessage(RED_TEAM, "CTF_EFLAGBACK", "CTF_FLAGBACK");
-		CtfTeamSpeak(RED_TEAM, "!CTF_EFLAGBACK", "!CTF_FLAGBACK");
-		entity_set_origin(ent, gOriginFlagBlue);	
-		set_pev(ent, pev_angles, gAnglesFlagBlue);
-	} else if (ent == gFlagRed) {
-		CtfTeamHudMessage(BLUE_TEAM, "CTF_EFLAGBACK", "CTF_FLAGBACK");
-		CtfTeamSpeak(BLUE_TEAM, "!CTF_EFLAGBACK", "!CTF_FLAGBACK");
-		entity_set_origin(ent, gOriginFlagRed);
-		set_pev(ent, pev_angles, gAnglesFlagRed);
-	}
-
 	drop_to_floor(ent);
+
+	// notify players that flag has return to base
+	new team;
+	switch (GetFlagTeam(ent)) {
+		case BLUE_TEAM: team = RED_TEAM;
+		case RED_TEAM: team = BLUE_TEAM;
+	}
+	
+	CtfTeamHudMessage(team, "CTF_EFLAGBACK", "CTF_FLAGBACK");
+	CtfTeamSpeak(team, "!CTF_EFLAGBACK", "!CTF_FLAGBACK");
 }
 
 IsPlayerCarryingFlag(id) {
@@ -502,8 +528,7 @@ public DropFlag(id, team) {
 	else
 		return;
 
-	CtfTeamHudMessage(team, "CTF_ELOSTFLAG", "CTF_LOSTFLAG");
-
+	
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
 
@@ -516,6 +541,8 @@ public DropFlag(id, team) {
 	set_pev(ent, pev_aiment, 0);
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
+
+	CtfTeamHudMessage(team, "CTF_ELOSTFLAG", "CTF_LOSTFLAG");
 }
 
 public CmdDropFlag(id, level, cid) {
@@ -526,61 +553,53 @@ public CmdDropFlag(id, level, cid) {
 	return PLUGIN_HANDLED;
 }
 
-public SpawnFlag(const Float:origin[3], team) {
-	new ent = create_entity("info_target");
-
+SpawnFlag(ent) {
+	new Float:origin[3], Float:angles[3];
+	GetFlagStartOrigin(ent, origin);
+	GetFlagStartAngles(ent, angles);
+	
 	entity_set_model(ent, FLAG_MODEL);
+	entity_set_size(ent, Float:{ 4.0, 4.0, 0.0 }, Float:{ 4.0, 4.0, 72.0 });
+
+	set_pev(ent, pev_origin, origin);
+	set_pev(ent, pev_angles, angles);
 	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_framerate, 1.0);
 
-	entity_set_size(ent, Float:{ 4.0, 4.0, 0.0 }, Float:{ 4.0, 4.0, 72.0 });
-
-	switch (team) {
+	switch (GetFlagTeam(ent)) {
 		case BLUE_TEAM: {
-			entity_set_origin(ent, gOriginFlagBlue);
-			set_pev(ent, pev_classname, INFO_FLAG_BLUE);
 			set_pev(ent, pev_skin, FLAG_SKIN_BLUE);
 			set_ent_rendering(ent, kRenderFxGlowShell, 0, 0, 255, kRenderNormal, 30);
-			set_pev(ent, pev_angles, gAnglesFlagBlue);
-		} case RED_TEAM: {
-			entity_set_origin(ent, gOriginFlagRed);		
-			set_pev(ent, pev_classname, INFO_FLAG_RED);
+		}
+		case RED_TEAM: {
 			set_pev(ent, pev_skin, FLAG_SKIN_RED);
 			set_ent_rendering(ent, kRenderFxGlowShell, 255, 0, 0, kRenderNormal, 30);
-			set_pev(ent, pev_angles, gAnglesFlagRed);
 		}
 	}
-
-	return ent;
 }
 
 // we need a base for the flag so players can score points when they capture...
-public SpawnCapturePoint(const Float:origin[3], team) {
+SpawnCapturePoint(flagEnt) {
+	new Float:origin[3], Float:angles[3];
+	GetFlagStartOrigin(flagEnt, origin);
+	GetFlagStartAngles(flagEnt, angles);
+	
 	new ent = create_entity("info_target");
 	set_pev(ent, pev_classname, INFO_CAPTURE_POINT);
-	
-	entity_set_model(ent, FLAG_MODEL);
-	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
-	set_pev(ent, pev_solid, SOLID_TRIGGER);
-	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
-	set_pev(ent, pev_framerate, 1.0);
 
+	entity_set_model(ent, FLAG_MODEL);
 	entity_set_size(ent, Float:{ -8.0, -8.0, 0.0 }, Float:{ 8.0, 8.0, 8.0 });
 	set_ent_rendering(ent, kRenderFxNone, 0, 0, 0, kRenderTransAlpha, 90);
 
-	switch (team) {
-		case BLUE_TEAM: {
-			set_pev(ent, pev_skin, FLAG_SKIN_BLUE);
-			entity_set_origin(ent, gOriginFlagBlue);
-			set_pev(ent, pev_angles, gAnglesFlagBlue);
-		} case RED_TEAM: {
-			entity_set_origin(ent, gOriginFlagRed);		
-			set_pev(ent, pev_skin, FLAG_SKIN_RED);
-			set_pev(ent, pev_angles, gAnglesFlagRed);
-		}
-	}
+	set_pev(ent, pev_origin, origin);
+	set_pev(ent, pev_angles, angles);
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+	set_pev(ent, pev_solid, SOLID_TRIGGER);
+	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(ent, pev_skin, pev(flagEnt, pev_skin));
+	set_pev(ent, pev_framerate, 1.0);
 
 	return ent;
 }
@@ -612,15 +631,17 @@ public pfn_keyvalue(entid) {
 		}
 	} else if (equal(classname, INFO_FLAG_BLUE)) { // item_flag_team1
 		if (equal(key, "origin")) {
-			gOriginFlagBlue = vector;
+			gFlagBlue = CreateCustomEnt(INFO_FLAG_BLUE);
+			SetFlagStartOrigin(gFlagBlue, vector);
 		} else if (equal(key, "angles")) {
-			gAnglesFlagBlue = vector;
+			SetFlagStartAngles(gFlagBlue, vector);
 		}
 	} else if (equal(classname, INFO_FLAG_RED)) { // item_flag_team2
 		if (equal(key, "origin")) {
-			gOriginFlagRed = vector;
+			gFlagRed = CreateCustomEnt(INFO_FLAG_RED);
+			SetFlagStartOrigin(gFlagRed, vector);
 		} else if (equal(key, "angles")) {
-			gAnglesFlagRed = vector;
+			SetFlagStartAngles(gFlagRed, vector);
 		}
 		gIsMapCtf = true;
 	}
