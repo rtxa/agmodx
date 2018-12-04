@@ -71,6 +71,7 @@ new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 new gCvarCtfDebug;
 new gCvarCapturePoints;
 new gCvarFlagReturnTime;
+new gCvarFlagDelayTime;
 
 bool:IsCtfMode() {
 	new type[32];
@@ -95,6 +96,7 @@ public plugin_precache() {
 	gCvarCtfDebug = create_cvar("sv_ag_ctf_debug", "0");
 	gCvarCapturePoints = create_cvar("sv_ag_ctf_capturepoints", "10");
 	gCvarFlagReturnTime = create_cvar("sv_ag_ctf_flag_returntime", "30");
+	gCvarFlagDelayTime = create_cvar("sv_ag_ctf_flag_delaytime", "3");
 }
 
 public plugin_init() {
@@ -121,7 +123,6 @@ public plugin_init() {
 	register_touch(INFO_FLAG_BLUE, "player", "FwFlagTouch");
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(INFO_CAPTURE_POINT, "player", "FwCapturePointTouch");
-
 
 	register_message(get_user_msgid("ScoreInfo"), "MsgScoreInfo");
 
@@ -415,10 +416,10 @@ public FwFlagTouch(touched, toucher) {
 	if (get_pcvar_num(gCvarCtfDebug))
 		server_print("FlagTouched");
 
-	// block pick up when flag is in the air
-	if (fm_distance_to_floor(touched) != 0.0)
+	if (GetFlagNextTouch(touched) >= get_gametime())
 		return PLUGIN_HANDLED;
-	else if (!is_user_alive(toucher))
+
+	if (!is_user_alive(toucher))
 		return PLUGIN_HANDLED;
 
 	new team = hl_get_user_team(toucher);
@@ -430,7 +431,7 @@ public FwFlagTouch(touched, toucher) {
 		if (team == BLUE_TEAM)
 			TakeFlag(toucher, touched);
 	}
-	return PLUGIN_HANDLED;
+	return PLUGIN_CONTINUE;
 }
 
 AttachFlagToPlayer(id, ent) {
@@ -467,6 +468,14 @@ GetFlagStartAngles(ent, Float:angles[3]) {
 	pev(ent, pev_vuser2, angles);
 }
 
+SetFlagNextTouch(ent, Float:time) {
+	set_pev(ent, pev_fuser1, get_gametime() + time);
+}
+
+Float:GetFlagNextTouch(ent) {
+	return entity_get_float(ent, EV_FL_fuser1);
+}
+
 ReturnFlagToBase(ent) {
 	if (get_pcvar_num(gCvarCtfDebug))
 		server_print("ReturnFlagToBase");
@@ -484,7 +493,11 @@ ReturnFlagToBase(ent) {
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
+	entity_set_size(ent, Float:{ 4.0, 4.0, 0.0 }, Float:{ 4.0, 4.0, 72.0 });
+
 	create_teleport_splash(ent);
+
+	SetFlagNextTouch(ent, get_pcvar_float(gCvarFlagDelayTime));
 
 	// notify players that flag has return to base
 	new team;
@@ -530,9 +543,10 @@ public DropFlag(id, team) {
 	else
 		return;
 
-	
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
+
+	SetFlagNextTouch(ent, get_pcvar_float(gCvarFlagDelayTime));
 
 	new Float:velocity[3];
 	velocity_by_aim(id, 400, velocity);
@@ -722,3 +736,5 @@ stock create_teleport_splash(ent) {
 
 	return 1;
 }
+
+
