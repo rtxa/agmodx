@@ -147,7 +147,7 @@ public client_disconnected(id) {
 	if (!gIsCtfMode)
 		return PLUGIN_HANDLED;
 
-	DropFlag(id, IsPlayerCarryingFlag(id));
+	DropFlag(id);
 
 	return PLUGIN_CONTINUE;
 }
@@ -298,7 +298,7 @@ stock Speak(id, const speak[]) {
 
 public DropFlagSpec(id) {
 	if (hl_get_user_spectator(id))
-		DropFlag(id, IsPlayerCarryingFlag(id));
+		DropFlag(id);
 }
 
 
@@ -333,7 +333,31 @@ public FwCapturePointTouch(touched, toucher) {
 }
 
 public FwPlayerKilled(victim, attacker) {
-	DropFlag(victim, IsPlayerCarryingFlag(victim));
+	new ent = GetFlagCarriedByPlayer(victim);
+	if (!ent)
+		return HAM_IGNORED;
+
+	new classname[32];
+	if (pev_valid(attacker)) {
+		pev(attacker, pev_classname, classname, charsmax(classname));
+	}
+
+	if (equal(classname, "trigger_hurt")) {
+		SetFlagCarriedByPlayer(victim, 0);
+		ReturnFlagToBase(ent);
+	} else {
+		DropFlag(victim);
+	}
+
+	return HAM_IGNORED;
+}
+
+GetFlagCarriedByPlayer(id) {
+	return pev(id, pev_iuser4);
+}
+
+SetFlagCarriedByPlayer(id, ent) {
+	set_pev(id, pev_iuser4, ent);
 }
 
 public FwPlayerSpawnPost(id) {
@@ -525,6 +549,7 @@ IsPlayerCarryingFlag(id) {
 public TakeFlag(id, ent) {
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	AttachFlagToPlayer(id, ent);
+	SetFlagCarriedByPlayer(id, ent);
 	CtfHudMessage(id, "CTF_YOUGOTFLAG", "CTF_GOTFLAG", "CTF_EGOTFLAG");
 	CtfSpeak(id, "!CTF_YOUGOTFLAG", "!CTF_GOTFLAG", "!CTF_EGOTFLAG");
 }
@@ -534,14 +559,9 @@ public TaskReturnFlagToBase(taskid) {
 	ReturnFlagToBase(ent);
 }
 
-public DropFlag(id, team) {
-	new ent;
-	if (team == BLUE_TEAM)
-		ent = gFlagBlue;
-	else if (team == RED_TEAM)
-		ent = gFlagRed;
-	else
-		return;
+public DropFlag(id) {
+	new ent = GetFlagCarriedByPlayer(id);
+	SetFlagCarriedByPlayer(id, 0);
 
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
@@ -558,13 +578,14 @@ public DropFlag(id, team) {
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
-	CtfTeamHudMessage(team, "CTF_ELOSTFLAG", "CTF_LOSTFLAG");
+	CtfTeamHudMessage(GetFlagTeam(ent), "CTF_ELOSTFLAG", "CTF_LOSTFLAG");
 }
 
 public CmdDropFlag(id, level, cid) {
 	if (get_pcvar_num(gCvarCtfDebug))
 		server_print("CmdDropFlag");
-	DropFlag(id, IsPlayerCarryingFlag(id));
+
+	DropFlag(id);
 
 	return PLUGIN_HANDLED;
 }
