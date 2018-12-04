@@ -563,6 +563,9 @@ public DropFlag(id) {
 	new ent = GetFlagCarriedByPlayer(id);
 	SetFlagCarriedByPlayer(id, 0);
 
+	if (!ent)
+		return;
+
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
 
