@@ -475,6 +475,8 @@ ReturnFlagToBase(ent) {
 	GetFlagStartOrigin(ent, origin);
 	GetFlagStartAngles(ent, angles);
 
+	create_teleport_splash(ent);
+
 	entity_set_origin(ent, origin);
 	set_pev(ent, pev_angles, angles);
 	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
@@ -482,7 +484,7 @@ ReturnFlagToBase(ent) {
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
-	drop_to_floor(ent);
+	create_teleport_splash(ent);
 
 	// notify players that flag has return to base
 	new team;
@@ -567,6 +569,11 @@ SpawnFlag(ent) {
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
 	set_pev(ent, pev_framerate, 1.0);
+
+	// when flag is on ground, set a new start origin
+	drop_to_floor(ent);
+	pev(ent, pev_origin, origin);
+	SetFlagStartOrigin(ent, origin);
 
 	switch (GetFlagTeam(ent)) {
 		case BLUE_TEAM: {
@@ -700,4 +707,18 @@ bool:IsObserver(id) {
 
 bool:IsInWelcomeCam(id) {
 	return IsObserver(id) && !hl_get_user_spectator(id) && get_pdata_int(id, OFFSET_HUD) & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
+}
+
+stock create_teleport_splash(ent) {
+	new Float:origin[3];
+	pev(ent, pev_origin, origin);
+
+	message_begin(MSG_BROADCAST, SVC_TEMPENTITY);
+	write_byte(TE_TELEPORT); 
+	write_coord(floatround(origin[0]));
+	write_coord(floatround(origin[1]));
+	write_coord(floatround(origin[2]));
+	message_end();
+
+	return 1;
 }
