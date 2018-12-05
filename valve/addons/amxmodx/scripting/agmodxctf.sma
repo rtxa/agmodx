@@ -306,6 +306,7 @@ public FwCapturePointTouch(touched, toucher) {
 	switch (IsPlayerCarryingFlag(toucher)) {
 		case BLUE_TEAM: { // Captured Blue Team flag
 			if (touched == gBaseRed) {
+				SetFlagCarriedByPlayer(toucher, 0);
 				ReturnFlagToBase(gFlagBlue);
 
 				new points = get_pcvar_num(gCvarCapturePoints);
@@ -318,6 +319,7 @@ public FwCapturePointTouch(touched, toucher) {
 			}
 		} case RED_TEAM: { // Captured Red Team flag
 			if (touched == gBaseBlue) {
+				SetFlagCarriedByPlayer(toucher, 0);
 				ReturnFlagToBase(gFlagRed);
 
 				new points = get_pcvar_num(gCvarCapturePoints);
