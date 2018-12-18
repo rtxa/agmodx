@@ -18,8 +18,6 @@ enum (+= 100) {
 	TASK_RETURNFLAGTOBASE = 1000,
 };
 
-#define OFFSET_PHYSHICSFLAG 193
-
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
 #define HL_MAX_TEAMNAME_LENGTH 16
@@ -36,6 +34,7 @@ enum (+= 100) {
 #define FLAG_STATUS_NOTCARRIED 0
 #define FLAG_STATUS_CARRIED 1
 
+new const INFO_PLAYER_DEATHMATCH[] = "info_player_deathmatch";
 new const INFO_PLAYER_BLUE[] = "info_player_team1";
 new const INFO_PLAYER_RED[] = "info_player_team2";
 
@@ -53,12 +52,6 @@ new bool:gIsMapCtf;
 
 new gBlueScore;
 new gRedScore;
-
-new gSpawnsBlue[64];
-new gSpawnsRed[64];
-
-new gNumSpawnsRed;
-new gNumSpawnsBlue;
 
 new gFlagBlue;
 new gFlagRed;
@@ -99,6 +92,13 @@ public plugin_precache() {
 	gCvarFlagDelayTime = create_cvar("sv_ag_ctf_flag_delaytime", "3");
 }
 
+stock CreateGameTeamMaster(name[], teamid) {
+	new ent = create_entity("game_team_master");
+	set_pev(ent, pev_targetname, name);
+	DispatchKeyValue(ent, "teamindex", fmt("%i", teamid - 1));
+	return ent;
+}
+
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
@@ -112,7 +112,6 @@ public plugin_init() {
 	register_clcmd("dropitems", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
 
-	RegisterHam(Ham_Spawn, "player", "FwPlayerSpawnPost", true);
 	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
 
 	SpawnFlag(gFlagBlue);
@@ -125,6 +124,9 @@ public plugin_init() {
 	register_touch(INFO_CAPTURE_POINT, "player", "FwCapturePointTouch");
 
 	register_message(get_user_msgid("ScoreInfo"), "MsgScoreInfo");
+
+	CreateGameTeamMaster("blue", BLUE_TEAM);
+	CreateGameTeamMaster("red", RED_TEAM);
 
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
@@ -362,82 +364,6 @@ SetFlagCarriedByPlayer(id, ent) {
 	set_pev(id, pev_iuser4, ent);
 }
 
-public FwPlayerSpawnPost(id) {
-	if (IsInWelcomeCam(id))
-		return HAM_IGNORED;
-
-	new ent = FindPlayerTeamSpawn(id);
-
-	if (ent)
-		TeleportToSpawn(id, ent);
-	else
-		user_kill(id, true);
-
-	return HAM_IGNORED;
-}
-
-public TeleportToSpawn(id, spawnEnt) {
-	new Float:origin[3], Float:angle[3];
-
-	// get origin and angle of spawn
-	pev(spawnEnt, pev_origin, origin);
-	pev(spawnEnt, pev_angles, angle);
-
-	// teleport it
-	entity_set_origin(id, origin);
-	set_pev(id, pev_angles, angle);
-	set_pev(id, pev_fixangle, 1);
-}
-
-FindPlayerTeamSpawn(id) {
-	new team, rndIdx, attempts;
-	team = hl_get_user_team(id);
-
-	switch (team) {
-		case BLUE_TEAM: {
-			do {
-				rndIdx = random(gNumSpawnsBlue);
-
-				if (attempts++ > 10) {
-					for (new i; i < gNumSpawnsBlue; i++)
-						if (IsSpawnPointValid(id, gSpawnsBlue[i]))
-							return gSpawnsBlue[i];
-					return 0;
-				}
-			} while (!IsSpawnPointValid(id, gSpawnsBlue[rndIdx]));
-			return gSpawnsBlue[rndIdx];
-		}
-		case RED_TEAM: {
-			do {
-				rndIdx = random(gNumSpawnsRed);
-
-				if (attempts++ > 10) {
-					for (new i; i < gNumSpawnsRed; i++)
-						if (IsSpawnPointValid(id, gSpawnsRed[i]))
-							return gSpawnsRed[i];
-					return 0;
-				}
-			} while (!IsSpawnPointValid(id, gSpawnsRed[rndIdx]));
-			return gSpawnsRed[rndIdx];
-		}
-		default: {
-		 	return 0;
-		}
-	}
-	return 0;
-}
-
-bool:IsSpawnPointValid(id, spawnEnt) {
-	new ent, Float:origin[3];
-	pev(spawnEnt, pev_origin, origin);
-
-	while ((ent = find_ent_in_sphere(ent, origin, 10.0)))
-		if (IsPlayer(ent) && ent != id)
-			return false;
-
-	return true;
-}
-
 public FwFlagTouch(touched, toucher) {
 	if (get_pcvar_num(gCvarCtfDebug))
 		server_print("FlagTouched");
@@ -653,28 +579,31 @@ SpawnCapturePoint(flagEnt) {
 
 /* Get data of entities from ag ctf map
  */
-public pfn_keyvalue(entid) {	
-	new classname[32], key[8], value[42];
+public pfn_keyvalue(ent) {	
+	new classname[32], key[16], value[64];
 	copy_keyvalue(classname, sizeof classname, key, sizeof key, value, sizeof value);
 
 	new Float:vector[3];
 	StrToVec(value, vector);
 
-	if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
+	static spawn;
+	if (equal(classname, INFO_PLAYER_DEATHMATCH)) {
+		return PLUGIN_HANDLED;
+	} else if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
 		if (equal(key, "origin")) {
-			gSpawnsBlue[gNumSpawnsBlue] = create_entity("info_player_deathmatch");
-			entity_set_origin(gSpawnsBlue[gNumSpawnsBlue], vector);
-			gNumSpawnsBlue++;
+			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
+			entity_set_origin(spawn, vector);
+			set_pev(spawn, pev_netname, "blue");
 		} else if (equal(key, "angles")) {
-			set_pev(gSpawnsBlue[gNumSpawnsBlue - 1], pev_angles, vector);
+			set_pev(spawn, pev_angles, vector);
 		}
 	} else if (equal(classname, INFO_PLAYER_RED)) { // info_player_team2
 		if (equal(key, "origin")) {
-			gSpawnsRed[gNumSpawnsRed] = create_entity("info_player_deathmatch");
-			entity_set_origin(gSpawnsRed[gNumSpawnsRed], vector);
-			gNumSpawnsRed++;
+			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
+			entity_set_origin(spawn, vector);
+			set_pev(spawn, pev_netname, "red");
 		} else if (equal(key, "angles")) {
-			set_pev(gSpawnsRed[gNumSpawnsRed - 1], pev_angles, vector);
+			set_pev(spawn, pev_angles, vector);
 		}
 	} else if (equal(classname, INFO_FLAG_BLUE)) { // item_flag_team1
 		if (equal(key, "origin")) {
@@ -692,6 +621,7 @@ public pfn_keyvalue(entid) {
 		}
 		gIsMapCtf = true;
 	}
+	return PLUGIN_CONTINUE;
 }
 
 stock CreateCustomEnt(const classname[]) {
@@ -740,15 +670,6 @@ bool:array_search(value, array[], size) {
 	return match;
 }
 
-bool:IsObserver(id) {
-	return get_pdata_int(id, OFFSET_PHYSHICSFLAG) & PFLAG_OBSERVER > 0 ? true : false;
-}
-
-
-bool:IsInWelcomeCam(id) {
-	return IsObserver(id) && !hl_get_user_spectator(id) && get_pdata_int(id, OFFSET_HUD) & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
-}
-
 stock create_teleport_splash(ent) {
 	new Float:origin[3];
 	pev(ent, pev_origin, origin);
@@ -762,5 +683,3 @@ stock create_teleport_splash(ent) {
 
 	return 1;
 }
-
-
