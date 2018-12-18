@@ -77,9 +77,6 @@ new const gBeepSnd[] = "fvox/beep";
 
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
-#define OFFSET_PHYSHICSFLAG 193
-#define OFFSET_IJUICE 62
-
 #define HL_MAX_TEAMNAME_LENGTH 16
 
 // Team models (this is used to fix team selection from VGUI Viewport)
@@ -2175,11 +2172,11 @@ public ResetChargers() {
 			if (equal(classname, "func_recharge")) {
 				set_pev(i, pev_frame, 0);
 				set_pev(i, pev_nextthink, 0);
-				set_pdata_int(i, OFFSET_IJUICE, 30); 
+				set_ent_data(i, "CRecharge", "m_iJuice", 30);
 			} else if (equal(classname, "func_healthcharger")) {
 				set_pev(i, pev_frame, 0);
 				set_pev(i, pev_nextthink, 0);
-				set_pdata_int(i, OFFSET_IJUICE, 75);
+				set_ent_data(i, "CWallHealth", "m_iJuice", 75);
 			}
 		}
 	}
@@ -2332,12 +2329,12 @@ public GetTeamListModels(output[][], size) {
 }
 
 bool:IsObserver(id) {
-	return get_pdata_int(id, OFFSET_PHYSHICSFLAG) & PFLAG_OBSERVER > 0 ? true : false;
+	return get_ent_data(id, "CBasePlayer", "m_afPhysicsFlags") & PFLAG_OBSERVER > 0 ? true : false;
 }
 
 
 bool:IsInWelcomeCam(id) {
-	return IsObserver(id) && !hl_get_user_spectator(id) && get_pdata_int(id, OFFSET_HUD) & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
+	return IsObserver(id) && !hl_get_user_spectator(id) && get_ent_data(id, "CBasePlayer", "m_iHideHUD") & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
 }
 
 /* Restock/remove ammo in a user's backpack.
@@ -2395,7 +2392,7 @@ stock ag_set_user_spectator(client, bool:spectator = true) {
 		set_pev(client, pev_iuser1, 0);
 		set_pev(client, pev_iuser2, 0);
 
-		set_pdata_int(client, OFFSET_HUD, 0);
+		set_ent_data(client, "CBasePlayer", "m_iHideHUD", 0);
 
 		// clear center message on exit from spectator mode
  		client_print(client, print_center, "");
