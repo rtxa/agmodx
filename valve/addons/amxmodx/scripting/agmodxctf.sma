@@ -70,17 +70,18 @@ bool:IsCtfMode() {
 	new type[32];
 	get_cvar_string("sv_ag_gametype", type, charsmax(type));
 
-	if (!equal(type, "ctf")) {
-		return false;
-	} else if (!gIsMapCtf) {
-		log_amx("Map not supported for CTF.");
-		return false;
-	}
+	if (equal(type, "ctf"))
+		return true;
 
-	return true;
+	return false;
 }
 
 public plugin_precache() {
+	gIsCtfMode = IsCtfMode();
+
+	if (!gIsCtfMode)
+		return;
+
 	precache_model(FLAG_MODEL);
 
 	for (new i; i < sizeof VOX_SOUNDS; i++)
@@ -99,13 +100,28 @@ stock CreateGameTeamMaster(name[], teamid) {
 	return ent;
 }
 
+// this removes spawns that are not from ctf
+RemoveUselessSpawns() {
+	new ent, master[32];
+	while ((ent = find_ent_by_class(ent, INFO_PLAYER_DEATHMATCH))) {
+		pev(ent, pev_netname, master, charsmax(master));
+		if (!equal(master, "blue") && !equal(master, "red")) {
+			remove_entity(ent);
+		} 
+	}
+}
+
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	gIsCtfMode = IsCtfMode();
-
-	if (!gIsCtfMode)
+	if (!gIsCtfMode) {
 		return;
+	} else if (!gIsMapCtf) {
+		log_amx("Map not supported for CTF.");
+		return;
+	}
+
+	RemoveUselessSpawns();
 
 	register_dictionary("agmodxctf.txt");
 
@@ -579,7 +595,10 @@ SpawnCapturePoint(flagEnt) {
 
 /* Get data of entities from ag ctf map
  */
-public pfn_keyvalue(ent) {	
+public pfn_keyvalue(ent) {
+	if (!gIsCtfMode)
+		return PLUGIN_CONTINUE;
+
 	new classname[32], key[16], value[64];
 	copy_keyvalue(classname, sizeof classname, key, sizeof key, value, sizeof value);
 
@@ -587,9 +606,7 @@ public pfn_keyvalue(ent) {
 	StrToVec(value, vector);
 
 	static spawn;
-	if (equal(classname, INFO_PLAYER_DEATHMATCH)) {
-		return PLUGIN_HANDLED;
-	} else if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
+	if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
 		if (equal(key, "origin")) {
 			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
 			entity_set_origin(spawn, vector);
