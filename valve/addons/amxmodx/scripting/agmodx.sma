@@ -1550,7 +1550,7 @@ public CmdDrop() {
 
 // I made this function for foreigners so they can differentiate the order of the month and the day...
 GetPluginBuildDate(output[], len) {
-	format_time(output, len, "%d %b %Y", parse_time(__DATE__, "%D")); // 15 Nov 2018
+	format_time(output, len, "%d %b %Y", parse_time(__DATE__, "%m:%d:%Y")); // 15 Nov 2018
 }
 
 // We need to use director hud msg because there aren't enough hud channels, unless we make a better gui that use less channels
