@@ -29,18 +29,29 @@ stock static teams[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
 static const _HLW_to_rgAmmoIdx[] =
 {
-	OFFSET_AMMO_SHOTGUN = 310,
-	OFFSET_AMMO_9MM, // MP5, GLOCK
-	OFFSET_AMMO_ARGRENADE, // M-203
-	OFFSET_AMMO_PYTHON,
-	OFFSET_AMMO_URANIUM, // GAUSS, EGON
-	OFFSET_AMMO_RPG,
-	OFFSET_AMMO_CROSSBOW,
-	OFFSET_AMMO_TRIPMINE,
-	OFFSET_AMMO_SATCHEL,
-	OFFSET_AMMO_HEGRENADE, // HAND GRENADE
-	OFFSET_AMMO_SNARK,
-	OFFSET_AMMO_HORNET	
+	0, 	// none
+	0,	// crowbar
+	2, 	// 9mmhandgun
+	4, 	// 357
+	2, 	// 9mmAR
+	3, 	// m203
+	7, 	// crossbow
+	1, 	// shotgun
+	6, 	// rpg
+	5, 	// gauss
+	5, 	// egon
+	12,	// hornetgun
+	10, // handgrenade
+	8, 	// tripmine
+	9, 	// satchel
+	11  // snark
+};
+
+/* Returns player frags.
+*/
+stock hl_get_user_frags(id)
+{
+	return pev(id, pev_frags, frags);
 }
 
 /* Sets player frags.
