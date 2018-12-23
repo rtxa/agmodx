@@ -20,8 +20,6 @@ enum (+= 100) {
 
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
-#define HL_MAX_TEAMNAME_LENGTH 16
-
 #define BLUE_TEAM 1
 #define RED_TEAM 2
 

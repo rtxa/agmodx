@@ -77,8 +77,6 @@ new const gBeepSnd[] = "fvox/beep";
 
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
-#define HL_MAX_TEAMNAME_LENGTH 16
-
 // Team models (this is used to fix team selection from VGUI Viewport)
 new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
@@ -704,7 +702,7 @@ SetPlayerEquipment(id) {
 public ResetBpAmmo(id) {
 	for (new i; i < sizeof gCvarStartAmmo; i++) {
 		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // some maps like bootbox dont like this if i dont put this condition
-			ag_set_user_bpammo(id, 310+i, get_pcvar_num(gCvarStartAmmo[i]));
+			set_ent_data(id, "CBasePlayer", "m_rgAmmo", get_pcvar_num(gCvarStartAmmo[i]), i + 1);
 	}
 }
 
@@ -1359,7 +1357,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	new ammoMsg[16], arGrenades;
 
 	if (weaponid == HLW_MP5)
-		arGrenades = get_pdata_int(sender, OFFSET_AMMO_ARGRENADE, EXTRAOFFSET);
+		arGrenades = hl_get_user_bpammo(sender, HLW_CHAINGUN);
 
 	FormatAmmo(weaponid, ammo, bpammo, arGrenades, ammoMsg, charsmax(ammoMsg));
 	replace_string(text, charsmax(text), "%q", ammoMsg, false); 
@@ -2335,15 +2333,6 @@ bool:IsObserver(id) {
 
 bool:IsInWelcomeCam(id) {
 	return IsObserver(id) && !hl_get_user_spectator(id) && get_ent_data(id, "CBasePlayer", "m_iHideHUD") & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
-}
-
-/* Restock/remove ammo in a user's backpack.
- */
-stock ag_set_user_bpammo(client, weapon, ammo) {
-	if(weapon <= HLW_CROWBAR)
-		return;
-
-	set_pdata_int(client, weapon, ammo, EXTRAOFFSET);
 }
 
 stock ag_get_team_alives(teamIndex) {
