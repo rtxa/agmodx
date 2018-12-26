@@ -109,19 +109,24 @@ RemoveUselessSpawns() {
 	}
 }
 
+public OnPlayerSpawn(id) {
+	client_print(id, print_center, "%l", "CTF_NOTCTFMAP");
+}
+
 public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
+
+	register_dictionary("agmodxctf.txt");
 
 	if (!gIsCtfMode) {
 		return;
 	} else if (!gIsMapCtf) {
-		log_amx("Map not supported for CTF.");
+		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
+		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
 		return;
 	}
 
 	RemoveUselessSpawns();
-
-	register_dictionary("agmodxctf.txt");
 
 	register_clcmd("dropitems", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");

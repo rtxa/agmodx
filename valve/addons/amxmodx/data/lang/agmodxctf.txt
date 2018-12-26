@@ -1,4 +1,5 @@
 [en]
+CTF_NOTCTFMAP = Map not supported for CTF 
 CTF_YOUCAP = You captured the ENEMY flag!
 CTF_TEAMCAP = Your team captured the ENEMY flag
 CTF_THEYCAP = Your flag was CAPTURED!
@@ -19,6 +20,7 @@ CTF_ELOSTFLAG = The ENEMY lost your FLAG!
 !CTF_EFLAGBACK = vox/dadeda The enemy flag(e80) has(s5) returned
 
 [es]
+CTF_NOTCTFMAP = Mapa no compatible con el modo CTF
 CTF_YOUCAP = Has capturado la bandera ENEMIGA.
 CTF_TEAMCAP = Tu equipo ha capturado^nla bandera ENEMIGA.
 CTF_THEYCAP = Tu bandera ha sido CAPTURADA.
