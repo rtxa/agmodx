@@ -516,16 +516,18 @@ public DropFlag(id) {
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
 
-	SetFlagNextTouch(ent, get_pcvar_float(gCvarFlagDelayTime));
-
 	new Float:velocity[3];
 	velocity_by_aim(id, 400, velocity);
 
-	set_pev(ent, pev_angles, 0);
-	set_pev(ent, pev_velocity, velocity);
-	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_aiment, 0);
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
+	set_pev(ent, pev_velocity, velocity);
+	set_pev(ent, pev_angles, 0);
+
+	entity_set_size(ent, Float:{0.0, 0.0, 0.0}, Float:{0.0, 0.0, 0.0}); // collisions will work as expected with no size (strange)
+
+	SetFlagNextTouch(ent, get_pcvar_float(gCvarFlagDelayTime));
 	set_pev(ent, pev_solid, SOLID_TRIGGER);
 
 	CtfTeamHudMessage(GetFlagTeam(ent), "CTF_ELOSTFLAG", "CTF_LOSTFLAG");
