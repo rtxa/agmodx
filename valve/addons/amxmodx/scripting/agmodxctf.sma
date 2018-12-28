@@ -516,14 +516,22 @@ public DropFlag(id) {
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	set_task(get_pcvar_float(gCvarFlagReturnTime), "TaskReturnFlagToBase", ent + TASK_RETURNFLAGTOBASE);
 
-	new Float:velocity[3];
-	velocity_by_aim(id, 400, velocity);
 
 	set_pev(ent, pev_aiment, 0);
 	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 	set_pev(ent, pev_sequence, FLAG_SEQ_NOTCARRIED);
-	set_pev(ent, pev_velocity, velocity);
 	set_pev(ent, pev_angles, 0);
+
+	if (is_user_alive(id)) { // drop it where player points
+		new Float:velocity[3];
+		velocity_by_aim(id, 400, velocity);
+		set_pev(ent, pev_velocity, velocity);
+	} else { // release it from player's position
+		new Float:origin[3];
+		pev(id, pev_origin, origin);
+		entity_set_origin(ent, origin);
+		set_pev(ent, pev_flags, FL_FLY);
+	}
 
 	entity_set_size(ent, Float:{0.0, 0.0, 0.0}, Float:{0.0, 0.0, 0.0}); // collisions will work as expected with no size (strange)
 
