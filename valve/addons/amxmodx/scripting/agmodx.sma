@@ -588,11 +588,11 @@ public client_remove(id) {
 	}
 
 	if (gIsArenaMode) {
-		if (GetNumAlives() < 2)
-			if (id == gMatchWinner) {
+		if (GetNumAlives() < 2) {
+			if (id == gMatchWinner)
 				gMatchWinner = gMatchLooser;
-				EndArena();
-			}
+			EndArena();
+		}
 	} else if (gIsLtsMode) {
 		EndMatchLts();
 	} else if (gIsLmsMode) {
