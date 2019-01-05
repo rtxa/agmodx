@@ -1885,12 +1885,13 @@ public CmdVote(id) {
 
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
 	
+	log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", id);
+	
 	// cancel vote after x seconds (set_task doesnt work in pause)
 	set_task(get_pcvar_float(gCvarVoteDuration), "DenyVote", TASK_DENYVOTE); 
 
 	// show vote
 	ShowVote();
-
 	return PLUGIN_HANDLED;
 }
 
@@ -1941,6 +1942,8 @@ public DoVote() {
 	if (!caller)
 		return;
 
+	log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", caller);
+
 	switch (gVoteOption) {
 		case VOTE_AGABORT: 			AbortVersus();
 		case VOTE_AGALLOW: 			AllowPlayer(target);
@@ -1967,6 +1970,8 @@ public DenyVote() {
 	if (get_pcvar_num(gCvarDebugVote))
 		server_print("DenyVote");
 
+	new caller = find_player_ex(FindPlayer_MatchUserId, gVoteCallerUserId);
+	log_amx("%L", LANG_SERVER, "LOG_VOTE_DENIED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", caller);
 	RemoveVote();
 
 	gVoteFailedTime = get_gametime() + get_pcvar_num(gCvarVoteFailedTime);
