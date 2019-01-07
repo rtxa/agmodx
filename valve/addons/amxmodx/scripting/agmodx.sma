@@ -1172,9 +1172,9 @@ public StartVersus() {
 		if (IsInWelcomeCam(player)) { // send to spec players in welcome cam 
 			ag_set_user_spectator(player);
 		} else if (!hl_get_user_spectator(player)) {
-			ResetScore(player);
-			FreezePlayer(player);
+			SaveScore(player);
 		}
+		FreezePlayer(player);
 	}
 
 	// Reset map
@@ -1205,6 +1205,8 @@ public StartVersusCountdown() {
 		gBlockCmdKill = false;
 		gBlockPlayerSpawn = false;
 
+		TrieClear(gTrieScoreAuthId);
+
 		// message holds a lot of time to avoid flickering, so I remove it manually
 		ClearSyncHud(0, gHudShowMatch);
 
@@ -1213,10 +1215,16 @@ public StartVersusCountdown() {
 
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
+			server_print("id %d IsInWelcomeCam %d", player, IsInWelcomeCam(player));
 			if (!hl_get_user_spectator(player)) {
-				SaveScore(player);
-				hl_user_spawn(player);
-				set_task(0.5, "ShowSettings", player);
+				if (!IsInWelcomeCam(player)) {				
+					ResetScore(player);
+					SaveScore(player);
+					hl_user_spawn(player);
+					set_task(0.5, "ShowSettings", player);
+				}
+			} else {
+				FreezePlayer(player, false);
 			}
 		}
 
@@ -1498,11 +1506,13 @@ public CmdSpectate(id) {
 	new authid[MAX_AUTHID_LENGTH];
 	get_user_authid(id, authid, charsmax(authid));
 
-	if (ScoreExists(authid)) { // let user spectate if he is playing a versus
-		if (!hl_get_user_spectator(id)) // set score when he is in spec will mess up the scoreboard (bugfixed hl bug?)
-			ResetScore(id); // Penalize players when they go to spec in a match
-	} else if (gBlockCmdSpec)
-		return PLUGIN_HANDLED;
+	if (!hl_get_user_spectator(id)) // note: setting score while player is in spec will mess up scoreboard (bugfixed hl bug?)
+		ResetScore(id);
+
+	if (gBlockCmdSpec) {
+		if (!ScoreExists(authid)) // only players playing a match can spectate
+			return PLUGIN_HANDLED;
+	}
 
 	if (gVoteStarted)
 		set_task(0.1, "ShowVote", TASK_SHOWVOTE); // when you spectate, the hud gets reset, so show vote after hud reset
