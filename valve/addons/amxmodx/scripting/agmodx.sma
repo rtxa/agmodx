@@ -430,7 +430,7 @@ public plugin_precache() {
 	gCvarSelfGauss = get_cvar_pointer("mp_selfgauss");
 	gCvarTimeLimit = get_cvar_pointer("mp_timelimit");
 	gCvarWeaponStay = get_cvar_pointer("mp_weaponstay");
-	
+
 	// AG Hud Color
 	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER | FCVAR_SPONLY); // yellow
 
@@ -782,7 +782,7 @@ public LmsMatchCountdown() {
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
 			if (hl_get_user_spectator(player))
-				ag_set_user_spectator(player, false);
+				hl_set_user_spectator(player, false);
 			else
 				hl_user_spawn(player);
 		}
@@ -872,7 +872,7 @@ public LtsMatchCountdown() {
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
 			if (hl_get_user_spectator(player))
-				ag_set_user_spectator(player, false);
+				hl_set_user_spectator(player, false);
 			else
 				hl_user_spawn(player);
 		}
@@ -974,11 +974,11 @@ public ArenaCountdown() {
 		}
 
 		if (hl_get_user_spectator(gMatchWinner))
-			ag_set_user_spectator(gMatchWinner, false);
+			hl_set_user_spectator(gMatchWinner, false);
 		else
 			hl_user_spawn(gMatchWinner);
 
-		ag_set_user_spectator(gMatchLooser, false);
+		hl_set_user_spectator(gMatchLooser, false);
 
 		ResetMap();
 
@@ -1167,7 +1167,7 @@ public StartVersus() {
 	for (new i; i < numPlayers; i++) {
 		player = players[i];
 		if (IsInWelcomeCam(player)) { // send to spec players in welcome cam 
-			ag_set_user_spectator(player);
+			hl_set_user_spectator(player);
 		} else if (!hl_get_user_spectator(player)) {
 			SaveScore(player);
 		}
@@ -1266,7 +1266,7 @@ public AbortVersus() {
 		if (is_user_alive(player))
 			FreezePlayer(player, false);
 		else if (hl_get_user_spectator(player))
-			ag_set_user_spectator(player, false);
+			hl_set_user_spectator(player, false);
 	}
 }
 
@@ -1285,14 +1285,14 @@ FreezePlayer(id, bool:freeze=true) {
 public SendToSpec(taskid) {
 	new id = taskid - TASK_SENDTOSPEC;
 	if (is_user_connected(id))
-		ag_set_user_spectator(id, true);
+		hl_set_user_spectator(id, true);
 }
 
 public SendVictimToSpec(taskid) {
 	new id = taskid - TASK_SENDVICTIMTOSPEC;
 	if (is_user_connected(id)) {
 		if (!is_user_alive(id) || is_user_bot(id)) {
-			ag_set_user_spectator(id, true);
+			hl_set_user_spectator(id, true);
 		}
 	}
 }
@@ -1627,9 +1627,9 @@ public CmdAgStart(id, level, cid) {
 	for (new i = 1; i <= MaxClients; i++) {
 		if (is_user_connected(i)) {
 			if (i == target[i])
-				ag_set_user_spectator(i, false);
+				hl_set_user_spectator(i, false);
 			else {
-				ag_set_user_spectator(i, true);
+				hl_set_user_spectator(i, true);
 				set_pev(id, pev_flags, pev(id, pev_flags) & ~FL_FROZEN);
 			}
 		}		
@@ -1684,7 +1684,7 @@ public AllowPlayer(id) {
 		// create a key for this new guy so i can save his score when he gets disconnect...
 		SaveScore(id);
 
-		ag_set_user_spectator(id, false);
+		hl_set_user_spectator(id, false);
 
 		ResetScore(id);
 
@@ -2375,51 +2375,6 @@ stock ag_get_team_numplayers(teamIndex) {
 	}
 
 	return numTeam;
-}
-
-stock ag_set_user_spectator(client, bool:spectator = true) {
-	if (hl_get_user_spectator(client) == spectator)
-		return;
-
-	if (spectator) {
-		static AllowSpectatorsCvar;
-		if (AllowSpectatorsCvar || (AllowSpectatorsCvar = get_cvar_pointer("allow_spectators"))) {
-			if (!get_pcvar_num(AllowSpectatorsCvar))
-				set_pcvar_num(AllowSpectatorsCvar, 1);
-
-			engclient_cmd(client, "spectate");
-		}
-	} else {
-		hl_user_spawn(client);
-
-		set_pev(client, pev_iuser1, 0);
-		set_pev(client, pev_iuser2, 0);
-
-		set_ent_data(client, "CBasePlayer", "m_iHideHUD", 0);
-
-		// clear center message on exit from spectator mode
- 		client_print(client, print_center, "");
-
-		static szTeam[16];
-		hl_get_user_team(client, szTeam, charsmax(szTeam));
-
-		// this fix when using openag client the scoreboard user colors
-		static Spectator;
-		if (Spectator || (Spectator = get_user_msgid("Spectator"))) {
-			message_begin(MSG_ALL, Spectator);
-			write_byte(client);
-			write_byte(0);
-			message_end();
-		}
-
-		static TeamInfo;
-		if (TeamInfo || (TeamInfo = get_user_msgid("TeamInfo"))) {
-			message_begin(MSG_ALL, TeamInfo);
-			write_byte(client);
-			write_string(szTeam);
-			message_end();
-		}
-	}
 }
 
 stock swap(&x, &y) {
