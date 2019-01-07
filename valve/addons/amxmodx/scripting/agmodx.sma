@@ -1601,7 +1601,7 @@ public CmdAgPause(id, level, cid) {
 
 	RemoveVote();
 	PauseGame(id);
-	return PLUGIN_CONTINUE;	
+	return PLUGIN_HANDLED;	
 }
 
 public CmdAgStart(id, level, cid) {
@@ -1654,7 +1654,7 @@ public CmdAgAbort(id, level, cid) {
 
 	AbortVersus();
 
-	return PLUGIN_CONTINUE;
+	return PLUGIN_HANDLED;
 }
 
 public CmdAgAllow(id, level, cid) {
@@ -1716,7 +1716,7 @@ public CmdAgNextMode(id, level, cid) {
 	else
 		client_print(id, print_console, "%l", "INVALID_MODE");
 
-	return PLUGIN_CONTINUE;
+	return PLUGIN_HANDLED;
 }
 
 public CmdAgNextMap(id, level, cid) {
@@ -1731,7 +1731,7 @@ public CmdAgNextMap(id, level, cid) {
 	else
 		client_print(id, print_console, "%l", "INVALID_MAP");
 
-	return PLUGIN_CONTINUE;
+	return PLUGIN_HANDLED;
 }
 
 public CmdChangeMode(id, level, cid) {
@@ -1744,7 +1744,7 @@ public CmdChangeMode(id, level, cid) {
 
 	ChangeMode(arg);
 	
-	return PLUGIN_CONTINUE;
+	return PLUGIN_HANDLED;
 }
 
 public CmdUserInfo(id, level, cid) {
@@ -1765,7 +1765,8 @@ public CmdUserInfo(id, level, cid) {
 		return PLUGIN_HANDLED;
 
 	PrintUserInfo(id, player);
-	return PLUGIN_CONTINUE;
+
+	return PLUGIN_HANDLED;
 }
 
 stock PrintUserInfo(caller, target) {
