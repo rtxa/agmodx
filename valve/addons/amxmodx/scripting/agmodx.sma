@@ -613,9 +613,6 @@ public PlayerPostSpawn(id) {
 	// when he spawn, the hud gets reset so allow him to show settings again
 	remove_task(id + TASK_SHOWSETTINGS);
 
-	if (gVoteStarted)
-		set_task(0.1, "ShowVote", TASK_SHOWVOTE); 	// when you respawn, the hud gets reset, so show vote after hud reset.
-
 	if (is_user_alive(id) && !gGamePlayerEquipExists) // what happens if users spawn dead? it's just a prevention.
 		SetPlayerEquipment(id); // note: this doesn't have effect on pre spawn
 }
@@ -1514,9 +1511,6 @@ public CmdSpectate(id) {
 			return PLUGIN_HANDLED;
 	}
 
-	if (gVoteStarted)
-		set_task(0.1, "ShowVote", TASK_SHOWVOTE); // when you spectate, the hud gets reset, so show vote after hud reset
-
 	return PLUGIN_CONTINUE;
 }
 
@@ -1837,7 +1831,8 @@ LoadGameMode() {
 public CmdVoteYes(id) {
 	if (gVoteStarted) {
 		gVotePlayers[id] = VOTE_YES;
-		ShowVote();
+		if (gIsPause) // when server is in pause, tasks are not going to get executed, so players have to update vote themselves.
+			ShowVote();
 	}
 
 	return PLUGIN_HANDLED;
@@ -1846,7 +1841,8 @@ public CmdVoteYes(id) {
 public CmdVoteNo(id) {
 	if (gVoteStarted) {
 		gVotePlayers[id] = VOTE_NO;
-		ShowVote();
+		if (gIsPause) // when server is in pause, tasks are not going to get executed, so players have to update vote themselves.
+			ShowVote();
 	}
 
 	return PLUGIN_HANDLED;
@@ -1897,12 +1893,14 @@ public CmdVote(id) {
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
 	
 	log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", id);
-	
-	// cancel vote after x seconds (set_task doesnt work in pause)
-	set_task(get_pcvar_float(gCvarVoteDuration), "DenyVote", TASK_DENYVOTE); 
 
-	// show vote
+	new time = get_pcvar_num(gCvarVoteDuration);
+
+	// show vote only for 30 seconds (warning: if sv is in pause, tasks are paused too)
 	ShowVote();
+	set_task(float(time), "DenyVote", TASK_DENYVOTE); 
+	set_task_ex(1.0, "ShowVote", TASK_SHOWVOTE, _, _, SetTask_Repeat, time);
+
 	return PLUGIN_HANDLED;
 }
 
