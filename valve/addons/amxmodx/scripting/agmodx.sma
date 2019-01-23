@@ -1896,10 +1896,13 @@ public CmdVote(id) {
 
 	new time = get_pcvar_num(gCvarVoteDuration);
 
-	// show vote only for 30 seconds (warning: if sv is in pause, tasks are paused too)
 	ShowVote();
-	set_task(float(time), "DenyVote", TASK_DENYVOTE); 
-	set_task_ex(1.0, "ShowVote", TASK_SHOWVOTE, _, _, SetTask_Repeat, time);
+	
+	if (gVoteStarted) {
+		// show vote only for 30 seconds (warning: if sv is in pause, tasks are paused too)
+		set_task(float(time), "DenyVote", TASK_DENYVOTE); 
+		set_task_ex(1.0, "ShowVote", TASK_SHOWVOTE, _, _, SetTask_Repeat, time);
+	}
 
 	return PLUGIN_HANDLED;
 }
