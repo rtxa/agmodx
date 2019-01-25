@@ -485,6 +485,15 @@ public plugin_end() {
 	set_pcvar_num(gCvarTimeLimit, gTimeLimit);
 
 	ArrayDestroy(gArenaQueue);
+
+	new TrieIter:handle = TrieIterCreate(gTrieVoteList);
+	new value;
+	while (!TrieIterEnded(handle)) {
+		TrieIterGetCell(handle, value);
+		DestroyForward(value);
+		TrieIterNext(handle);
+	}
+	TrieIterDestroy(handle);
 	TrieDestroy(gTrieVoteList);
 	TrieDestroy(gTrieScoreAuthId);
 }
