@@ -2198,7 +2198,7 @@ public DoVote() {
 
 	log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", caller);
 
-	ExecuteForward(gVoteOptionFwHandle, _, caller, false, gNumVoteArgs, gVoteArg1, gVoteArg2);
+	ExecuteForward(gVoteOptionFwHandle, _, caller, false, gNumVoteArgs, PrepareArray(gVoteArg1, sizeof(gVoteArg1), true), PrepareArray(gVoteArg2, sizeof(gVoteArg2), true));
 }
 
 public DenyVote() {
