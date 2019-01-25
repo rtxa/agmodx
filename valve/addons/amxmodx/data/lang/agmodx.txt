@@ -1,7 +1,7 @@
 [en]
-LOG_VOTE_STARTED = Vote: ^"%s%s^" called by ^"%N^" has started
-LOG_VOTE_ACCEPTED = Vote: ^"%s%s^" called by ^"%N^" has been accepted
-LOG_VOTE_DENIED = Vote: ^"%s%s^" called by ^"%N^" has been denied
+LOG_VOTE_STARTED = Vote: "%s%s" called by "%N" has started
+LOG_VOTE_ACCEPTED = Vote: "%s%s" called by "%N" has been accepted
+LOG_VOTE_DENIED = Vote: "%s%s" called by "%N" has been denied
 DISPLAY_INFO1 = Type 'help' 'vote' in the console to see available commands
 DISPLAY_INFO2 = Type 'settings' in the chat to see AG Mod X settings
 TIMER_UNLIMITED = Unlimited time
@@ -37,9 +37,9 @@ INVALID_NUMBER = Number is invalid
 SPEC_CANTTALK = Spectators can't talk to people playing a match. Use say_team to talk with other spectators.
 
 [es]
-LOG_VOTE_STARTED = Voto: ^"%s%s^" llamado por ^"%N^" ha empezado
-LOG_VOTE_ACCEPTED = Voto: ^"%s%s^" llamado por ^"%N^" ha sido aceptado
-LOG_VOTE_DENIED = Voto: ^"%s%s^" llamado por ^"%N^" ha sido denegado
+LOG_VOTE_STARTED = Voto: "%s%s" llamado por "%N" ha empezado
+LOG_VOTE_ACCEPTED = Voto: "%s%s" llamado por "%N" ha sido aceptado
+LOG_VOTE_DENIED = Voto: "%s%s" llamado por "%N" ha sido denegado
 DISPLAY_INFO1 = Escribe 'help' 'vote' en la consola para ver los comandos disponibles del AG Mod X.
 DISPLAY_INFO2 = Escribe 'settings' en el chat para ver la configuracion del AG Mod X.
 TIMER_UNLIMITED = Tiempo ilimitado
