@@ -420,15 +420,16 @@ public plugin_init() {
 	RegisterHam(Ham_Spawn, "player", "PlayerPostSpawn", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
 
-	register_concmd("help", "CmdHelp", ADMIN_ALL, "HELP_HELP", _, true);
-	register_concmd("timeleft", "CmdTimeLeft", ADMIN_ALL, "HELP_TIMELEFT", _, true);
 	register_concmd("agabort", "CmdAgAbort", ADMIN_BAN, "HELP_AGABORT", _, true);
 	register_concmd("agallow", "CmdAgAllow", ADMIN_BAN, "HELP_AGALLOW", _, true);
 	register_concmd("agpause", "CmdAgPause", ADMIN_BAN, "HELP_AGPAUSE", _, true);
 	register_concmd("agstart", "CmdAgStart", ADMIN_BAN, "HELP_AGSTART", _, true);
 	register_concmd("agnextmode", "CmdAgNextMode", ADMIN_BAN, "HELP_AGNEXTMODE", _, true);
 	register_concmd("agnextmap", "CmdAgNextMap", ADMIN_BAN, "HELP_AGNEXTMAP", _, true);
+	register_concmd("agmap", "CmdAgMap", ADMIN_BAN, "HELP_AGMAP", _, true);
 	
+	register_concmd("help", "CmdHelp", ADMIN_ALL, "HELP_HELP", _, true);
+	register_concmd("timeleft", "CmdTimeLeft", ADMIN_ALL, "HELP_TIMELEFT", _, true);
 	register_clcmd("vote", "CmdVote", ADMIN_ALL, "HELP_VOTE", _, true);
 	register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "HELP_YES", _, true);
 	register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "HELP_NO", _, true);
@@ -1537,21 +1538,28 @@ public ShowSettings(id) {
 }
 
 public CmdAgPause(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
+	if (!IsUserServer(id)) {
+		new cmd[16];
+		read_argv(0, cmd, charsmax(cmd));
+		client_cmd(id, "vote %s", cmd);
+		return PLUGIN_HANDLED;
+	}
 
-	log_amx("Agpause: %N", id);
+	log_amx("AgPause: %N", id);
 
 	RemoveVote();
 	PauseGame(id);
+
 	return PLUGIN_HANDLED;	
 }
 
 public CmdAgStart(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
-
-	log_amx("Agstart: %N", id);
+	if (!IsUserServer(id)) {
+		new cmd[16];
+		read_argv(0, cmd, charsmax(cmd));
+		client_cmd(id, "vote %s", cmd);
+		return PLUGIN_HANDLED;
+	}
 
 	new arg[32];
 	read_argv(1, arg, charsmax(arg));
@@ -1573,6 +1581,7 @@ public CmdAgStart(id, level, cid) {
 			return PLUGIN_HANDLED;
 	}
 
+	
 	for (new i = 1; i <= MaxClients; i++) {
 		if (is_user_connected(i)) {
 			if (i == target[i])
@@ -1584,16 +1593,22 @@ public CmdAgStart(id, level, cid) {
 		}		
 	}
 
+	log_amx("AgStart: %N", id);
+
 	StartVersus();
 
 	return PLUGIN_HANDLED;
 }
 
 public CmdAgAbort(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
+	if (!IsUserServer(id)) {
+		new cmd[16];
+		read_argv(0, cmd, charsmax(cmd));
+		client_cmd(id, "vote %s", cmd);
+		return PLUGIN_HANDLED;
+	}
 
-	log_amx("Agabort: %N", id);
+	log_amx("AgAbort: %N", id);
 
 	AbortVersus();
 
@@ -1601,8 +1616,13 @@ public CmdAgAbort(id, level, cid) {
 }
 
 public CmdAgAllow(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
+	if (!IsUserServer(id)) {
+		new cmd[16], args[32];
+		read_argv(0, cmd, charsmax(cmd));
+		read_args(args, charsmax(args));
+		client_cmd(id, "vote %s %s", cmd, args);
+		return PLUGIN_HANDLED;
+	}
 
 	if (!gVersusStarted)
 		return PLUGIN_HANDLED;
@@ -1618,9 +1638,9 @@ public CmdAgAllow(id, level, cid) {
 	if (!player)
 		return PLUGIN_HANDLED;
 
-	AllowPlayer(player);
+	log_amx("AgAllow: %N to %N", id, player);
 
-	log_amx("Agallow: %N to %N", id, player);
+	AllowPlayer(player);
 
 	return PLUGIN_HANDLED;
 }
@@ -1646,47 +1666,87 @@ public AllowPlayer(id) {
 }
 
 public CmdAgNextMode(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
-
 	new arg[32];
 	read_argv(1, arg, charsmax(arg));
-
 	strtolower(arg);
 
-	if (TrieKeyExists(gTrieVoteList, arg))
+	if (!IsUserServer(id)) {
+		new cmd[16];
+		read_argv(0, cmd, charsmax(cmd));
+		client_cmd(id, "vote %s %s", cmd, arg);
+		return PLUGIN_HANDLED;
+	}
+
+	if (TrieKeyExists(gTrieVoteList, arg)) {
+		log_amx("AgNextMode: ^"%s^" ^"%N^"", arg, id);
 		set_pcvar_string(gCvarGameMode, arg); // set next mode
-	else
+	} else {
 		client_print(id, print_console, "%l", "INVALID_MODE");
+	}
 
 	return PLUGIN_HANDLED;
 }
 
 public CmdAgNextMap(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
-
 	new arg[32];
 	read_argv(1, arg, charsmax(arg));
 
-	if (is_map_valid(arg))
+	if (!IsUserServer(id)) {
+		new cmd[16];
+		read_argv(0, cmd, charsmax(cmd));
+		client_cmd(id, "vote %s %s", cmd, arg);
+		return PLUGIN_HANDLED;
+	}    
+
+	if (is_map_valid(arg)) {
+		log_amx("AgNextMap: ^"%s^" ^"%N^"", arg, id);
 		set_pcvar_string(gCvarAmxNextMap, arg); // set new mode
-	else
+	} else {
 		client_print(id, print_console, "%l", "INVALID_MAP");
+	}
 
 	return PLUGIN_HANDLED;
 }
 
 public CmdChangeMode(id, level, cid) {
-	if (!cmd_access(id, level, cid, 0))
-	    return PLUGIN_HANDLED;
-
 	new arg[32];
 	read_argv(0, arg, charsmax(arg));
 	strtolower(arg);
 
-	ChangeMode(arg);
-	
+	if (!IsUserServer(id)) {
+		new cmd[16];
+		read_argv(0, cmd, charsmax(cmd));
+		client_cmd(id, "vote %s", cmd);
+		return PLUGIN_HANDLED;
+	}   
+
+	if (TrieKeyExists(gTrieVoteList, arg)) {
+		log_amx("Change gamemode: ^"%s^" ^"%N^"", arg, id);
+		ChangeMode(arg);
+	}
+
+	return PLUGIN_HANDLED;
+}
+
+public CmdAgMap(id, level, cid) {
+	new arg[32];
+	read_argv(1, arg, charsmax(arg));
+
+	if (!IsUserServer(id)) {
+		new cmd[16];
+		read_argv(0, cmd, charsmax(cmd));
+		client_cmd(id, "vote %s %s", cmd, arg);
+		return PLUGIN_HANDLED;
+	} 
+
+	if (is_map_valid(arg)) {
+		log_amx("AgMap: ^"%s^" ^"%N^"", id, arg);
+		ChangeMap(arg);
+	} else {
+		console_print(id, "%l", "INVALID_MAP");
+	}
+
+
 	return PLUGIN_HANDLED;
 }
 
@@ -2594,6 +2654,21 @@ stock player_teleport_splash(id) {
 	message_end();
 
 	return 1;
+}
+
+IsUserServer(id) {
+	if (is_dedicated_server()) {
+		if (!id) {
+			return true;
+		}
+	} else { // listen server
+		new ip[MAX_IP_LENGTH];
+		get_user_ip(id, ip, charsmax(ip), true);
+		if (equal(ip, "loopback")) {
+			return true;
+		}
+	} 
+	return false;
 }
 
 public native_ag_vote_add(plugin_id, argc) {
