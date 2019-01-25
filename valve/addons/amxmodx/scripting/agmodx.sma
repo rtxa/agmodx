@@ -1090,7 +1090,7 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 */
 public StartVersus() {
 	if (get_playersnum() < get_pcvar_num(gCvarAgStartMinPlayers)) {
-		client_print(0, print_center, "%l", "MATCH_MINPLAYERS", get_pcvar_num(gCvarAgStartMinPlayers));
+		client_print(0, print_center, "%l", "MATCH_MINPLAYERS_CENTER", get_pcvar_num(gCvarAgStartMinPlayers));
 		return;
 	} else if (gTimeLimit <= 0 && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // block start versus with mp_timelimit 0
 		client_print(0, print_center, "%l", "MATCH_DENY_STARTUNLIMITED");
@@ -2015,8 +2015,14 @@ public OnVoteAgStart(id, check, argc) {
 		return false;
 	}
 
-	if (!check)
+	if (!check) {
 		StartVersus();
+	} else {
+		if (get_playersnum() < get_pcvar_num(gCvarAgStartMinPlayers)) {
+			console_print(id, "%l", "MATCH_MINPLAYERS", get_pcvar_num(gCvarAgStartMinPlayers));
+			return false;
+		}
+	}
 	
 	return true;
 }
