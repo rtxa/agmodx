@@ -86,7 +86,6 @@ new gLocationName[128][32]; 		// Max locations (128) and max location name lengt
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
 new gNumLocations;
 
-#define MAX_TIMELIMIT 538214400
 #define TIMELEFT_SETUNLIMITED -1
 
 // timeleft / timelimit system
@@ -1011,13 +1010,10 @@ public StartTimeLeft() {
 	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
 
-	if (gTimeLimit >= MAX_TIMELIMIT)
-		gTimeLimit = 0;
-
 	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
 
-	// set mp_timelimit to "unlimited" and block changes so no one mess the timelimit
-	set_pcvar_num(gCvarTimeLimit, MAX_TIMELIMIT);
+	// set mp_timelimit always to empty (this way i can always track changes) and don't let anyone modify it.
+	set_pcvar_string(gCvarTimeLimit, "");
 	gHookCvarTimeLimit = hook_cvar_change(gCvarTimeLimit, "CvarTimeLimitHook");
 
 	// Start my own timeleft
@@ -1082,8 +1078,8 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 		gTimeLimit = timeLimit;
 	}
 
-	// always set it to unlimited, so players can't change the cvar value and finish the map (go to intermission mode) by accident...	
-	set_pcvar_num(pcvar, MAX_TIMELIMIT);
+	// always leave it empty, so players can't change the cvar value and finish the map (go to intermission mode) by accident...	
+	set_pcvar_string(pcvar, ""); 
 
 	enable_cvar_hook(gHookCvarTimeLimit);
 }
@@ -1770,7 +1766,7 @@ public OnVoteTimeLimit(id, check, argc, arg1[], arg2[]) {
 			return false;
 		}
 		new num = str_to_num(arg2);
-		if (num < 0 && num >= MAX_TIMELIMIT) {
+		if (num < 0) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
 		}
