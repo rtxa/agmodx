@@ -1011,6 +1011,7 @@ public CmdTimeLeft(id) {
 	client_print(id, print_console, "timeleft: %i:%02i", 
 		gTimeLeft == TIMELEFT_SETUNLIMITED ? 0 : gTimeLeft / 60, // minutes
 		gTimeLeft == TIMELEFT_SETUNLIMITED ? 0 : gTimeLeft % 60); // seconds
+	return PLUGIN_HANDLED;
 }
 
 /*
@@ -1456,6 +1457,7 @@ public CmdHelp(id, level, cid) {
 		}
 	}
 	client_print(id, print_console, "--------------------");
+	return PLUGIN_HANDLED;
 }
 
 public CmdSpectate(id) {
@@ -1501,6 +1503,7 @@ public CmdJoinTeam(id) {
 			}
 		}
 	}
+	return PLUGIN_HANDLED;
 }
 
 public CmdDrop() {
