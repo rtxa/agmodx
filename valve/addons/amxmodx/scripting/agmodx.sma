@@ -1559,7 +1559,6 @@ public CmdAgPause(id, level, cid) {
 
 	log_amx("AgPause: %N", id);
 
-	RemoveVote();
 	PauseGame(id);
 
 	return PLUGIN_HANDLED;	
@@ -1806,8 +1805,8 @@ CreateVoteSystem() {
 	gTrieVoteList = TrieCreate();
 	ag_vote_add("agabort", "OnVoteAgAbort");
 	ag_vote_add("agallow", "OnVoteAgAllow");
-	ag_vote_add("agnextmap", "OnVoteNextMap");
-	ag_vote_add("agnextmode", "OnVoteNextMode");
+	ag_vote_add("agnextmap", "OnVoteAgNextMap");
+	ag_vote_add("agnextmode", "OnVoteAgNextMode");
 	ag_vote_add("agpause", "OnVoteAgPause");
 	ag_vote_add("agstart", "OnVoteAgStart");
 	ag_vote_add("agmap", "OnVoteAgMap");
@@ -2039,14 +2038,48 @@ public OnVoteAgStart(id, check, argc) {
 	return true;
 }
 
+public OnVoteAgPause(id, check, argc) {
+	if (argc != 1) {
+		client_print(id, print_console, "%l", "VOTE_INVALID");
+		return false;
+	}
+
+	if (!check) {
+		PauseGame(id);
+	}
+	
+	return true;
+}
+
 public OnVoteAgMap(id, check, argc, arg1[], arg2[]) {
 	if (argc != 2) {
 		client_print(id, print_console, "%l", "VOTE_INVALID");
 		return false;
 	}
 
+	// Rename vote always to agmap to be consistent
+	formatex(arg1, 31, "%s", "agmap");
+
 	if (!check) {
 		ChangeMap(arg2);
+	} else {
+		if (!is_map_valid(arg2)) {
+			client_print(id, print_console, "%l", "INVALID_MAP");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+public OnVoteAgNextMap(id, check, argc, arg1[], arg2[]) {
+	if (argc != 2) {
+		client_print(id, print_console, "%l", "VOTE_INVALID");
+		return false;
+	}
+
+	if (!check) {
+		set_pcvar_string(gCvarAmxNextMap, arg2);
 	} else {
 		if (!is_map_valid(arg2)) {
 			client_print(id, print_console, "%l", "INVALID_MAP");
