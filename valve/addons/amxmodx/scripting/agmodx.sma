@@ -187,6 +187,7 @@ new gCvarFriendlyFire;
 new gCvarSelfGauss;
 new gCvarTimeLimit;
 new gCvarWeaponStay;
+new gCvarHeadShot;
 
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
@@ -366,6 +367,7 @@ public plugin_precache() {
 		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0", FCVAR_SERVER);
 
 	// Multiplayer cvars
+	gCvarHeadShot = create_cvar("mp_headshot", "1.0", FCVAR_SERVER);
 	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
 	gCvarFallDamage = get_cvar_pointer("mp_falldamage");
 	gCvarFlashLight = get_cvar_pointer("mp_flashlight");
@@ -416,6 +418,7 @@ public plugin_init() {
 	register_forward(FM_GetGameDescription, "FwGameDescription");
 
 	// player's hooks
+	RegisterHam(Ham_TraceAttack, "player", "PlayerTraceAttack");
 	RegisterHam(Ham_Killed, "player", "PlayerPreKilled");
 	RegisterHam(Ham_Spawn, "player", "PlayerPostSpawn", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
@@ -563,6 +566,12 @@ public client_remove(id) {
 
 	return PLUGIN_HANDLED;
 }
+
+public PlayerTraceAttack(victim, attacker, Float:damage, Float:dir[3], ptr, bits) {
+	if (get_tr2(ptr, TR_iHitgroup) == HIT_HEAD)
+		SetHamParamFloat(3, damage * get_pcvar_float(gCvarHeadShot));
+	return HAM_IGNORED;
+} 
 
 public PlayerPreSpawn(id) {
 	// if player has to spec, don't let him spawn...
