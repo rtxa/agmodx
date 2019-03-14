@@ -16,6 +16,7 @@
 *   by using MSG_ALL instead of MSG_BROADCAST.
 * - Now hl_set_user_team() doesn't remove you from spectator to set your team.
 * - Fixed hl_set_user_team(), now it doesn't kill the player anymore on model's change.
+* - Fixed hl_set_user_frags() wrong value by converting frags to float
 *
 * http://aghl.ru/forum/ - Russian Half-Life and Adrenaline Gamer Community
 *
@@ -71,7 +72,7 @@ stock hl_set_user_frags(id, frags)
 	if (!ScoreInfo)
 		ScoreInfo = get_user_msgid("ScoreInfo");
 
-	set_pev(id, pev_frags, frags);
+	set_pev(id, pev_frags, float(frags));
 
 	message_begin(MSG_ALL, ScoreInfo);
 	write_byte(id);
