@@ -1,29 +1,37 @@
 /*
 * AMX mod X functions for Half-Life
 *
-* Version 1.1 (date: 29.07.2010) Author: Kord
+* Supported AMX Mod X versions: 1.9 or newer
+*
 * Version 1.2 (date: 02.10.2013) Author: Kord
-* Version 1.3 (last update: 22.12.2018) Author: rtxa
-*  - Now AMXX 1.9 is required to use this include.
-*  - Now offsets are retrieved from gamedata instead of hardcoding them inside plugin (AMXX 1.9 feature).
-*  - Added send of Spectator msg in hl_set_user_spectator(). Fixes wrong colors in scoreboard for some clients.
+* Version 1.3 (date: 22.12.2018) Author: rtxa
+*  - Now offsets are retrieved from gamedata instead of hardcoding them inside plugin (now AMXX 1.9 is required).
+*  - Now Spectator message is sended in hl_set_user_spectator(). Some clients depends on this to show spectators in scoreboard.
 *  - Added HL_MAX_TEAMNAME_LENGTH constant.
 *  - Added hl_[g|s]et_user_frags().
+* Version 1.4 (date: 14.03.2019) Author: rtxa
+* - Renamed hl.inc to hlstocks.inc to distinguish it from the original.
+* - Renamed HL_MAX_TEAMNAME_LENGTH to HL_TEAMNAME_LENGTH.
+* - Fixed score of players not being updated correctly when using hl_set_user_frags() or hl_set_user_deaths()
+*   by using MSG_ALL instead of MSG_BROADCAST.
+* - Now hl_set_user_team() doesn't remove you from spectator to set your team.
+* - Fixed hl_set_user_team(), now it doesn't kill the player anymore on model's change.
 *
 * http://aghl.ru/forum/ - Russian Half-Life and Adrenaline Gamer Community
 *
 */
 
-#if defined _hl_included
-#endinput
+#if defined _hlstocks_included
+	#endinput
 #endif
-#define _hl_included
+#define _hlstocks_included
 
 #include <amxmodx>
 #include <fakemeta>
 
+// Server supports up to 32 teams, but client's scoreboard is hardcoded up to 10.
 #define HL_MAX_TEAMS			10
-#define HL_MAX_TEAMNAME_LENGTH 	16
+#define HL_TEAMNAME_LENGTH 		16
 
 stock static teams[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
@@ -65,7 +73,7 @@ stock hl_set_user_frags(id, frags)
 
 	set_pev(id, pev_frags, frags);
 
-	message_begin(MSG_BROADCAST, ScoreInfo);
+	message_begin(MSG_ALL, ScoreInfo);
 	write_byte(id);
 	write_short(frags);
 	write_short(hl_get_user_deaths(id));
@@ -90,7 +98,7 @@ stock hl_set_user_deaths(client, deaths)
 	static ScoreInfo;
 	if (ScoreInfo || (ScoreInfo = get_user_msgid("ScoreInfo")))
 	{
-		message_begin(MSG_BROADCAST, ScoreInfo);
+		message_begin(MSG_ALL, ScoreInfo);
 		write_byte(client);
 		write_short(get_user_frags(client));
 		write_short(deaths);
@@ -208,8 +216,7 @@ stock hl_set_user_team(client, const team[])
 	teamid = __get_team_index(team);
 	if (teamid == -1) return 0;
 
-	hl_set_user_spectator(client, false);
-
+	set_ent_data_string(client, "CBasePlayer", "m_szTeamName", team);
 	engfunc(EngFunc_SetClientKeyValue, client, engfunc(EngFunc_GetInfoKeyBuffer, client), "model", team);
 	engfunc(EngFunc_SetClientKeyValue, client, engfunc(EngFunc_GetInfoKeyBuffer, client), "team", team);
 
@@ -218,7 +225,7 @@ stock hl_set_user_team(client, const team[])
 	{
 		message_begin(MSG_ALL, TeamInfo);
 		write_byte(client);
-		write_string(team);
+		write_string(pev(id, pev_iuser1) ? "" : team);
 		message_end();
 	}
 

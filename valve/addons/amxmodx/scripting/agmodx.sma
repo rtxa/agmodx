@@ -25,7 +25,7 @@
 #include <fakemeta>
 #include <fun>
 #include <hamsandwich>
-#include <hl>
+#include <hlstocks>
 
 #define PLUGIN  "AG Mod X"
 #define VERSION "Beta 1.4"
