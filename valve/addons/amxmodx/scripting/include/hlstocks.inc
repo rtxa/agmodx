@@ -33,6 +33,7 @@
 // Server supports up to 32 teams, but client's scoreboard is hardcoded up to 10.
 #define HL_MAX_TEAMS			10
 #define HL_TEAMNAME_LENGTH 		16
+#define HL_MAX_TEAMNAME_LENGTH  16
 
 stock static teams[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 

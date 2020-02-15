@@ -28,7 +28,7 @@
 #include <hlstocks>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 1.4"
+#define VERSION "Beta 2.0"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
@@ -79,7 +79,7 @@ new const gBeepSnd[] = "fvox/beep";
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
 // Team models (this is used to fix team selection from VGUI Viewport)
-new gTeamListModels[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
+new gTeamListModels[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
 
 // Location system
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
@@ -107,18 +107,11 @@ new bool:gBlockCmdDrop;
 new bool:gBlockPlayerSpawn;
 new bool:gSendVictimToSpec;
 new bool:gSendConnectingToSpec;
-new bool:gRestorePlayerEquipOnKill;
 new bool:gGamePlayerEquipExists;
 
 // gamemode flags
-new bool:gIsArenaMode;
 new bool:gIsLtsMode;
 new bool:gIsLmsMode;
-
-// arena vars
-new Array:gArenaQueue;
-new gMatchWinner;
-new gMatchLooser;
 
 // agstart
 new bool:gVersusStarted;
@@ -464,7 +457,7 @@ public plugin_init() {
 	// this saves score of players that're playing a match
 	// so if someone get disconnect by any reason, the score will be restored when he returns
 	gTrieScoreAuthId = TrieCreate();
-	gArenaQueue = ArrayCreate();
+	
 
 	// this is used for change hud colors of ag mod x
 	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
@@ -477,6 +470,8 @@ public plugin_init() {
 
 public plugin_cfg() {
 	// pause it because "say timeleft" shows wrong timeleft, unless we modify the amx plugin, or put the plugin first and create our own timeleft cmd...
+	// humm, maybe use an agmodx_timeleft and disable this one...
+	// then read setinfo from user so you can hide the timeleft and only use the one from you clien with timeleft
 	pause("cd", "timeleft.amxx");
 
 	// this should fix bad cvar pointer
@@ -486,8 +481,6 @@ public plugin_cfg() {
 public plugin_end() {
 	disable_cvar_hook(gHookCvarTimeLimit);
 	set_pcvar_num(gCvarTimeLimit, gTimeLimit);
-
-	ArrayDestroy(gArenaQueue);
 
 	new TrieIter:handle = TrieIterCreate(gTrieVoteList);
 	new value;
@@ -516,10 +509,6 @@ public client_putinserver(id) {
 		set_task(1.0, "RestoreScore", id, authid, sizeof authid); // delay to avoid some scoreboard glitchs
 	else if (gSendConnectingToSpec)
 		set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
-
-	if (gIsArenaMode) {
-		CountArenaQueue();
-	}
 
 	set_task(3.0, "ShowSettings", id);
 	set_task(25.0, "DisplayInfo", id);
@@ -552,16 +541,9 @@ public client_remove(id) {
 		ShowVote();
 	}
 
-	if (gIsArenaMode) {
-		if (GetNumAlives() < 2) {
-			if (id == gMatchWinner)
-				gMatchWinner = gMatchLooser;
-			EndArena();
-		}
-	} else if (gIsLtsMode) {
+
+	if (gIsLtsMode) {
 		EndMatchLts();
-	} else if (gIsLmsMode) {
-		EndMatchLms();	
 	}
 
 	return PLUGIN_HANDLED;
@@ -583,9 +565,6 @@ public PlayerPreSpawn(id) {
 public PlayerPostSpawn(id) {
 	// when he spawn, the hud gets reset so allow him to show settings again
 	remove_task(id + TASK_SHOWSETTINGS);
-
-	if (is_user_alive(id) && !gGamePlayerEquipExists) // what happens if users spawn dead? it's just a prevention.
-		SetPlayerEquipment(id); // note: this doesn't have effect on pre spawn
 }
 
 public client_kill() {
@@ -597,40 +576,6 @@ public client_kill() {
 public PlayerPreKilled(victim, attacker) {
 	if (gSendVictimToSpec)
 		set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
-
-	// Arena
-	if (gIsArenaMode) {
-		if (victim != attacker && IsPlayer(attacker)) {
-			gMatchWinner = attacker;
-			gMatchLooser = victim;
-		} else if (gMatchWinner == victim)
-			swap(gMatchWinner, gMatchLooser);
-		
-		// send looser to the end of the queue
-		ArrayDeleteCell(gArenaQueue, gMatchLooser);
-		ArrayPushCell(gArenaQueue, gMatchLooser);
-
-		set_task(1.0, "EndArena");
-	}
-
-	// Arcade
-	if (is_user_alive(attacker) && gRestorePlayerEquipOnKill) {
-		set_user_health(attacker, get_pcvar_num(gCvarStartHealth));
-		set_user_armor(attacker, get_pcvar_num(gCvarStartArmor));
-		ResetBpAmmo(attacker);
-		ResetWeaponClip(attacker);
-	}
-
-	// Last Team Standing and Last Man Standing
-	if (gIsLtsMode) {
-		if (!PlayerKilledHimself(victim, attacker))
-		player_teleport_splash(victim);
-		EndMatchLts();
-	} else if (gIsLmsMode) {
-		if (!PlayerKilledHimself(victim, attacker))
-			player_teleport_splash(victim);
-		EndMatchLms();
-	}
 }
 
 stock bool:PlayerKilledHimself(victim, attacker) {
@@ -655,16 +600,6 @@ SetGameModePlayerEquip() {
 		if (get_pcvar_num(gCvarStartWeapons[i]))
 			DispatchKeyValue(ent, gWeaponClass[i], "1");
 	}
-}
-
-SetPlayerEquipment(id) {
-	set_user_health(id, get_pcvar_num(gCvarStartHealth));
-	set_user_armor(id, get_pcvar_num(gCvarStartArmor));
-
-	if (get_pcvar_bool(gCvarStartLongJump))
-		hl_set_user_longjump(id, true);
-
-	ResetBpAmmo(id);
 }
 
 public ResetBpAmmo(id) {
@@ -708,97 +643,6 @@ public GetUserWeaponEntId(id, weapon) {
 	new classname[32];
 	get_weaponname(weapon, classname, charsmax(classname));
 	return find_ent_by_owner(0, classname, id);
-}
-
-/*
-* Arcade
-*/
-public StartArcade() {
-	gRestorePlayerEquipOnKill = true;
-	gBlockCmdDrop = true;
-}
-
-/* 
-* Last Man Standing Mode
-*/
-public StartMatchLms() {
-	gIsLmsMode = true;
-
-	// gamerules
-	gBlockCmdSpec = true;
-	gBlockCmdDrop = true;
-	gSendVictimToSpec = true;
-	gSendConnectingToSpec = true;
-
-	if (get_playersnum() < 2) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
-		set_task(5.0, "StartMatchLms", TASK_STARTMATCH);
-		return;
-	}
-
-	gStartMatchTime = 5;
-	LmsMatchCountdown();	
-}
-
-public LmsMatchCountdown() {
-	gStartMatchTime--;
-
-	PlaySound(0, gCountSnd[gStartMatchTime]);
-
-	if (gStartMatchTime == 0) {
-		new players[32], numPlayers, player;
-		get_players(players, numPlayers);
-
-		for (new i; i < numPlayers; i++) {
-			player = players[i];
-			if (hl_get_user_spectator(player))
-				hl_set_user_spectator(player, false);
-			else
-				hl_user_spawn(player);
-		}
-
-		remove_task(TASK_STARTMATCH);
-
-		EndMatchLms();
-
-		ResetMap();
-
-		return;
-	}
-
-	PlaySound(0, gBeepSnd);
-
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartMatchTime);
-
-	set_task(1.0, "LmsMatchCountdown", TASK_STARTMATCH);
-}
-
-public EndMatchLms() {
-	if (task_exists(TASK_STARTMATCH))
-		return;
-
-	new alive[MAX_PLAYERS], numAlives, player;
-	get_players_ex(alive, numAlives, GetPlayers_ExcludeDead);
-
-	switch (numAlives) {
-		case 1: {
-			player = alive[0];
-			set_user_godmode(player, true);
-
-			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", player);
-
-			set_task(5.0, "StartMatchLms", TASK_STARTMATCH);	
-		} 
-		case 0: {
-			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
-
-			set_task(5.0, "StartMatchLms", TASK_STARTMATCH);
-		}
-	}
 }
 
 /* 
@@ -902,118 +746,6 @@ public EndMatchLts() {
 		SetGodModeAlives();
 		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
 	}	
-}
-
-/* 
-* Arena Mode
-*/
-public StartArena() {
-	gIsArenaMode = true;
-
-	// game rules
-	gBlockCmdSpec = true;
-	gBlockCmdDrop = true;
-	gSendVictimToSpec = true;
-	gSendConnectingToSpec = true;
-
-	if (get_playersnum() > 1) {
-		CountArenaQueue();
-
-		gMatchWinner = ArrayGetCell(gArenaQueue, 0);
-		gMatchLooser = ArrayGetCell(gArenaQueue, 1);
-
-		gStartMatchTime = 5;
-		ArenaCountdown();
-		
-	} else { // Wait for more players...
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
-		
-		set_task(5.0, "StartArena", TASK_STARTMATCH);	
-	}
-}
-
-public ArenaCountdown() {
-	gStartMatchTime--;
-
-	PlaySound(0, gCountSnd[gStartMatchTime]);
-
-	if (gStartMatchTime == 0) {
-		if (!is_user_connected(gMatchWinner) || !is_user_connected(gMatchLooser)) {
-			set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
-			return;
-		}
-
-		if (hl_get_user_spectator(gMatchWinner))
-			hl_set_user_spectator(gMatchWinner, false);
-		else
-			hl_user_spawn(gMatchWinner);
-
-		hl_set_user_spectator(gMatchLooser, false);
-
-		ResetMap();
-
-		remove_task(TASK_STARTMATCH);
-
-		return;
-	}
-
-	PlaySound(0, gBeepSnd);
-
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_STARTARENA", gMatchWinner, gMatchLooser, gStartMatchTime);
-
-	set_task(1.0, "ArenaCountdown", TASK_STARTMATCH);
-}
-
-public EndArena() {
-	if (task_exists(TASK_STARTMATCH))
-		return;
-
-	new alives = GetNumAlives();
-
-	if (alives < 2) {
-		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
-
-		if (alives == 1) { // Show winner
-			if (is_user_connected(gMatchWinner))
-				set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
-			
-			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", gMatchWinner);
-		} else { // No winners
-			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
-		}
-	}
-
-}
-
-
-
-/* This add new players to the queue and removes the disconnected players.
- */
-public CountArenaQueue() {
-	for (new id = 1; id <= MaxClients; id++) { 
-		if (is_user_connected(id)) {
-			if (ArrayFindValue(gArenaQueue, id) == ARRAY_NOMATCHES)
-				ArrayPushCell(gArenaQueue, id);
-		} else {
-			ArrayDeleteCell(gArenaQueue, id);
-		}
-	}
-}
-
-ArrayDeleteCell(Array:handle, value) {
-	new idx = ArrayFindValue(handle, value);
-	if (idx != ARRAY_NOMATCHES)
-		ArrayDeleteItem(handle, idx);
-}
-
-public PrintArenaQueue() {
-	for (new i; i < ArraySize(gArenaQueue); i++) {
-		server_print("i. %i", ArrayGetCell(gArenaQueue, i));
-	}
 }
 
 public CmdTimeLeft(id) {
@@ -2411,14 +2143,8 @@ StartMode() {
 	new arg[32];
 	get_pcvar_string(gCvarGameType, arg, charsmax(arg));
 	
-	if (equal(arg, "arena"))
-		StartArena();
-	else if (equal(arg, "arcade"))
-		StartArcade();
-	else if (equal(arg, "lts"))
+	if (equal(arg, "lts"))
 		StartMatchLts();
-	else if (equal(arg, "lms"))
-		StartMatchLms();
 	
 	// doesn't work in plugin_precache :/
 	if (get_pcvar_num(gCvarReplaceEgonWithAmmo))
@@ -2426,7 +2152,7 @@ StartMode() {
 
 	BanGamemodeEnts();
 
-	SetGameModePlayerEquip(); //  set an equipment when user spawns
+	//SetGameModePlayerEquip(); //  set an equipment when user spawns
 }
 
 BanGamemodeEnts() {
@@ -2450,11 +2176,11 @@ BanGamemodeEnts() {
 	}
 
 	// block chargers
-	if (get_pcvar_num(gCvarBanHevCharger))
-		RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
+	//if (get_pcvar_num(gCvarBanHevCharger))
+	//	RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
 
-	if (get_pcvar_num(gCvarBanHealthCharger))
-		RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");	
+	//if (get_pcvar_num(gCvarBanHealthCharger))
+	//	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");	
 }
 
 public FwChargersUse() {
@@ -2682,12 +2408,6 @@ stock ag_get_team_numplayers(teamIndex) {
 	}
 
 	return numTeam;
-}
-
-stock swap(&x, &y) {
-	x = x + y;
-	y = x - y;
-	x = x - y;
 }
 
 stock RemoveExtension(const input[], output[], length, const ext[]) {

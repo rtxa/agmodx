@@ -4,11 +4,11 @@
 #include <fakemeta>
 #include <fakemeta_util>
 #include <hamsandwich>
-#include <hl>
+#include <hlstocks>
 #include <fun>
 
 #define PLUGIN  "AG Mod X CTF"
-#define VERSION "1.0"
+#define VERSION "2.0"
 #define AUTHOR  "rtxa"
 
 #pragma semicolon 1
