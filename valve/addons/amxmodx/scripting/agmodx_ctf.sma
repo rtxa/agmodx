@@ -74,11 +74,20 @@ bool:IsCtfMode() {
 	return false;
 }
 
+stock StopPlugin() {
+	new pluginName[32];
+	get_plugin(-1, pluginName, sizeof(pluginName));
+	pause("d", pluginName);
+	return;
+}
+
 public plugin_precache() {
 	gIsCtfMode = IsCtfMode();
 
-	if (!gIsCtfMode)
+	if (!gIsCtfMode) {
+		StopPlugin();
 		return;
+	}
 
 	precache_model(FLAG_MODEL);
 
