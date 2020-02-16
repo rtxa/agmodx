@@ -19,6 +19,7 @@
 */
 
 #include <agmodx>
+#include <agmodx_stocks>
 #include <amxmisc>
 #include <amxmodx>
 #include <engine>
@@ -107,18 +108,10 @@ new bool:gBlockCmdDrop;
 new bool:gBlockPlayerSpawn;
 new bool:gSendVictimToSpec;
 new bool:gSendConnectingToSpec;
-new bool:gGamePlayerEquipExists;
-
-// gamemode flags
-new bool:gIsLtsMode;
-new bool:gIsLmsMode;
 
 // agstart
 new bool:gVersusStarted;
 new gStartVersusTime;
-
-// for arena and lts/lms
-new gStartMatchTime; 
 
 // hud sync handles
 new gHudShowVote;
@@ -184,17 +177,12 @@ new gCvarHeadShot;
 
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
-new gCvarStartHealth;
-new gCvarStartArmor;
-new gCvarStartLongJump;
 
 new gCvarBanWeapons[SIZE_BANWEAPONS];
 new gCvarBanAmmo[SIZE_AMMOENTS];
 new gCvarBanBattery;
 new gCvarBanHealthKit;
 new gCvarBanLongJump;
-new gCvarBanHevCharger;
-new gCvarBanHealthCharger;
 new gCvarReplaceEgonWithAmmo;
 
 // cvars names
@@ -308,15 +296,6 @@ new const gAmmoClass[][] = {
 	"ammo_rpgclip"
 };
 
-new const gClearFieldEntsClass[][] = {
-	"bolt",
-	"monster_snark",
-	"monster_satchel",
-	"monster_tripmine",
-	"beam", // this removes beam of tripmine
-	"weaponbox"
-};
-
 public plugin_precache() {
 	// AG Mod X Version
 	create_cvar("agmodx_version", VERSION, FCVAR_SERVER);
@@ -340,15 +319,13 @@ public plugin_precache() {
 	// Gamemode cvars
 	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
-	gCvarStartArmor = create_cvar("sv_ag_start_armor", "0");
-	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
 	gCvarBanHealthKit = create_cvar("sv_ag_ban_healthkit", "0");
 	gCvarBanBattery = create_cvar("sv_ag_ban_battery", "0");
 	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
-	gCvarBanHealthCharger = create_cvar("sv_ag_ban_healthcharger", "0");
-	gCvarBanHevCharger = create_cvar("sv_ag_ban_hevcharger", "0");
 	gCvarReplaceEgonWithAmmo = create_cvar("sv_ag_replace_egonwithammo", "0");
+	create_cvar("sv_ag_start_health", "100");
+	create_cvar("sv_ag_start_armor", "0");
+	create_cvar("sv_ag_start_longjump", "0");
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
 		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0", FCVAR_SERVER);
@@ -541,11 +518,6 @@ public client_remove(id) {
 		ShowVote();
 	}
 
-
-	if (gIsLtsMode) {
-		EndMatchLts();
-	}
-
 	return PLUGIN_HANDLED;
 }
 
@@ -580,26 +552,6 @@ public PlayerPreKilled(victim, attacker) {
 
 stock bool:PlayerKilledHimself(victim, attacker) {
 	return (!IsPlayer(attacker) || victim == attacker); // attacker can be worldspawn if player dies by fall
-}
-
-/*
-* Set player equipment of current gamemode
-*/
-SetGameModePlayerEquip() {
-	new ent = find_ent_by_class(0, "game_player_equip");
-
-	if (!ent) {
-		ent = create_entity("game_player_equip");
-	} else {
-		gGamePlayerEquipExists = true;
-		return;
-	}
-
-	for (new i; i < SIZE_WEAPONS; i++) {
-		// If the map has a game_player_equip, ignore gamemode cvars (this will avoid problems in maps like 357_box or bootbox)
-		if (get_pcvar_num(gCvarStartWeapons[i]))
-			DispatchKeyValue(ent, gWeaponClass[i], "1");
-	}
 }
 
 public ResetBpAmmo(id) {
@@ -645,108 +597,12 @@ public GetUserWeaponEntId(id, weapon) {
 	return find_ent_by_owner(0, classname, id);
 }
 
-/* 
-* Last Team Standing Mode
-*/
-public StartMatchLts() {
-	gIsLtsMode = true;
-
-	// don't send to spec victims when a match is going to start
-	for (new id = 1; id <= MaxClients; id++)
-		remove_task(id + TASK_SENDVICTIMTOSPEC);
-
-	// gamerules
-	gBlockCmdSpec = true;
-	gBlockCmdDrop = true;
-	gSendVictimToSpec = true;
-	gSendConnectingToSpec = true;
-
-	new numBlue = ag_get_team_numplayers(1);
-	new numRed = ag_get_team_numplayers(2);
-
-	if (get_playersnum() < 2 || numBlue < 1 || numRed < 1) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
-		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
-		return;
-	}
-
-	gStartMatchTime = 5;
-	LtsMatchCountdown();
-}
-
-public LtsMatchCountdown() {
-	gStartMatchTime--;
-
-	PlaySound(0, gCountSnd[gStartMatchTime]);
-
-	if (gStartMatchTime == 0) {
-		new players[32], numPlayers, player;
-		get_players(players, numPlayers);
-
-		for (new i; i < numPlayers; i++) {
-			player = players[i];
-			if (hl_get_user_spectator(player))
-				hl_set_user_spectator(player, false);
-			else
-				hl_user_spawn(player);
-		}
-
-		remove_task(TASK_STARTMATCH);
-
-		EndMatchLts();
-
-		ResetMap();
-
-		return;
-	}
-
-	PlaySound(0, gBeepSnd);
-
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
-	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartMatchTime);
-
-	set_task(1.0, "LtsMatchCountdown", TASK_STARTMATCH);
-}
-
-SetGodModeAlives() {
-	new players[MAX_PLAYERS], numPlayers;
-	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
-
-	for (new i; i < numPlayers; i++)
-		set_user_godmode(players[i], true);
-}
-
 stock GetNumAlives() {
 	new alives[32], numAlives;
 	get_players(alives, numAlives, "a");
 	return numAlives;
 }
 
-public EndMatchLts() {
-	if (task_exists(TASK_STARTMATCH))
-		return; // this has already been triggered, so ignore.
-
-	new numAlivesBlue = ag_get_team_alives(1);
-	new numAlivesRed = ag_get_team_alives(2);
-	
-	if (numAlivesBlue == 0 && numAlivesRed > 0) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER_RED");
-		SetGodModeAlives();
-		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
-	} else if (numAlivesRed == 0 && numAlivesBlue > 0) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER_BLUE");
-		SetGodModeAlives();
-		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
-	} else if (numAlivesRed == 0 && numAlivesBlue == 0) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
-		SetGodModeAlives();
-		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
-	}	
-}
 
 public CmdTimeLeft(id) {
 	client_print(id, print_console, "timeleft: %i:%02i", 
@@ -880,13 +736,6 @@ public StartVersus() {
 
 	gStartVersusTime = 10;
 	StartVersusCountdown();
-}
-
-stock ResetMap() {
-	ClearField();
-	ClearCorpses();
-	RespawnItems();
-	ResetChargers();	
 }
 
 public StartVersusCountdown() {
@@ -2142,10 +1991,7 @@ public PlayTeam(caller) {
 StartMode() {
 	new arg[32];
 	get_pcvar_string(gCvarGameType, arg, charsmax(arg));
-	
-	if (equal(arg, "lts"))
-		StartMatchLts();
-	
+		
 	// doesn't work in plugin_precache :/
 	if (get_pcvar_num(gCvarReplaceEgonWithAmmo))
 		ReplaceEgonWithAmmo();
@@ -2174,18 +2020,6 @@ BanGamemodeEnts() {
 		if (get_pcvar_num(gCvarBanAmmo[i]))
 			remove_entity_name(gAmmoClass[i]);
 	}
-
-	// block chargers
-	//if (get_pcvar_num(gCvarBanHevCharger))
-	//	RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
-
-	//if (get_pcvar_num(gCvarBanHealthCharger))
-	//	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");	
-}
-
-public FwChargersUse() {
-	// block chargers
-	return HAM_SUPERCEDE;
 }
 
 // Advertise about the use of some commands in AG mod x
@@ -2209,37 +2043,6 @@ public CmdPauseAg(id) {
 	return PLUGIN_HANDLED;
 }
 
-public ResetChargers() {
-	new classname[32];
-	for (new i; i < global_get(glb_maxEntities); i++) {
-		if (pev_valid(i)) {
-			pev(i, pev_classname, classname, charsmax(classname));
-			if (equal(classname, "func_recharge")) {
-				set_pev(i, pev_frame, 0);
-				set_pev(i, pev_nextthink, 0);
-				set_ent_data(i, "CRecharge", "m_iJuice", 30);
-			} else if (equal(classname, "func_healthcharger")) {
-				set_pev(i, pev_frame, 0);
-				set_pev(i, pev_nextthink, 0);
-				set_ent_data(i, "CWallHealth", "m_iJuice", 75);
-			}
-		}
-	}
-}
-
-// This will respawn all weapons, ammo and items of the map to prepare for a new match (agstart)
-public RespawnItems() {
-	new classname[32];
-	for (new i; i < global_get(glb_maxEntities); i++) {
-		if (pev_valid(i)) {
-			pev(i, pev_classname, classname, charsmax(classname));
-			if (contain(classname, "weapon_") != -1 || contain(classname, "ammo_") != -1 || contain(classname, "item_") != -1) {
-				set_pev(i, pev_nextthink, get_gametime());
-			}
-		}
-	}
-}
-
 public ReplaceEgonWithAmmo() {
 	new num, idx, ents[64], Float:origin[3];
 
@@ -2256,26 +2059,6 @@ public ReplaceEgonWithAmmo() {
 		entity_set_origin(ents[i], origin);
 		DispatchSpawn(ents[i]);
 	}
-}
-
-// this will clean entities from previous matchs
-public ClearField() {
-	for (new i; i < sizeof gClearFieldEntsClass; i++)
-		remove_entity_name(gClearFieldEntsClass[i]);
-
-	new entid;
-	while ((entid = find_ent_by_class(entid, "rpg_rocket")))
-		set_pev(entid, pev_dmg, 0);
-
-	entid = 0;
-	while ((entid = find_ent_by_class(entid, "grenade")))
-		set_pev(entid, pev_dmg, 0);
-}
-
-stock ClearCorpses() {
-	new ent;
-	while ((ent = find_ent_by_class(ent, "bodyque")))
-		entity_set_origin(ent, Float:{4096.0, 4096.0, 4096.0});
 }
 
 /*
@@ -2363,16 +2146,6 @@ public CacheTeamListModels(teamlist[][], size) {
 	}
 }
 
-public GetTeamListModels(output[][], size) {
-	new teamlist[192];
-	get_cvar_string("mp_teamlist", teamlist, charsmax(teamlist));
-
-	new nIdx, nLen = (1 + copyc(output[nIdx], size, teamlist, ';'));
-
-	while (nLen < strlen(teamlist) && ++nIdx < HL_MAX_TEAMS)
-		nLen += (1 + copyc(output[nIdx], size, teamlist[nLen], ';'));
-}
-
 bool:IsObserver(id) {
 	return get_ent_data(id, "CBasePlayer", "m_afPhysicsFlags") & PFLAG_OBSERVER > 0 ? true : false;
 }
@@ -2382,34 +2155,6 @@ bool:IsInWelcomeCam(id) {
 	return IsObserver(id) && !hl_get_user_spectator(id) && get_ent_data(id, "CBasePlayer", "m_iHideHUD") & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
 }
 
-stock ag_get_team_alives(teamIndex) {
-	new players[MAX_PLAYERS], numPlayers;
-	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
-
-	new num;
-	for (new i; i < numPlayers; i++)
-		if (hl_get_user_team(players[i]) == teamIndex)
-			num++;
-
-	return num;
-}
-
-// when user spectates, his teams is 0, so you have to check his model..
-stock ag_get_team_numplayers(teamIndex) {
-	new players[MAX_PLAYERS], numPlayers;
-	get_players(players, numPlayers);
-
-	new model[16], numTeam;
-	for (new i; i < numPlayers; i++) {
-		hl_get_user_model(players[i], model, charsmax(model));
-		// ignore case, sometimes a player set his model to barNey...
-		if (equali(model, gTeamListModels[teamIndex - 1])) 
-			numTeam++; 
-	}
-
-	return numTeam;
-}
-
 stock RemoveExtension(const input[], output[], length, const ext[]) {
 	copy(output, length, input);
 
@@ -2417,23 +2162,6 @@ stock RemoveExtension(const input[], output[], length, const ext[]) {
 	if (idx < 0) return 0;
 	
 	return replace(output[idx], length, ext, "");
-}
-
-stock player_teleport_splash(id) {
-	if (!is_user_connected(id))
-		return 0;
-
-	new origin[3];
-	get_user_origin(id, origin);
-
-	message_begin(MSG_BROADCAST, SVC_TEMPENTITY);
-	write_byte(TE_TELEPORT);
-	write_coord(origin[0]);
-	write_coord(origin[1]);
-	write_coord(origin[2]);
-	message_end();
-
-	return 1;
 }
 
 IsUserServer(id) {

@@ -6,6 +6,7 @@
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
+#include <hlstocks>
 
 stock ResetMap() {
 	ClearField();
