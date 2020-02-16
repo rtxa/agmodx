@@ -1833,7 +1833,10 @@ public CmdVote(id) {
 
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
 	
-	log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", id);
+	if (strlen(gVoteArg2))
+		log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", gVoteArg1, fmt(" %s", gVoteArg2), id);
+	else
+		log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", gVoteArg1, "", id);
 
 	new time = get_pcvar_num(gCvarVoteDuration);
 
@@ -1893,7 +1896,10 @@ public DoVote() {
 	if (!caller)
 		return;
 
-	log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", caller);
+	if (strlen(gVoteArg2))
+		log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, fmt(" %s", gVoteArg2), caller);
+	else
+		log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, "", caller);
 
 	ExecuteForward(gVoteOptionFwHandle, _, caller, false, gNumVoteArgs, PrepareArray(gVoteArg1, sizeof(gVoteArg1), true), PrepareArray(gVoteArg2, sizeof(gVoteArg2), true));
 }
