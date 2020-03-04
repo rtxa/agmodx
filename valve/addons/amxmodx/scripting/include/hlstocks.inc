@@ -17,6 +17,11 @@
 * - Now hl_set_user_team() doesn't remove you from spectator to set your team.
 * - Fixed hl_set_user_team(), now it doesn't kill the player anymore on model's change.
 * - Fixed hl_set_user_frags() wrong value by converting frags to float
+* Version 1.5 (date: 15.03.2019) Author: rtxa
+* - Add hl_set_user_score(), this will send one message instead of two when you need to set both frags and deaths.
+* Version 1.6 (date: 03.03.2020) Author: rtxa
+* - Get back HL_MAX_TEAMNAME_LENGTH to keep backward compatibility
+* - Fixed typos in some functions.
 *
 * http://aghl.ru/forum/ - Russian Half-Life and Adrenaline Gamer Community
 *
@@ -61,7 +66,7 @@ static const _HLW_to_rgAmmoIdx[] =
 */
 stock hl_get_user_frags(id)
 {
-	return pev(id, pev_frags, frags);
+	return pev(id, pev_frags);
 }
 
 /* Sets player frags.
@@ -110,6 +115,27 @@ stock hl_set_user_deaths(client, deaths)
 	}
 }
 
+/* Sets player score.
+*/
+stock hl_set_user_score(client, frags, deaths)
+{
+	set_pev(id, pev_frags, float(frags));
+	set_ent_data(client, "CBasePlayer", "m_iDeaths", deaths);
+
+	static ScoreInfo;
+	if (ScoreInfo || (ScoreInfo = get_user_msgid("ScoreInfo")))
+	{
+		message_begin(MSG_ALL, ScoreInfo);
+		write_byte(client);
+		write_short(frags);
+		write_short(deaths);
+		write_short(0);
+		write_short(hl_get_user_team(client));
+		message_end();
+	}
+}
+
+
 /* Get amount of ammo in backpack on a user for a specific weapon.
 * Look in hlsdk_const.inc for weapon types: HLW_*.
 * Weapons on the same line uses the same ammo type:
@@ -138,7 +164,7 @@ stock hl_set_user_bpammo(client, weapon, ammo)
 	if (weapon <= HLW_CROWBAR)
 		return;
 
-	set_ent_data(client, "CBasePlayer", "m_rgAmmo", _HLW_to_rgAmmoIdx[weapon], ammo);
+	set_ent_data(client, "CBasePlayer", "m_rgAmmo", ammo, _HLW_to_rgAmmoIdx[weapon]);
 }
 
 /* Get user model.
@@ -227,7 +253,7 @@ stock hl_set_user_team(client, const team[])
 	{
 		message_begin(MSG_ALL, TeamInfo);
 		write_byte(client);
-		write_string(pev(id, pev_iuser1) ? "" : team);
+		write_string(pev(client, pev_iuser1) ? "" : team);
 		message_end();
 	}
 
