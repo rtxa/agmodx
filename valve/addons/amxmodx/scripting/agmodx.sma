@@ -772,7 +772,6 @@ public StartVersusCountdown() {
 
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
-			server_print("id %d IsInWelcomeCam %d", player, IsInWelcomeCam(player));
 			if (!hl_get_user_spectator(player)) {
 				if (!IsInWelcomeCam(player)) {				
 					ResetScore(player);
@@ -1421,6 +1420,7 @@ CreateVoteSystem() {
 	ag_vote_add("mp_selfgauss", "OnVoteSelfGauss");
 	ag_vote_add("mp_timelimit", "OnVoteTimeLimit");
 	ag_vote_add("mp_weaponstay", "OnVoteWeaponStay");
+	ag_vote_add("ag_gauss_fix", "OnVoteGaussFix");
 }
 
 public OnVoteTimeLimit(id, check, argc, arg1[], arg2[]) {
@@ -1562,6 +1562,25 @@ public OnVoteSelfGauss(id, check, argc, arg1[], arg2[]) {
 
 	if (!check) {
 		set_pcvar_string(gCvarSelfGauss, arg2);
+	} else {
+		if (!is_str_num(arg2)) {
+			console_print(id, "%l", "INVALID_NUMBER");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+public OnVoteGaussFix(id, check, argc, arg1[], arg2[]) {
+	if (argc != 2) {
+		console_print(id, "%l", "VOTE_INVALID");
+		return false;
+	}
+
+	if (!check) {
+		new num = str_to_num(arg2);
+		set_pcvar_num(gCvarSelfGauss, !num);
 	} else {
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
@@ -1915,10 +1934,13 @@ public DoVote() {
 	if (!caller)
 		return;
 
-	if (strlen(gVoteArg2))
-		log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, fmt(" %s", gVoteArg2), caller);
-	else
+	if (strlen(gVoteArg2)) {
+		new str[32];
+		formatex(str, charsmax(str), " %s", gVoteArg2);
+		log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, str, caller);
+	} else {
 		log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, "", caller);
+	}
 
 	ExecuteForward(gVoteOptionFwHandle, _, caller, false, gNumVoteArgs, PrepareArray(gVoteArg1, sizeof(gVoteArg1), true), PrepareArray(gVoteArg2, sizeof(gVoteArg2), true));
 }
