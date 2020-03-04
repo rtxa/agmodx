@@ -8,8 +8,8 @@
 #include <fun>
 
 #define PLUGIN  "AG Mod X CTF"
-#define VERSION "2.0"
-#define AUTHOR  "rtxa"
+#define VERSION "Beta 2.0"
+#define AUTHOR  "rtxA"
 
 #pragma semicolon 1
 

@@ -4,13 +4,13 @@
 #include <fakemeta>
 #include <fakemeta_util>
 #include <hamsandwich>
-#include <hl>
+#include <hlstocks>
 #include <fun>
 #include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X Arcade"
-#define VERSION "2.0"
-#define AUTHOR  "rtxa"
+#define VERSION "Beta 2.0"
+#define AUTHOR  "rtxA"
 
 #pragma semicolon 1
 
@@ -71,32 +71,13 @@ new const gAgStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_snark",
 };
 
-new const gWeaponClass[][] = {
-	"weapon_357",
-	"weapon_9mmAR",
-	"weapon_9mmhandgun",
-	"weapon_crossbow",
-	"weapon_crowbar",
-	"weapon_gauss",
-	"weapon_egon",
-	"weapon_handgrenade",
-	"weapon_hornetgun",
-	"weapon_rpg",
-	"weapon_satchel",
-	"weapon_shotgun",
-	"weapon_snark",
-	"weapon_tripmine"
-};
-
 new bool:gIsArcadeMode;
-new bool:gGamePlayerEquipExists;
 
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
 
 new gCvarStartHealth;
 new gCvarStartArmor;
-new gCvarStartLongJump;
 
 // To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
 bool:IsArcadeMode() {
@@ -116,7 +97,6 @@ public plugin_precache() {
 	if (!gIsArcadeMode)
 		return;
 
-	gCvarStartLongJump = get_cvar_pointer("sv_ag_start_longjump");
 	gCvarStartHealth = get_cvar_pointer("sv_ag_start_health");
 	gCvarStartArmor = get_cvar_pointer("sv_ag_start_armor");
 
@@ -133,20 +113,12 @@ public plugin_init() {
 		return;
 	}
 
-	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Post", true);
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre");
 	register_clcmd("drop", "CmdDrop");
-
-	SetGameModePlayerEquip();
 }
 
 public CmdDrop() {
 	return PLUGIN_HANDLED;
-}
-
-public OnPlayerSpawn_Post(id) {
-	if (is_user_alive(id) && !gGamePlayerEquipExists) // what happens if users spawn dead? it's just a prevention.
-		SetPlayerEquipment(id); // note: this doesn't have effect on pre spawn
 }
 
 public OnPlayerKilled_Pre(victim, attacker) {
@@ -160,7 +132,7 @@ public OnPlayerKilled_Pre(victim, attacker) {
 
 ResetBpAmmo(id) {
 	for (new i; i < sizeof gCvarStartAmmo; i++) {
-		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // some maps like bootbox dont like this if i dont put this condition
+		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // only restore backpack ammo set in game_player_equip from the map
 			set_ent_data(id, "CBasePlayer", "m_rgAmmo", get_pcvar_num(gCvarStartAmmo[i]), i + 1);
 	}
 }
@@ -199,34 +171,4 @@ GetUserWeaponEntId(id, weapon) {
 	new classname[32];
 	get_weaponname(weapon, classname, charsmax(classname));
 	return find_ent_by_owner(0, classname, id);
-}
-
-SetPlayerEquipment(id) {
-	set_user_health(id, get_pcvar_num(gCvarStartHealth));
-	set_user_armor(id, get_pcvar_num(gCvarStartArmor));
-
-	if (get_pcvar_bool(gCvarStartLongJump))
-		hl_set_user_longjump(id, true);
-
-	ResetBpAmmo(id);
-}
-
-/*
-* Set player equipment of current gamemode
-*/
-SetGameModePlayerEquip() {
-	new ent = find_ent_by_class(0, "game_player_equip");
-
-	if (!ent) {
-		ent = create_entity("game_player_equip");
-	} else {
-		gGamePlayerEquipExists = true;
-		return;
-	}
-
-	for (new i; i < SIZE_WEAPONS; i++) {
-		// If the map has a game_player_equip, ignore gamemode cvars (this will avoid problems in maps like 357_box or bootbox)
-		if (get_pcvar_num(gCvarStartWeapons[i]))
-			DispatchKeyValue(ent, gWeaponClass[i], "1");
-	}
 }

@@ -30,7 +30,7 @@
 
 #define PLUGIN  "AG Mod X"
 #define VERSION "Beta 2.0"
-#define AUTHOR  "rtxa"
+#define AUTHOR  "rtxA"
 
 #pragma semicolon 1
 
@@ -86,6 +86,9 @@ new gTeamListModels[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
 new gNumLocations;
+
+// Game player equip
+new bool:gGamePlayerEquipExists;
 
 #define TIMELEFT_SETUNLIMITED -1
 
@@ -174,6 +177,10 @@ new gCvarSelfGauss;
 new gCvarTimeLimit;
 new gCvarWeaponStay;
 new gCvarHeadShot;
+
+new gCvarStartHealth;
+new gCvarStartArmor;
+new gCvarStartLongJump;
 
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
@@ -323,9 +330,9 @@ public plugin_precache() {
 	gCvarBanBattery = create_cvar("sv_ag_ban_battery", "0");
 	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
 	gCvarReplaceEgonWithAmmo = create_cvar("sv_ag_replace_egonwithammo", "0");
-	create_cvar("sv_ag_start_health", "100");
-	create_cvar("sv_ag_start_armor", "0");
-	create_cvar("sv_ag_start_longjump", "0");
+	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
+	gCvarStartArmor = create_cvar("sv_ag_start_armor", "0");
+	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
 		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0", FCVAR_SERVER);
@@ -535,6 +542,9 @@ public PlayerPreSpawn(id) {
 }
 
 public PlayerPostSpawn(id) {
+	if (!gGamePlayerEquipExists) // what happens if users spawn dead? it's just a prevention.
+		SetPlayerEquipment(id); // note: this doesn't have effect on pre spawn
+
 	// when he spawn, the hud gets reset so allow him to show settings again
 	remove_task(id + TASK_SHOWSETTINGS);
 }
@@ -556,7 +566,7 @@ stock bool:PlayerKilledHimself(victim, attacker) {
 
 public ResetBpAmmo(id) {
 	for (new i; i < sizeof gCvarStartAmmo; i++) {
-		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // some maps like bootbox dont like this if i dont put this condition
+		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // only restore backpack ammo set in game_player_equip from the map
 			set_ent_data(id, "CBasePlayer", "m_rgAmmo", get_pcvar_num(gCvarStartAmmo[i]), i + 1);
 	}
 }
@@ -2004,8 +2014,42 @@ StartMode() {
 
 	BanGamemodeEnts();
 
-	//SetGameModePlayerEquip(); //  set an equipment when user spawns
+	SetGameModePlayerEquip(); //  set an equipment when user spawns
 }
+
+/*
+* Set player equipment of current gamemode
+*/
+SetGameModePlayerEquip() {
+	// i need to add maybe a check for game_player_equip that are not used in masters, whatever, only in spawn...
+	new ent = find_ent_by_class(0, "game_player_equip");
+
+	// if map has a game_player_equip, ignore gamemode cvars, looks like miniag works like that
+	// also this will avoid problems in maps like 357_box or bootbox
+	if (ent) {
+		gGamePlayerEquipExists = true;
+		return;
+	}
+	
+	ent = create_entity("game_player_equip");
+
+	for (new i; i < SIZE_WEAPONS; i++) {
+		if (get_pcvar_num(gCvarStartWeapons[i]))
+			DispatchKeyValue(ent, gWeaponClass[i], "1");
+	}
+
+	if (get_pcvar_bool(gCvarStartLongJump)) {
+		DispatchKeyValue(ent, "item_longjump", "1");
+	}
+}
+
+SetPlayerEquipment(id) {
+	set_user_health(id, get_pcvar_num(gCvarStartHealth));
+	set_user_armor(id, get_pcvar_num(gCvarStartArmor));
+
+	ResetBpAmmo(id);
+}
+
 
 BanGamemodeEnts() {
 	if (get_pcvar_num(gCvarBanLongJump))
