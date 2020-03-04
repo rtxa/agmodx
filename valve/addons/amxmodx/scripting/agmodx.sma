@@ -1773,6 +1773,15 @@ LoadGameMode() {
 	close_dir(handleDir);
 }
 
+public CmdGenericVote(id) {
+	new args[128];
+	new cmdName[32];
+	read_argv(0, cmdName, charsmax(cmdName));
+	read_args(args, charsmax(args));
+	client_cmd(id, "vote %s %s", cmdName, args);
+	return PLUGIN_HANDLED;
+}
+
 public CmdVoteYes(id) {
 	if (gVoteStarted) {
 		gVotePlayers[id] = VOTE_YES;
@@ -2242,6 +2251,10 @@ public native_ag_vote_add(plugin_id, argc) {
 		return false;
 
 	TrieSetCell(gTrieVoteList, voteName, fwHandle);
+
+	// i hate this behaviour from miniag, it's much better to use all votes only with "vote <votename>"
+	// because this way leads to a possibly overlap of commands from other plugins, whatever...
+	register_clcmd(voteName, "CmdGenericVote");
 
 	return true;
 }
