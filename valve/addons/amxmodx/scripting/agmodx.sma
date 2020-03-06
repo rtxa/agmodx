@@ -1873,11 +1873,19 @@ public CmdVote(id) {
 	gVotePlayers[id] = VOTE_YES;
 
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
-	
-	if (strlen(gVoteArg2))
-		log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", gVoteArg1, fmt(" %s", gVoteArg2), id);
-	else
-		log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", gVoteArg1, "", id);
+
+	// Vote Log
+
+	new voteArgs[128];
+	if (strlen(gVoteArg2)) {
+		formatex(voteArgs, charsmax(voteArgs), "%s %s", gVoteArg1, gVoteArg2);
+	} else {
+		formatex(voteArgs, charsmax(voteArgs), "%s", gVoteArg1);
+	}
+
+	log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", voteArgs, id);
+
+	// ==============
 
 	new time = get_pcvar_num(gCvarVoteDuration);
 
@@ -1937,13 +1945,18 @@ public DoVote() {
 	if (!caller)
 		return;
 
+	// Vote Log
+
+	new voteArgs[128];
 	if (strlen(gVoteArg2)) {
-		new str[32];
-		formatex(str, charsmax(str), " %s", gVoteArg2);
-		log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, str, caller);
+		formatex(voteArgs, charsmax(voteArgs), "%s %s", gVoteArg1, gVoteArg2);
 	} else {
-		log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", gVoteArg1, "", caller);
+		formatex(voteArgs, charsmax(voteArgs), "%s", gVoteArg1);
 	}
+
+	log_amx("%L", LANG_SERVER, "LOG_VOTE_ACCEPTED", voteArgs, caller);
+
+	// ==============
 
 	ExecuteForward(gVoteOptionFwHandle, _, caller, false, gNumVoteArgs, PrepareArray(gVoteArg1, sizeof(gVoteArg1), true), PrepareArray(gVoteArg2, sizeof(gVoteArg2), true));
 }
@@ -1953,7 +1966,21 @@ public DenyVote() {
 		server_print("DenyVote");
 
 	new caller = find_player_ex(FindPlayer_MatchUserId, gVoteCallerUserId);
-	log_amx("%L", LANG_SERVER, "LOG_VOTE_DENIED", gVoteArg1, strlen(gVoteArg2) ? fmt(" %s", gVoteArg2) : "", caller);
+
+	// Vote Log
+
+	new voteArgs[128];
+	if (strlen(gVoteArg2)) {
+		formatex(voteArgs, charsmax(voteArgs), "%s %s", gVoteArg1, gVoteArg2);
+	} else {
+		formatex(voteArgs, charsmax(voteArgs), "%s", gVoteArg1);
+	}
+
+	log_amx("%L", LANG_SERVER, "LOG_VOTE_DENIED", voteArgs, caller);
+
+	// ==============
+
+
 	RemoveVote();
 
 	gVoteFailedTime = get_gametime() + get_pcvar_num(gCvarVoteFailedTime);

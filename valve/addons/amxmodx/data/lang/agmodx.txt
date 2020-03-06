@@ -1,7 +1,7 @@
 [en]
-LOG_VOTE_STARTED = Vote: "%s%s" called by "%N" has started
-LOG_VOTE_ACCEPTED = Vote: "%s%s" called by "%N" has been accepted
-LOG_VOTE_DENIED = Vote: "%s%s" called by "%N" has been denied
+LOG_VOTE_STARTED = Vote: "%s" called by "%N" has started
+LOG_VOTE_ACCEPTED = Vote: "%s" called by "%N" has been accepted
+LOG_VOTE_DENIED = Vote: "%s" called by "%N" has been denied
 DISPLAY_INFO1 = Type 'help' 'vote' in the console to see available commands
 DISPLAY_INFO2 = Type 'settings' in the chat to see AG Mod X settings
 TIMER_UNLIMITED = Unlimited time
