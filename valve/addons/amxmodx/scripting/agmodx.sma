@@ -542,8 +542,11 @@ public PlayerPreSpawn(id) {
 }
 
 public PlayerPostSpawn(id) {
-	if (!gGamePlayerEquipExists) // what happens if users spawn dead? it's just a prevention.
-		SetPlayerEquipment(id); // note: this doesn't have effect on pre spawn
+	if (is_user_alive(id)) {// when player joins the server for the first time, he spawns dead...
+		if (!gGamePlayerEquipExists) {
+			SetPlayerEquipment(id);
+		}
+	}
 
 	// when he spawn, the hud gets reset so allow him to show settings again
 	remove_task(id + TASK_SHOWSETTINGS);
