@@ -79,6 +79,13 @@ new gCvarStartAmmo[SIZE_AMMO];
 new gCvarStartHealth;
 new gCvarStartArmor;
 
+stock StopPlugin() {
+	new pluginName[32];
+	get_plugin(-1, pluginName, sizeof(pluginName));
+	pause("d", pluginName);
+	return;
+}
+
 // To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
 bool:IsArcadeMode() {
 	new type[32];
@@ -94,8 +101,10 @@ public plugin_precache() {
 	// maybe add a check to detect ag mod x is on, if it's on, then it means all cvars are registred and safe to use, or in plugins.ini this always has to be after
 	gIsArcadeMode = IsArcadeMode();
 
-	if (!gIsArcadeMode)
+	if (!gIsArcadeMode) {
+		StopPlugin();
 		return;
+	}
 
 	gCvarStartHealth = get_cvar_pointer("sv_ag_start_health");
 	gCvarStartArmor = get_cvar_pointer("sv_ag_start_armor");
