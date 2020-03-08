@@ -250,8 +250,8 @@ new const gAgBanWeapons[SIZE_BANWEAPONS][] = {
 	"sv_ag_ban_9mmhandgun",
 	"sv_ag_ban_crossbow",
 	"sv_ag_ban_crowbar",
-	"sv_ag_ban_egon",
 	"sv_ag_ban_gauss",
+	"sv_ag_ban_egon",
 	"sv_ag_ban_hgrenade",
 	"sv_ag_ban_hornetgun",
 	"sv_ag_ban_rpg",
@@ -297,10 +297,10 @@ new const gAmmoClass[][] = {
 	"ammo_9mmbox",
 	"ammo_9mmclip",
 	"ammo_ARgrenades",
-	"ammo_buckshot",
 	"ammo_crossbow",
 	"ammo_gaussclip",
-	"ammo_rpgclip"
+	"ammo_rpgclip",
+	"ammo_buckshot"
 };
 
 public plugin_precache() {
