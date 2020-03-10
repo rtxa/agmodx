@@ -159,21 +159,17 @@ public CmdDrop() {
 }
 
 public OnPlayerTraceAttack_Pre(victim, attacker, Float:damage, Float:direction[3], tr, damagetype) {
-	static classname[32];
+	new classname[32];
 	pev(attacker, pev_classname, classname, charsmax(classname));
 
 	if (equal(classname, "player")) {
 		if (get_user_weapon(attacker) == HLW_GAUSS) {
-			if (!get_ent_data(attacker, "CGauss", "m_fPrimaryFire")) {
 				return HAM_SUPERCEDE;
-			}
 		}
 	}
 
 	if (equal(classname, "weapon_gauss")) {
-		if (!get_ent_data(attacker, "CGauss", "m_fPrimaryFire")) {
 			return HAM_SUPERCEDE;
-		}
 	}
 
 	return HAM_IGNORED;
