@@ -574,49 +574,6 @@ public ResetBpAmmo(id) {
 	}
 }
 
-public ResetWeaponClip(id) {
-	new weapon;
-	if (get_pcvar_num(gCvarStartWeapons[START_RPG])) {
-		weapon = GetUserWeaponEntId(id, HLW_RPG);
-		hl_set_weapon_ammo(weapon, 1);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_CROSSBOW])) {
-		weapon = GetUserWeaponEntId(id, HLW_CROSSBOW);
-		hl_set_weapon_ammo(weapon, 5);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
-		weapon = GetUserWeaponEntId(id, HLW_MP5);
-		if (hl_get_weapon_ammo(weapon) < 25)
-			hl_set_weapon_ammo(weapon, 25);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_9MMHANDGUN])) {
-		weapon = GetUserWeaponEntId(id, HLW_GLOCK);
-		hl_set_weapon_ammo(weapon, 17);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_357])) {
-		weapon = GetUserWeaponEntId(id, HLW_PYTHON);
-		hl_set_weapon_ammo(weapon, 6);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_SHOTGUN])) {
-		weapon = GetUserWeaponEntId(id, HLW_SHOTGUN);
-		hl_set_weapon_ammo(weapon, 8);
-	}
-}
-
-// If user has the weapon (HLW enum from hlsdk_const.inc), return the weapon entity index.
-public GetUserWeaponEntId(id, weapon) {
-	new classname[32];
-	get_weaponname(weapon, classname, charsmax(classname));
-	return find_ent_by_owner(0, classname, id);
-}
-
-stock GetNumAlives() {
-	new alives[32], numAlives;
-	get_players(alives, numAlives, "a");
-	return numAlives;
-}
-
-
 public CmdTimeLeft(id) {
 	client_print(id, print_console, "timeleft: %i:%02i", 
 		gTimeLeft == TIMELEFT_SETUNLIMITED ? 0 : gTimeLeft / 60, // minutes

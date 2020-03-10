@@ -14,7 +14,7 @@
 
 #pragma semicolon 1
 
-#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+#define MODE_TYPE_NAME "arena"
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
@@ -93,12 +93,8 @@ new const gAgStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_snark",
 };
 
-new bool:gIsArenaMode;
-
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
-
-// gameplay cvars
 
 // arena vars
 new Array:gArenaQueue;
@@ -110,29 +106,10 @@ new gHudShowMatch;
 // ag hud color
 new gHudRed, gHudGreen, gHudBlue;
 
-// To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
-bool:IsArenaMode() {
-	new type[32];
-	get_cvar_string("sv_ag_gametype", type, charsmax(type));
-
-	if (equal(type, "arena"))
-		return true;
-
-	return false;
-}
-
-stock StopPlugin() {
-	new pluginName[32];
-	get_plugin(-1, pluginName, sizeof(pluginName));
-	pause("d", pluginName);
-	return;
-}
-
 public plugin_precache() {
-	// maybe add a check to detect ag mod x is on, if it's on, then it means all cvars are registred and safe to use, or in plugins.ini this always has to be after
-	gIsArenaMode = IsArenaMode();
+	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	if (!gIsArenaMode) {
+	if (!IsSelectedMode(MODE_TYPE_NAME)) {
 		StopPlugin();
 		return;
 	}
@@ -148,13 +125,6 @@ public plugin_precache() {
 }
 
 public plugin_init() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
-
-	if (!gIsArenaMode) {
-		StopPlugin();
-		return;
-	}
-
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Pre");
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre");
 	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");
@@ -238,8 +208,6 @@ public OnPlayerKilled_Pre(victim, attacker) {
 * Arena Mode
 */
 public StartArena() {
-	gIsArenaMode = true;
-
 	if (get_playersnum() > 1) {
 		CountArenaQueue();
 

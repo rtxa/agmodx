@@ -8,6 +8,8 @@
 #include <fakemeta>
 #include <hlstocks>
 
+#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+
 stock ResetMap() {
 	ClearField();
 	ClearCorpses();
@@ -106,3 +108,23 @@ stock ag_get_team_numplayers(teamIndex, teamlistModels[][]) {
 	return numTeam;
 }
 
+// To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
+stock bool:IsSelectedMode(const mode[]) {
+	new type[32];
+	get_cvar_string("sv_ag_gametype", type, charsmax(type));
+	return equal(type, mode) ? true : false;
+}
+
+stock StopPlugin() {
+	new pluginName[32];
+	get_plugin(-1, pluginName, sizeof(pluginName));
+	pause("d", pluginName);
+	return;
+}
+
+// If user has the weapon (HLW enum from hlsdk_const.inc), return the weapon entity index.
+stock GetUserWeaponEntId(id, weapon) {
+	new classname[32];
+	get_weaponname(weapon, classname, charsmax(classname));
+	return find_ent_by_owner(0, classname, id);
+}

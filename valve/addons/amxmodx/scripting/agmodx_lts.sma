@@ -8,13 +8,13 @@
 #include <fun>
 #include <agmodx_stocks>
 
-#define PLUGIN  "AG Mod X LMS"
+#define PLUGIN  "AG Mod X LTS"
 #define VERSION "Beta 2.0"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
 
-#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+#define MODE_TYPE_NAME "lts"
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
@@ -93,8 +93,6 @@ new const gAgStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_snark",
 };
 
-new bool:gIsLtsMode;
-
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
 
@@ -108,29 +106,10 @@ new gHudShowMatch;
 // ag hud color
 new gHudRed, gHudGreen, gHudBlue;
 
-// To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
-bool:IsLtsMode() {
-	new type[32];
-	get_cvar_string("sv_ag_gametype", type, charsmax(type));
-
-	if (equal(type, "lts"))
-		return true;
-
-	return false;
-}
-
-stock StopPlugin() {
-	new pluginName[32];
-	get_plugin(-1, pluginName, sizeof(pluginName));
-	pause("d", pluginName);
-	return;
-}
-
 public plugin_precache() {
-	// maybe add a check to detect ag mod x is on, if it's on, then it means all cvars are registred and safe to use, or in plugins.ini this always has to be after
-	gIsLtsMode = IsLtsMode();
+	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	if (!gIsLtsMode) {
+	if (!IsSelectedMode(MODE_TYPE_NAME)) {
 		StopPlugin();
 		return;
 	}
@@ -146,13 +125,6 @@ public plugin_precache() {
 }
 
 public plugin_init() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
-
-	if (!gIsLtsMode) {
-		StopPlugin();
-		return;
-	}
-
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
 
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Pre");
@@ -226,8 +198,6 @@ public OnPlayerKilled_Pre(victim, attacker) {
 * Last Team Standing Mode
 */
 public StartMatchLts() {
-	gIsLtsMode = true;
-
 	// don't send to spec victims when a match is going to start
 	for (new id = 1; id <= MaxClients; id++)
 		remove_task(id + TASK_SENDVICTIMTOSPEC);

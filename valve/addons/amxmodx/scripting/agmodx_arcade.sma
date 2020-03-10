@@ -14,7 +14,7 @@
 
 #pragma semicolon 1
 
-#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+#define MODE_TYPE_NAME "arcade"
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
@@ -71,37 +71,16 @@ new const gAgStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_snark",
 };
 
-new bool:gIsArcadeMode;
-
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
 
 new gCvarStartHealth;
 new gCvarStartArmor;
 
-stock StopPlugin() {
-	new pluginName[32];
-	get_plugin(-1, pluginName, sizeof(pluginName));
-	pause("d", pluginName);
-	return;
-}
-
-// To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
-bool:IsArcadeMode() {
-	new type[32];
-	get_cvar_string("sv_ag_gametype", type, charsmax(type));
-
-	if (equal(type, "arcade"))
-		return true;
-
-	return false;
-}
-
 public plugin_precache() {
-	// maybe add a check to detect ag mod x is on, if it's on, then it means all cvars are registred and safe to use, or in plugins.ini this always has to be after
-	gIsArcadeMode = IsArcadeMode();
+	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	if (!gIsArcadeMode) {
+	if (!IsSelectedMode(MODE_TYPE_NAME)) {
 		StopPlugin();
 		return;
 	}
@@ -116,12 +95,6 @@ public plugin_precache() {
 }
 
 public plugin_init() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
-
-	if (!gIsArcadeMode) {
-		return;
-	}
-
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre");
 	register_clcmd("drop", "CmdDrop");
 }
@@ -175,9 +148,3 @@ ResetWeaponClip(id) {
 	}
 }
 
-// If user has the weapon (HLW enum from hlsdk_const.inc), return the weapon entity index.
-GetUserWeaponEntId(id, weapon) {
-	new classname[32];
-	get_weaponname(weapon, classname, charsmax(classname));
-	return find_ent_by_owner(0, classname, id);
-}

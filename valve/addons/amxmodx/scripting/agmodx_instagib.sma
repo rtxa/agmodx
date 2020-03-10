@@ -14,7 +14,7 @@
 
 #pragma semicolon 1
 
-#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+#define MODE_TYPE_NAME "instagib"
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
@@ -71,34 +71,13 @@ new const gAgStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_snark",
 };
 
-new bool:gIsMode;
-
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
 
-stock StopPlugin() {
-	new pluginName[32];
-	get_plugin(-1, pluginName, sizeof(pluginName));
-	pause("d", pluginName);
-	return;
-}
-
-// To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
-bool:IsSelectedMode() {
-	new type[32];
-	get_cvar_string("sv_ag_gametype", type, charsmax(type));
-
-	if (equal(type, "instagib"))
-		return true;
-
-	return false;
-}
-
 public plugin_precache() {
-	// maybe add a check to detect ag mod x is on, if it's on, then it means all cvars are registred and safe to use, or in plugins.ini this always has to be after
-	gIsMode = IsSelectedMode();
+	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	if (!gIsMode) {
+	if (!IsSelectedMode(MODE_TYPE_NAME)) {
 		StopPlugin();
 		return;
 	}
@@ -110,12 +89,6 @@ public plugin_precache() {
 }
 
 public plugin_init() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
-
-	if (!gIsMode) {
-		return;
-	}
-
 	RegisterHamPlayer(Ham_Killed, "OnPlayerKilled_Pre");
 	RegisterHamPlayer(Ham_TakeDamage, "OnPlayerTakeDamage_Pre");
 
@@ -150,40 +123,4 @@ ResetBpAmmo(id) {
 		if (get_pcvar_num(gCvarStartAmmo[i]) != 0)  // only restore backpack ammo set in game_player_equip from the map
 			set_ent_data(id, "CBasePlayer", "m_rgAmmo", get_pcvar_num(gCvarStartAmmo[i]), i + 1);
 	}
-}
-
-ResetWeaponClip(id) {
-	new weapon;
-	if (get_pcvar_num(gCvarStartWeapons[START_RPG])) {
-		weapon = GetUserWeaponEntId(id, HLW_RPG);
-		hl_set_weapon_ammo(weapon, 1);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_CROSSBOW])) {
-		weapon = GetUserWeaponEntId(id, HLW_CROSSBOW);
-		hl_set_weapon_ammo(weapon, 5);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
-		weapon = GetUserWeaponEntId(id, HLW_MP5);
-		if (hl_get_weapon_ammo(weapon) < 25)
-			hl_set_weapon_ammo(weapon, 25);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_9MMHANDGUN])) {
-		weapon = GetUserWeaponEntId(id, HLW_GLOCK);
-		hl_set_weapon_ammo(weapon, 17);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_357])) {
-		weapon = GetUserWeaponEntId(id, HLW_PYTHON);
-		hl_set_weapon_ammo(weapon, 6);
-	}
-	if (get_pcvar_num(gCvarStartWeapons[START_SHOTGUN])) {
-		weapon = GetUserWeaponEntId(id, HLW_SHOTGUN);
-		hl_set_weapon_ammo(weapon, 8);
-	}
-}
-
-// If user has the weapon (HLW enum from hlsdk_const.inc), return the weapon entity index.
-GetUserWeaponEntId(id, weapon) {
-	new classname[32];
-	get_weaponname(weapon, classname, charsmax(classname));
-	return find_ent_by_owner(0, classname, id);
 }

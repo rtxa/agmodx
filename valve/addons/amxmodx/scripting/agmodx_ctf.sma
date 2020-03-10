@@ -6,6 +6,7 @@
 #include <hamsandwich>
 #include <hlstocks>
 #include <fun>
+#include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X CTF"
 #define VERSION "Beta 2.0"
@@ -18,7 +19,7 @@ enum (+= 100) {
 	TASK_RETURNFLAGTOBASE = 1000,
 };
 
-#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+#define MODE_TYPE_NAME "ctf"
 
 #define BLUE_TEAM 1
 #define RED_TEAM 2
@@ -64,25 +65,10 @@ new gCvarCapturePoints;
 new gCvarFlagReturnTime;
 new gCvarFlagDelayTime;
 
-bool:IsCtfMode() {
-	new type[32];
-	get_cvar_string("sv_ag_gametype", type, charsmax(type));
-
-	if (equal(type, "ctf"))
-		return true;
-
-	return false;
-}
-
-stock StopPlugin() {
-	new pluginName[32];
-	get_plugin(-1, pluginName, sizeof(pluginName));
-	pause("d", pluginName);
-	return;
-}
-
 public plugin_precache() {
-	gIsCtfMode = IsCtfMode();
+	register_plugin(PLUGIN, VERSION, AUTHOR);
+
+	gIsCtfMode = IsSelectedMode(MODE_TYPE_NAME);
 
 	if (!gIsCtfMode) {
 		StopPlugin();
@@ -123,13 +109,9 @@ public OnPlayerSpawn(id) {
 }
 
 public plugin_init() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
-
 	register_dictionary("agmodxctf.txt");
 
-	if (!gIsCtfMode) {
-		return;
-	} else if (!gIsMapCtf) {
+	if (!gIsMapCtf) {
 		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
 		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
 		return;
@@ -680,16 +662,6 @@ stock hl_set_teamscore(teamName[], points, id = 0) {
 	write_short(points); // capture points
 	write_short(0); // score is only for flags captures, so deaths is always 0
 	message_end();
-}
-
-public GetTeamListModels(output[][], size) {
-	new teamlist[192];
-	get_cvar_string("mp_teamlist", teamlist, charsmax(teamlist));
-
-	new nIdx, nLen = (1 + copyc(output[nIdx], size, teamlist, ';'));
-
-	while (nLen < strlen(teamlist) && ++nIdx < HL_MAX_TEAMS)
-		nLen += (1 + copyc(output[nIdx], size, teamlist[nLen], ';'));
 }
 
 // the parsed string is in this format "x y z" e.g "128 0 256"

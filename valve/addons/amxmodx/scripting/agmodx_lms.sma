@@ -14,7 +14,7 @@
 
 #pragma semicolon 1
 
-#define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
+#define MODE_TYPE_NAME "lms"
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
@@ -93,36 +93,19 @@ new const gAgStartAmmo[SIZE_AMMO][] = {
 	"sv_ag_start_ammo_snark",
 };
 
-new bool:gIsLmsMode;
-
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
 
-// gameplay cvars
-
-// arena vars
 new gStartMatchTime; 
 new gHudShowMatch;
 
 // ag hud color
 new gHudRed, gHudGreen, gHudBlue;
 
-// To do: use a native to check if ag mod x is on, or to check if normal ag mod is being use
-bool:IsLmsMode() {
-	new type[32];
-	get_cvar_string("sv_ag_gametype", type, charsmax(type));
-
-	if (equal(type, "lms"))
-		return true;
-
-	return false;
-}
-
 public plugin_precache() {
-	// maybe add a check to detect ag mod x is on, if it's on, then it means all cvars are registred and safe to use, or in plugins.ini this always has to be after
-	gIsLmsMode = IsLmsMode();
+	register_plugin(PLUGIN, VERSION, AUTHOR);
 
-	if (!gIsLmsMode) {
+	if (!IsSelectedMode(MODE_TYPE_NAME)) {
 		StopPlugin();
 		return;
 	}
@@ -137,21 +120,7 @@ public plugin_precache() {
 		gCvarStartAmmo[i] = get_cvar_pointer(gAgStartAmmo[i]);
 }
 
-stock StopPlugin() {
-	new pluginName[32];
-	get_plugin(-1, pluginName, sizeof(pluginName));
-	pause("d", pluginName);
-	return;
-}
-
 public plugin_init() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
-
-	if (!gIsLmsMode) {
-		StopPlugin();
-		return;
-	}
-
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Pre");
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre");
 	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");
@@ -222,8 +191,6 @@ public OnPlayerKilled_Pre(victim, attacker) {
 * Last Man Standing Mode
 */
 public StartMatchLms() {
-	gIsLmsMode = true;
-
 	if (get_playersnum() < 2) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
 		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
