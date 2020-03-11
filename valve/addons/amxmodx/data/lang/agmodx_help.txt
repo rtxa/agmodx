@@ -1,0 +1,35 @@
+[en]
+TITLE_CMDHELP = AG Mod X Help: Commands
+AGCMD_HELP = - shows help on using other commands of AG Mod X.
+AGCMD_AGSTART = [name/#userid 1] [name/#userid 2] ... [name/#userid 32] - start a match with selected players.
+AGCMD_AGALLOW = [name or #userid] - allows a player to enter a match.
+AGCMD_AGABORT = - abort the match.
+AGCMD_AGPAUSE = - pause the game.
+AGCMD_AGNEXTMODE = - set the next gamemode.
+AGCMD_AGNEXTMAP = - set the next map.
+AGCMD_AGMAP = - change map.
+AGCMD_VOTE = <vote> [value] - do a vote.
+AGCMD_YES = - vote yes when a vote is running.
+AGCMD_NO = - vote no when a vote is running.
+AGCMD_SETTINGS = - shows a splash hud with the current settings of the server.
+AGCMD_PLAYTEAM = <file>.wav - plays the sound file to the team.
+AGCMD_TIMELEFT = - shows match time left.
+AGCMD_LISTVOTES = - shows available votes.
+
+[es]
+TITLE_CMDHELP = AG Mod X Ayuda: Comandos
+AGCMD_HELP = - muestra la lista de comandos del AG Mod X.
+AGCMD_AGSTART = [name/#userid 1] [name/#userid 2] ... [name/#userid 32] - comienza una partida con los jugadores ingresados
+AGCMD_AGALLOW = [name or #userid] - ingresa un usuario a la partida
+AGCMD_AGABORT = - termina la partida
+AGCMD_AGPAUSE = - pone en pausa la partida
+AGCMD_AGNEXTMODE = - establece el siguiente modo.
+AGCMD_AGNEXTMAP = - establece el siguiente mapa.
+AGCMD_AGMAP = cambia de mapa.
+AGCMD_VOTE = <vote> [value] - realiza una votacion
+AGCMD_YES = - vota a favor cuando hay una votacion
+AGCMD_NO = - vota en contra cuando hay una votacion
+AGCMD_SETTINGS = - muestra los ajustes del AG Mod X
+AGCMD_PLAYTEAM = <file>.wav - reproduce el nombre del sonido ingresado a todo el equipo.
+AGCMD_TIMELEFT = - muestra el tiempo restante de la partida
+AGCMD_LISTVOTES = - muestra los votos disponibles.

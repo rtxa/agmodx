@@ -47,18 +47,7 @@ enum (+=100) {
 	TASK_TIMELEFT
 };
 
-new const gHelpList[][] = {
-	"agabort",
-	"agallow",
-	"agnextmap",
-	"agnextmode",
-	"agpause",
-	"agstart",
-	"no",
-	"settings",
-	"vote",
-	"yes",
-};
+new Array:gAgCmdList;
 
 // Team models (this is used to fix team selection from VGUI Viewport)
 new gTeamListModels[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
@@ -105,7 +94,6 @@ new gHudShowTimeLeft;
 // agpause
 new bool:gIsPause;
 
-new gGameModeList[32][32];
 new gGameModeName[32];
 
 // restore score system: array index
@@ -282,7 +270,7 @@ public plugin_init() {
 
 	// Multilingual
 	register_dictionary("agmodx.txt");
-	register_dictionary("agmodxhelp.txt");
+	register_dictionary("agmodx_help.txt");
 	register_dictionary("agmodx_votehelp.txt");
 
 	// amxx help translations
@@ -297,24 +285,26 @@ public plugin_init() {
 	RegisterHam(Ham_Spawn, "player", "PlayerPostSpawn", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
 
-	register_concmd("agabort", "CmdAgAbort", ADMIN_BAN, "HELP_AGABORT", _, true);
-	register_concmd("agallow", "CmdAgAllow", ADMIN_BAN, "HELP_AGALLOW", _, true);
-	register_concmd("agpause", "CmdAgPause", ADMIN_BAN, "HELP_AGPAUSE", _, true);
-	register_concmd("agstart", "CmdAgStart", ADMIN_BAN, "HELP_AGSTART", _, true);
-	register_concmd("agnextmode", "CmdAgNextMode", ADMIN_BAN, "HELP_AGNEXTMODE", _, true);
-	register_concmd("agnextmap", "CmdAgNextMap", ADMIN_BAN, "HELP_AGNEXTMAP", _, true);
-	register_concmd("agmap", "CmdAgMap", ADMIN_BAN, "HELP_AGMAP", _, true);
-	
-	register_concmd("help", "CmdHelp", ADMIN_ALL, "HELP_HELP", _, true);
-	register_concmd("timeleft", "CmdTimeLeft", ADMIN_ALL, "HELP_TIMELEFT", _, true);
-	register_clcmd("vote", "CmdVote", ADMIN_ALL, "HELP_VOTE", _, true);
-	register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "HELP_YES", _, true);
-	register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "HELP_NO", _, true);
-	register_clcmd("settings", "ShowSettings", ADMIN_ALL, "HELP_SETTINGS", _, true);
-	register_clcmd("say settings", "ShowSettings", ADMIN_ALL, "HELP_SETTINGS", _, true);
-	register_clcmd("play_team", "PlayTeam", ADMIN_ALL, "HELP_PLAYTEAM", _, true);
+	gAgCmdList = ArrayCreate();
 
-	register_concmd("aglistvotes", "CmdVoteHelp");
+	ag_register_concmd("agabort", "CmdAgAbort", ADMIN_BAN, "AGCMD_AGABORT", _, true);
+	ag_register_concmd("agallow", "CmdAgAllow", ADMIN_BAN, "AGCMD_AGALLOW", _, true);
+	ag_register_concmd("agpause", "CmdAgPause", ADMIN_BAN, "AGCMD_AGPAUSE", _, true);
+	ag_register_concmd("agstart", "CmdAgStart", ADMIN_BAN, "AGCMD_AGSTART", _, true);
+	ag_register_concmd("agnextmode", "CmdAgNextMode", ADMIN_BAN, "AGCMD_AGNEXTMODE", _, true);
+	ag_register_concmd("agnextmap", "CmdAgNextMap", ADMIN_BAN, "AGCMD_AGNEXTMAP", _, true);
+	ag_register_concmd("agmap", "CmdAgMap", ADMIN_BAN, "AGCMD_AGMAP", _, true);
+	
+	ag_register_concmd("aglistvotes", "CmdVoteHelp", ADMIN_ALL, "AGCMD_LISTVOTES", _, true);
+	ag_register_concmd("timeleft", "CmdTimeLeft", ADMIN_ALL, "AGCMD_TIMELEFT", _, true);
+	ag_register_clcmd("vote", "CmdVote", ADMIN_ALL, "AGCMD_VOTE", _, true);
+	ag_register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "AGCMD_YES", _, true);
+	ag_register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "AGCMD_NO", _, true);
+	ag_register_clcmd("settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
+	ag_register_clcmd("say settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
+	ag_register_clcmd("play_team", "PlayTeam", ADMIN_ALL, "AGCMD_PLAYTEAM", _, true);
+
+	register_concmd("help", "CmdHelp", ADMIN_ALL, "AGCMD_HELP", _, true);
 
 	register_clcmd("spectate", "CmdSpectate"); // block spectate
 	register_clcmd("drop", "CmdDrop"); // block drop
@@ -375,6 +365,8 @@ public plugin_end() {
 	TrieIterDestroy(handle);
 	TrieDestroy(gTrieVoteList);
 	TrieDestroy(gTrieScoreAuthId);
+
+	ArrayDestroy(gAgCmdList);
 }
 
 // Gamemode name that should be displayed in server browser and in splash with server settings data
@@ -885,38 +877,66 @@ public FindNearestLocation(id, Float:locOrigin[][3], numLocs) {
 }
 
 public CmdHelp(id, level, cid) {
-	new cmd[32], info[128], flags, bool:isInfoMl;
-	new j;
-
-	client_print(id, print_console, "----- Ag Mod X -----");
-	for (new i; i < get_clcmdsnum(-1); i++) {
-		isInfoMl = false;
-		if (!get_clcmd(i, cmd, charsmax(cmd), flags, info, charsmax(info), ADMIN_BAN, isInfoMl)) 
-			continue;
-		for (new i; i < sizeof gHelpList; i++) {
-			if (isInfoMl)
-				LookupLangKey(info, charsmax(info), info, id);
-
-			if (equal(cmd, gHelpList[i]))
-				client_print(id, print_console, "%i. %s %s", ++j, cmd, info);
-		}
-	}
-
-	for (new i; i < get_clcmdsnum(-1); i++) {
-		isInfoMl = false;
-		if (!get_clcmd(i, cmd, charsmax(cmd), flags, info, charsmax(info), ADMIN_BAN, isInfoMl)) 
-			continue;
-		for (new i; i < sizeof gHelpList; i++) {
-			if (isInfoMl)
-				LookupLangKey(info, charsmax(info), info, id);
-
-			if (equal(cmd, gGameModeList[i]))
-				client_print(id, print_console, "%i. %s %s", ++j, cmd, info);
-		}
-	}
-	client_print(id, print_console, "--------------------");
+	ProcessCmdHelp(id, .start_argindex = 1, .do_search = false, .main_command = "help");
 	return PLUGIN_HANDLED;
 }
+
+ProcessCmdHelp(id, start_argindex, bool:do_search, const main_command[], const search[] = "")
+{
+	new user_flags = get_user_flags(id);
+
+	// HACK: ADMIN_ADMIN is never set as a user's actual flags, so those types of commands never show
+	if (user_flags > 0 && !(user_flags & ADMIN_USER))
+	{
+		user_flags |= ADMIN_ADMIN;
+	}
+
+	new clcmdsnum = ArraySize(gAgCmdList);
+
+	const MaxDefaultEntries    = 10;
+	const MaxCommandLength     = 32;
+	const MaxCommandInfoLength = 128;
+
+	new HelpAmount = MaxDefaultEntries; // default entries
+
+	new start  = clamp(read_argv_int(start_argindex), .min = 1, .max = clcmdsnum) - 1; // Zero-based list;
+	new amount = !id ? read_argv_int(start_argindex + 1) : HelpAmount;
+	new end    = min(start + (amount > 0 ? amount : HelpAmount), clcmdsnum);
+
+	console_print(id, "^n----- %l -----", "TITLE_CMDHELP");
+
+	new info[MaxCommandInfoLength];
+	new command[MaxCommandLength];
+	new command_flags;
+	new bool:is_info_ml;
+	new index;
+
+	for (index = start; index < end; ++index)
+	{
+		get_concmd(ArrayGetCell(gAgCmdList, index), command, charsmax(command), command_flags, info, charsmax(info), user_flags, id, is_info_ml);
+
+		if (is_info_ml)
+		{
+			LookupLangKey(info, charsmax(info), info, id);
+		}
+
+		console_print(id, "%3d: %s %s", index + 1, command, info);
+	}
+
+	console_print(id, "----- %l -----", "HELP_ENTRIES", start + 1, end, clcmdsnum);
+
+	formatex(command, charsmax(command), "%s%c%s", main_command, do_search ? " " : "", search);
+
+	if (end < clcmdsnum)
+	{
+		console_print(id, "----- %l -----", "HELP_USE_MORE", command, end + 1);
+	}
+	else if (start || index != clcmdsnum)
+	{
+		console_print(id, "----- %l -----", "HELP_USE_BEGIN", command);
+	}
+}
+
 
 public CmdSpectate(id) {
 	new authid[MAX_AUTHID_LENGTH];
@@ -1643,7 +1663,7 @@ LoadGameMode() {
 				gGameModeName = name;
 
 			// create cmd and vote for gamemode
-			register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, fmt("- %s", info));
+			ag_register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, fmt("- %s", info));
 			ag_vote_add(fileName, "OnVoteChangeMode"); 
 
 			strtoupper(fileName);
@@ -2210,6 +2230,22 @@ IsUserServer(id) {
 		}
 	} 
 	return false;
+}
+
+ag_register_concmd(const cmd[], const function[], flags = -1, const info[] = "", FlagManager = -1, bool:info_ml = false) {
+	new idx = register_concmd(cmd, function, flags, info, FlagManager, info_ml);
+	if (idx) {
+		ArrayPushCell(gAgCmdList, idx);
+	}
+	return idx;
+}
+
+ag_register_clcmd(const cmd[], const function[], flags = -1, const info[] = "", FlagManager = -1, bool:info_ml = false) {
+	new idx = register_clcmd(cmd, function, flags, info, FlagManager, info_ml);
+	if (idx) {
+		ArrayPushCell(gAgCmdList, idx);
+	}
+	return idx;
 }
 
 public native_ag_vote_add(plugin_id, argc) {
