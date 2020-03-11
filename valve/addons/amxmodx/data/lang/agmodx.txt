@@ -39,9 +39,9 @@ SPEC_CANTTALK = Spectators can't talk to people playing a match. Use say_team to
 
 [es]
 CMD_NOINFO = - No hay info.
-LOG_VOTE_STARTED = Voto: "%s%s" llamado por "%N" ha empezado
-LOG_VOTE_ACCEPTED = Voto: "%s%s" llamado por "%N" ha sido aceptado
-LOG_VOTE_DENIED = Voto: "%s%s" llamado por "%N" ha sido denegado
+LOG_VOTE_STARTED = Voto: "%s" llamado por "%N" ha empezado
+LOG_VOTE_ACCEPTED = Voto: "%s" llamado por "%N" ha sido aceptado
+LOG_VOTE_DENIED = Voto: "%s" llamado por "%N" ha sido denegado
 DISPLAY_INFO1 = Escribe 'help' 'vote' en la consola para ver los comandos disponibles del AG Mod X.
 DISPLAY_INFO2 = Escribe 'settings' en el chat para ver la configuracion del AG Mod X.
 TIMER_UNLIMITED = Tiempo ilimitado
