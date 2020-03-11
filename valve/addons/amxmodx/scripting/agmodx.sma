@@ -283,6 +283,10 @@ public plugin_init() {
 	// Multilingual
 	register_dictionary("agmodx.txt");
 	register_dictionary("agmodxhelp.txt");
+	register_dictionary("agmodx_votehelp.txt");
+
+	// amxx help translations
+	register_dictionary("adminhelp.txt");
 
 	// show current AG mode on game description when you find servers
 	register_forward(FM_GetGameDescription, "FwGameDescription");
@@ -309,6 +313,8 @@ public plugin_init() {
 	register_clcmd("settings", "ShowSettings", ADMIN_ALL, "HELP_SETTINGS", _, true);
 	register_clcmd("say settings", "ShowSettings", ADMIN_ALL, "HELP_SETTINGS", _, true);
 	register_clcmd("play_team", "PlayTeam", ADMIN_ALL, "HELP_PLAYTEAM", _, true);
+
+	register_concmd("aglistvotes", "CmdVoteHelp");
 
 	register_clcmd("spectate", "CmdSpectate"); // block spectate
 	register_clcmd("drop", "CmdDrop"); // block drop
@@ -1215,14 +1221,14 @@ public CmdAgMap(id, level, cid) {
 
 public CmdUserInfo(id, level, cid) {
 	if (!cmd_access(id, level, cid, 1))
-	    return PLUGIN_HANDLED;
+		return PLUGIN_HANDLED;
 
 	new target[32];
 	read_argv(1, target, charsmax(target));
 
 	if (equal(target, "")) {
-	    PrintUserInfo(id, id);
-	    return PLUGIN_HANDLED;
+		PrintUserInfo(id, id);
+		return PLUGIN_HANDLED;
 	}
 
 	new player = cmd_target(id, target);
@@ -1639,6 +1645,10 @@ LoadGameMode() {
 			// create cmd and vote for gamemode
 			register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, fmt("- %s", info));
 			ag_vote_add(fileName, "OnVoteChangeMode"); 
+
+			strtoupper(fileName);
+			AddTranslation("en", CreateLangKey(fmt("%s%s", "AGVOTE_", fileName)), fmt("- %s", info));
+			strtolower(fileName);
 		}
 	} while (next_file(handleDir, fileName, charsmax(fileName)));
 
@@ -1684,7 +1694,7 @@ public CmdVote(id) {
 	// Print help on console
 	new argc = read_argc();
 	if (argc == 1) {
-		VoteHelp(id);
+		client_print(id, print_console, "%l", "VOTE_HELP");
 		return PLUGIN_HANDLED;
 	}
 
@@ -1855,18 +1865,80 @@ public RemoveVote() {
 	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
 }
 
-VoteHelp(id) {
-	new TrieIter:handle = TrieIterCreate(gTrieVoteList);
-	
-	console_print(id, "--- %l ---", "VOTE_HELP");
-	new key[32], i;
-	while (!TrieIterEnded(handle)) {
-	    TrieIterGetKey(handle, key, charsmax(key));
-	    console_print(id, "%d. %s", ++i, key);
-	    TrieIterNext(handle);
+public CmdVoteHelp(id) {
+	ProcessVoteHelp(id, .start_argindex = 1, .main_command = "aglistvotes");
+	return PLUGIN_HANDLED;
+}
+
+ProcessVoteHelp(id, start_argindex, const main_command[])
+{
+	const MaxDefaultEntries    = 10;
+	const MaxCommandLength     = 32;
+	const HelpAmount = MaxDefaultEntries;
+
+	new clcmdsnum;
+
+	new Array:cmdNameList = ArrayCreate(MaxCommandLength);
+	{
+		new TrieIter:handle = TrieIterCreate(gTrieVoteList);
+		
+		new cmd[32];
+
+		while (!TrieIterEnded(handle)) {
+			TrieIterGetKey(handle, cmd, sizeof(cmd));
+
+			ArrayPushString(cmdNameList, cmd);
+
+			TrieIterNext(handle);
+
+			clcmdsnum++;
+		}
+
+		TrieIterDestroy(handle);
 	}
-	console_print(id, "--- %l ---", "VOTE_HELP");
-	TrieIterDestroy(handle);
+
+	new start  = clamp(read_argv_int(start_argindex), .min = 1, .max = clcmdsnum) - 1; // Zero-based list;
+	new amount = !id ? read_argv_int(start_argindex + 1) : HelpAmount;
+	new end    = min(start + (amount > 0 ? amount : HelpAmount), clcmdsnum);
+
+	console_print(id, "^n----- %l -----", "TITLE_VOTEHELP");
+
+	new command[MaxCommandLength];
+	new index;
+
+	for (index = start; index < end; ++index) {
+		ArrayGetString(cmdNameList, index, command, sizeof(command));
+
+		new key[32];
+		copy(key, sizeof(key), command);
+
+		strtoupper(key);
+
+		new langKey[32];
+		formatex(langKey, charsmax(langKey), "%s%s", "AGVOTE_", key);
+
+		if (GetLangTransKey(langKey) != TransKey_Bad)
+			console_print(id, "%3d: %s %l", index + 1, command, langKey);
+		else
+			console_print(id, "%3d: %s %l", index + 1, command, "CMD_NOINFO");
+	}
+
+	console_print(id, "----- %l -----", "HELP_ENTRIES", start + 1, end, clcmdsnum);
+
+	formatex(command, charsmax(command), "%s", main_command);
+
+	if (end < clcmdsnum)
+	{
+		console_print(id, "----- %l -----", "HELP_USE_MORE", command, end + 1);
+	}
+	else if (start || index != clcmdsnum)
+	{
+		console_print(id, "----- %l -----", "HELP_USE_BEGIN", command);
+	}
+
+	ArrayDestroy(cmdNameList);
+
+	return PLUGIN_HANDLED;
 }
 
 public ChangeMode(const mode[]) {

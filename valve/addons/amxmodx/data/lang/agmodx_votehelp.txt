@@ -1,0 +1,23 @@
+[en]
+TITLE_VOTEHELP = AG Mod X Help: Votes
+AGVOTE_AGSTART = - start a match.
+AGVOTE_AGALLOW = [name or #userid] - allow a player into the match. If blank - allow yourself.
+AGVOTE_AGABORT = - abort the match.
+AGVOTE_AGPAUSE = - pause the game.
+AGVOTE_AGNEXTMODE = - set the next gamemode.
+AGVOTE_AGNEXTMAP = - set the next map.
+AGVOTE_AGMAP = - change map.
+AGVOTE_VOTE = <arg> [arg2] - do a vote.
+AGVOTE_MP_FRIENDLYFIRE = <0/1> - sets the value of friendly fire.
+
+[es]
+TITLE_VOTEHELP = AG Mod X Ayuda: Votos
+AGVOTE_AGSTART = - comienza una partida.
+AGVOTE_AGALLOW = [name or #userid] - ingresa un usuario a la partida. En blanco - ingresas tu mismo.
+AGVOTE_AGABORT = - finaliza la partida
+AGVOTE_AGPAUSE = - pone en pausa la partida
+AGVOTE_AGNEXTMODE = - establece el siguiente modo.
+AGVOTE_AGNEXTMAP = - establece el siguiente mapa.
+AGVOTE_AGMAP = - cambia el mapa.
+AGVOTE_MP_FRIENDLYFIRE = <0/1> - cambia el valor del fuego amigo.
+
