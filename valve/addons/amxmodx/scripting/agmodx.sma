@@ -205,11 +205,11 @@ public plugin_precache() {
 	gCvarDebugVote = create_cvar("sv_ag_debug_vote", "0", FCVAR_SERVER);
 
 	// Chat cvar
-	gCvarSpecTalk = create_cvar("sv_ag_spectalk", "0", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER | FCVAR_SPONLY);
 
 	// Agstart cvars
-	gCvarAgStartMinPlayers = create_cvar("sv_ag_agstart_minplayers", "2", FCVAR_SERVER);
-	gCvarAgStartAllowUnlimited = create_cvar("sv_ag_agstart_allowunlimited", "0", FCVAR_SERVER); // block start versus with unlimited time
+	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
+	gCvarAgStartAllowUnlimited = create_cvar("sv_ag_start_allowunlimited", "0", FCVAR_SERVER); // block start versus with unlimited time
 	
 	// Vote cvars
 	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER | FCVAR_SPONLY);
