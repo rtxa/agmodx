@@ -17,9 +17,18 @@
 
 #define MODE_TYPE_NAME "arena"
 
-#define TASK_SENDVICTIMTOSPEC 1499
-#define TASK_STARTMATCH 1599
-#define TASK_SENDTOSPEC 1699
+// TaskIDs
+enum (+=100) {
+	TASK_SENDVICTIMTOSPEC = 1499,
+	TASK_ARENACOUNTDOWN,
+	TASK_STARTMATCH,
+	TASK_ENDMATCH,
+	TASK_SENDTOSPEC
+};
+
+#define MATCH_WAITING_Y -1.0
+#define MATCH_WINNER_Y 0.1
+#define MATCH_START_Y -1.0
 
 #define ARRAY_NOMATCHES -1 // i use this with ArrayFindValue
 
@@ -28,8 +37,13 @@ new gCvarStartAmmo[SIZE_AMMO];
 
 // arena vars
 new Array:gArenaQueue;
+
 new gMatchWinner;
-new gMatchLooser;
+new gMatchWinnerName[32];
+
+new gFirstPlayer;
+new gSecondPlayer;
+
 new gStartMatchTime; 
 new gHudShowMatch;
 
@@ -73,11 +87,6 @@ public plugin_end() {
 	ArrayDestroy(gArenaQueue);
 }
 
-public client_disconnected(id) {
-	remove_task(TASK_SENDTOSPEC + id);
-	remove_task(TASK_SENDVICTIMTOSPEC + id);
-}
-
 public CmdDrop() {
 	return PLUGIN_HANDLED;
 }
@@ -93,8 +102,7 @@ public FwChargersUse() {
 }
 
 public OnPlayerSpawn_Pre(id) {
-	// if player has to spec, don't let him spawn...
-	if (task_exists(TASK_SENDVICTIMTOSPEC + id))
+	if (HasVictimToSpec(id))
 		return HAM_SUPERCEDE;
 	return HAM_IGNORED;
 }
@@ -118,20 +126,29 @@ public SendVictimToSpec(taskid) {
 	}
 }
 
-public OnPlayerKilled_Pre(victim, attacker) {
-	set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
+HasVictimToSpec(id) {
+	return task_exists(TASK_SENDVICTIMTOSPEC + id);
+}
 
-	if (victim != attacker && IsPlayer(attacker)) {
-		gMatchWinner = attacker;
-		gMatchLooser = victim;
-	} else if (gMatchWinner == victim)
-		swap(gMatchWinner, gMatchLooser);
-	
+public OnPlayerKilled_Pre(victim, attacker) {	
+	gMatchWinner = attacker;
+
+	if (victim == attacker || !IsPlayer(attacker)) {
+		if (!GetNumAlives()) { // if both player are dead, then no winners...
+			gMatchWinner = 0;
+		} else if (gFirstPlayer == victim)
+			gMatchWinner = gSecondPlayer;
+		else if (gSecondPlayer == victim) {
+			gMatchWinner = gFirstPlayer;
+		}
+	}
+
 	// send looser to the end of the queue
-	ArrayDeleteCell(gArenaQueue, gMatchLooser);
-	ArrayPushCell(gArenaQueue, gMatchLooser);
+	ArrayDeleteCell(gArenaQueue, victim);
+	ArrayPushCell(gArenaQueue, victim);
 
-	set_task(1.0, "EndArena");
+	set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
+	set_task(4.0, "EndArena", TASK_ENDMATCH);
 }
 
 /*
@@ -141,14 +158,17 @@ public StartArena() {
 	if (get_playersnum() > 1) {
 		CountArenaQueue();
 
-		gMatchWinner = ArrayGetCell(gArenaQueue, 0);
-		gMatchLooser = ArrayGetCell(gArenaQueue, 1);
+		// get the players so we can show their name
+		gFirstPlayer = ArrayGetCell(gArenaQueue, 0);
+		gSecondPlayer = ArrayGetCell(gArenaQueue, 1);
 
-		gStartMatchTime = 5;
+		gMatchWinner = 0;
+
+		gStartMatchTime = 4;
 		ArenaCountdown();
 		
 	} else { // Wait for more players...
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WAITING_Y, 0, 2.0, 4.0, 0.2, 0.5);
 		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
 		
 		set_task(5.0, "StartArena", TASK_STARTMATCH);	
@@ -157,58 +177,57 @@ public StartArena() {
 
 
 public ArenaCountdown() {
-	gStartMatchTime--;
+	if (!is_user_connected(gFirstPlayer) || !is_user_connected(gSecondPlayer)) {
+		if (!task_exists(TASK_STARTMATCH))
+			set_task(3.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+		return;
+	}
 
 	PlaySound(0, gCountSnd[gStartMatchTime]);
 
 	if (gStartMatchTime == 0) {
-		if (!is_user_connected(gMatchWinner) || !is_user_connected(gMatchLooser)) {
-			set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
-			return;
-		}
-
-		if (hl_get_user_spectator(gMatchWinner))
-			hl_set_user_spectator(gMatchWinner, false);
+		// Spawn players
+		if (hl_get_user_spectator(gFirstPlayer))
+			hl_set_user_spectator(gFirstPlayer, false);
 		else
-			hl_user_spawn(gMatchWinner);
+			hl_user_spawn(gFirstPlayer);
 
-		hl_set_user_spectator(gMatchLooser, false);
+		hl_set_user_spectator(gSecondPlayer, false);
 
 		ResetMap();
-
-		remove_task(TASK_STARTMATCH);
 
 		return;
 	}
 
 	PlaySound(0, gBeepSnd);
 
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_STARTARENA", gMatchWinner, gMatchLooser, gStartMatchTime);
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_START_Y, 0, 3.0, 4.0, 0.2, 0.5, -1); 
+	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_STARTARENA", gFirstPlayer, gSecondPlayer, gStartMatchTime);
 
-	set_task(1.0, "ArenaCountdown", TASK_STARTMATCH);
+	set_task(1.0, "ArenaCountdown", TASK_ARENACOUNTDOWN);
+
+	gStartMatchTime--;
 }
 
 public EndArena() {
 	if (task_exists(TASK_STARTMATCH))
 		return;
 
-	new alives = GetNumAlives();
+	set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
 
-	if (alives < 2) {
-		set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
-
-		if (alives == 1) { // Show winner
-			if (is_user_connected(gMatchWinner))
-				set_user_godmode(gMatchWinner, true); // avoid kill himself or get hurt by victim after win
-			
-			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.2); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", gMatchWinner);
-		} else { // No winners
-			set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-			ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
-		}
+	if (!gMatchWinner) {
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WINNER_Y, 0, 3.0, 4.0, 0.2, 0.2); 
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_NOWINNER");
+		return;
 	}
+	
+	if (is_user_connected(gMatchWinner)) {
+		get_user_name(gMatchWinner, gMatchWinnerName, charsmax(gMatchWinnerName)); 
+		set_user_godmode(gMatchWinner, true); // give inmmunity to player after win
+	}
+
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WINNER_Y, 0, 3.0, 4.0, 0.2, 0.2);
+	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", gMatchWinnerName);
 
 }
 
@@ -244,20 +263,28 @@ public client_putinserver(id) {
 	CountArenaQueue();
 }
 
-// here is_user_alive(id) will show 0 :)
-public client_remove(id) {
-	if (GetNumAlives() < 2) {
-		if (id == gMatchWinner)
-			gMatchWinner = gMatchLooser;
-		EndArena();
+public client_disconnected(id) {
+	remove_task(TASK_SENDTOSPEC + id);
+	remove_task(TASK_SENDVICTIMTOSPEC + id);
+
+	if (gMatchWinner == id) {
+		get_user_name(id, gMatchWinnerName, charsmax(gMatchWinnerName));
 	}
-	return PLUGIN_HANDLED;
 }
 
-stock swap(&x, &y) {
-	x = x + y;
-	y = x - y;
-	x = x - y;
+// here is_user_alive(id) will show 0 :)
+public client_remove(id) {
+	CountArenaQueue();
+	if (GetNumAlives() < 2) {
+		if (!gMatchWinner) {
+			set_task(5.0, "StartArena", TASK_STARTMATCH);
+		} else {
+			if (!task_exists(TASK_ENDMATCH)) {
+				set_task(3.0, "EndArena", TASK_ENDMATCH);
+			}
+		}
+	}
+	return PLUGIN_HANDLED;
 }
 
 PlaySound(id, const sound[]) {
