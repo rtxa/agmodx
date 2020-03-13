@@ -26,9 +26,9 @@ enum (+=100) {
 	TASK_SENDTOSPEC
 };
 
-#define MATCH_WAITING_Y -1.0
-#define MATCH_WINNER_Y 0.1
-#define MATCH_START_Y -1.0
+#define MATCH_WAITING_Y 0.2
+#define MATCH_WINNER_Y 0.2
+#define MATCH_START_Y 0.2
 
 #define ARRAY_NOMATCHES -1 // i use this with ArrayFindValue
 
@@ -155,6 +155,11 @@ public OnPlayerKilled_Pre(victim, attacker) {
 * Arena Mode
 */
 public StartArena() {
+	if (task_exists(TASK_STARTMATCH)) {
+		return;
+	}
+
+
 	if (get_playersnum() > 1) {
 		CountArenaQueue();
 
@@ -164,13 +169,12 @@ public StartArena() {
 
 		gMatchWinner = 0;
 
-		gStartMatchTime = 4;
+		gStartMatchTime = 3;
 		ArenaCountdown();
 		
 	} else { // Wait for more players...
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WAITING_Y, 0, 2.0, 4.0, 0.2, 0.5);
 		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
-		
 		set_task(5.0, "StartArena", TASK_STARTMATCH);	
 	}
 }
@@ -178,8 +182,7 @@ public StartArena() {
 
 public ArenaCountdown() {
 	if (!is_user_connected(gFirstPlayer) || !is_user_connected(gSecondPlayer)) {
-		if (!task_exists(TASK_STARTMATCH))
-			set_task(3.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+		set_task(3.0, "StartArena", TASK_STARTMATCH); // start new match after win match
 		return;
 	}
 
@@ -277,7 +280,8 @@ public client_remove(id) {
 	CountArenaQueue();
 	if (GetNumAlives() < 2) {
 		if (!gMatchWinner) {
-			set_task(5.0, "StartArena", TASK_STARTMATCH);
+			if (!task_exists(TASK_STARTMATCH))
+				set_task(5.0, "StartArena", TASK_STARTMATCH);
 		} else {
 			if (!task_exists(TASK_ENDMATCH)) {
 				set_task(3.0, "EndArena", TASK_ENDMATCH);
