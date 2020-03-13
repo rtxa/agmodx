@@ -514,18 +514,47 @@ public ShowTimeLeft() {
 			b = 50; 
 		}
 
-		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
+		new timerText[128];
+		FormatTimeLeft(gTimeLeft, timerText, charsmax(timerText));
 
-		if (gTimeLeft > 3600)
-			ShowSyncHudMsg(0, gHudShowTimeLeft, "%i:%02i:%02i", gTimeLeft / 3600, (gTimeLeft / 60) % 60, gTimeLeft % 60);
-		else
-			ShowSyncHudMsg(0, gHudShowTimeLeft, "%i:%02i", gTimeLeft / 60, gTimeLeft % 60);
+		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
+		ShowSyncHudMsg(0, gHudShowTimeLeft, timerText);
 	} else {
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01); // flicks the hud with out this, maybe is a bug
 		ShowSyncHudMsg(0, gHudShowTimeLeft, "%l", "TIMER_UNLIMITED");
 	}
 
 	return PLUGIN_CONTINUE;
+}
+
+FormatTimeLeft(timeleft, output[], length) {
+	new days, hours, minutes, seconds;
+
+	const SECONDS_PER_MINUTE = 60;
+	const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
+	const SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
+
+	new seconds_total = timeleft;
+
+	days = seconds_total / SECONDS_PER_DAY;
+	seconds_total = seconds_total % SECONDS_PER_DAY;
+
+	hours = seconds_total / SECONDS_PER_HOUR;
+	seconds_total = seconds_total % SECONDS_PER_HOUR;
+
+	minutes = seconds_total / SECONDS_PER_MINUTE;
+	seconds_total = seconds_total % SECONDS_PER_MINUTE;
+
+	seconds = seconds_total;
+
+	if (days > 0) {
+		formatex(output, length, "%id %ih %im %is", days, hours, minutes, seconds);	
+	} else if (hours > 0)
+		formatex(output, length, "%ih %02im %02is", hours, minutes, seconds);
+	else if (minutes > 0)
+		formatex(output, length, "%i:%02i", minutes, seconds);
+	else // seconds
+		formatex(output, length, "%i", seconds);
 }
 
 // Ex: If you set mp_timelimit to the same value, this will not get executed
