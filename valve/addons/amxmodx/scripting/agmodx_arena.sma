@@ -38,6 +38,8 @@ new gCvarStartAmmo[SIZE_AMMO];
 // arena vars
 new Array:gArenaQueue;
 
+
+new bool:gMatchStarted;
 new gMatchWinner;
 new gMatchWinnerName[32];
 
@@ -70,7 +72,7 @@ public plugin_precache() {
 
 public plugin_init() {
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Pre");
-	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre");
+	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Post", true);
 	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");
 	RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
 
@@ -120,9 +122,7 @@ public SendToSpec(taskid) {
 public SendVictimToSpec(taskid) {
 	new id = taskid - TASK_SENDVICTIMTOSPEC;
 	if (is_user_connected(id)) {
-		if (!is_user_alive(id) || is_user_bot(id)) {
-			hl_set_user_spectator(id, true);
-		}
+		hl_set_user_spectator(id, true);
 	}
 }
 
@@ -130,13 +130,14 @@ HasVictimToSpec(id) {
 	return task_exists(TASK_SENDVICTIMTOSPEC + id);
 }
 
-public OnPlayerKilled_Pre(victim, attacker) {	
+public OnPlayerKilled_Post(victim, attacker) {		
+	// if it pass the checks, then we are sure the winner is the attacker
 	gMatchWinner = attacker;
 
-	if (victim == attacker || !IsPlayer(attacker)) {
-		if (!GetNumAlives()) { // if both player are dead, then no winners...
-			gMatchWinner = 0;
-		} else if (gFirstPlayer == victim)
+	if (GetNumAlives() == 0) {
+		gMatchWinner = 0;
+	} else if (victim == attacker || !IsPlayer(attacker)) { // player killed himself or by the world
+		if (gFirstPlayer == victim)
 			gMatchWinner = gSecondPlayer;
 		else if (gSecondPlayer == victim) {
 			gMatchWinner = gFirstPlayer;
@@ -148,18 +149,15 @@ public OnPlayerKilled_Pre(victim, attacker) {
 	ArrayPushCell(gArenaQueue, victim);
 
 	set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
-	set_task(4.0, "EndArena", TASK_ENDMATCH);
+
+	if (!task_exists(TASK_ENDMATCH))
+		set_task(3.0, "EndArena", TASK_ENDMATCH);
 }
 
 /*
 * Arena Mode
 */
 public StartArena() {
-	if (task_exists(TASK_STARTMATCH)) {
-		return;
-	}
-
-
 	if (get_playersnum() > 1) {
 		CountArenaQueue();
 
@@ -182,13 +180,19 @@ public StartArena() {
 
 public ArenaCountdown() {
 	if (!is_user_connected(gFirstPlayer) || !is_user_connected(gSecondPlayer)) {
-		set_task(3.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+		ClearSyncHud(0, gHudShowMatch);
+		if (!task_exists(TASK_STARTMATCH))
+			set_task(3.0, "StartArena", TASK_STARTMATCH);
 		return;
 	}
 
 	PlaySound(0, gCountSnd[gStartMatchTime]);
 
 	if (gStartMatchTime == 0) {
+		gMatchStarted = true;
+
+		ClearSyncHud(0, gHudShowMatch);
+
 		// Spawn players
 		if (hl_get_user_spectator(gFirstPlayer))
 			hl_set_user_spectator(gFirstPlayer, false);
@@ -204,7 +208,7 @@ public ArenaCountdown() {
 
 	PlaySound(0, gBeepSnd);
 
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_START_Y, 0, 3.0, 4.0, 0.2, 0.5, -1); 
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_START_Y, 0, 3.0, 3.0, 0.2, 0.5); 
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_STARTARENA", gFirstPlayer, gSecondPlayer, gStartMatchTime);
 
 	set_task(1.0, "ArenaCountdown", TASK_ARENACOUNTDOWN);
@@ -216,7 +220,9 @@ public EndArena() {
 	if (task_exists(TASK_STARTMATCH))
 		return;
 
-	set_task(5.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+	gMatchStarted = false;
+
+	set_task(3.0, "StartArena", TASK_STARTMATCH); // start new match after win match
 
 	if (!gMatchWinner) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WINNER_Y, 0, 3.0, 4.0, 0.2, 0.2); 
@@ -253,16 +259,8 @@ ArrayDeleteCell(Array:handle, value) {
 		ArrayDeleteItem(handle, idx);
 }
 
-public PrintArenaQueue() {
-	for (new i; i < ArraySize(gArenaQueue); i++) {
-		server_print("i. %i", ArrayGetCell(gArenaQueue, i));
-	}
-}
-
-
-// SI no es arena realmente, parar le modo con amx_pausecfg stop nombredelplugin
 public client_putinserver(id) {
-	set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
+	set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid scoreboard glitchs
 	CountArenaQueue();
 }
 
@@ -275,20 +273,37 @@ public client_disconnected(id) {
 	}
 }
 
-// here is_user_alive(id) will show 0 :)
+// aca esta el bug, hay q usar el gMatchStarted, cuando se desocneca el player y aun sigue vivo
 public client_remove(id) {
 	CountArenaQueue();
-	if (GetNumAlives() < 2) {
-		if (!gMatchWinner) {
-			if (!task_exists(TASK_STARTMATCH))
-				set_task(5.0, "StartArena", TASK_STARTMATCH);
-		} else {
-			if (!task_exists(TASK_ENDMATCH)) {
+
+	if (task_exists(TASK_ARENACOUNTDOWN)) {
+		// player to start match have disconnect, so cancel the countdown
+		if (id == gFirstPlayer || id == gSecondPlayer) {
+			gFirstPlayer = gSecondPlayer = 0;
+			return;
+		}
+	}
+
+	if (gMatchStarted) {
+		if (!task_exists(TASK_ENDMATCH)) {
+			if (gMatchWinner == id) {
+				gMatchWinner = 0;
+			}
+			if (GetNumAlives() < 2) {
+				SetGodModeAlives();
 				set_task(3.0, "EndArena", TASK_ENDMATCH);
 			}
 		}
 	}
-	return PLUGIN_HANDLED;
+}
+
+SetGodModeAlives() {
+	new players[MAX_PLAYERS], numPlayers;
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
+
+	for (new i; i < numPlayers; i++)
+		set_user_godmode(players[i], true);
 }
 
 PlaySound(id, const sound[]) {
