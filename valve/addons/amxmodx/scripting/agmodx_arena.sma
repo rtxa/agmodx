@@ -186,7 +186,7 @@ public ArenaCountdown() {
 		return;
 	}
 
-	PlaySound(0, gCountSnd[gStartMatchTime]);
+	PlayNumSound(0, gStartMatchTime);
 
 	if (gStartMatchTime == 0) {
 		gMatchStarted = true;

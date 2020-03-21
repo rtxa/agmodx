@@ -7,6 +7,7 @@
 #include <engine>
 #include <fakemeta>
 #include <hlstocks>
+#include <agmodx_const>
 
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 

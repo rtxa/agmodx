@@ -133,7 +133,7 @@ public StartMatchLms() {
 public LmsMatchCountdown() {
 	gStartMatchTime--;
 
-	PlaySound(0, gCountSnd[gStartMatchTime]);
+	PlayNumSound(0, gStartMatchTime);
 
 	if (gStartMatchTime == 0) {
 		new players[32], numPlayers, player;
