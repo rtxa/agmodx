@@ -479,26 +479,29 @@ public StartTimeLeft() {
 	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
 
-	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
-
 	// set mp_timelimit always to empty (this way i can always track changes) and don't let anyone modify it.
 	set_pcvar_string(gCvarTimeLimit, "");
 	gHookCvarTimeLimit = hook_cvar_change(gCvarTimeLimit, "CvarTimeLimitHook");
 
 	// Start my own timeleft
-	set_task(1.0, "TimeLeftCountdown", TASK_TIMELEFT, _, _, "b");
+	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
+	TimeLeftCountdown();
 }
 
 public TimeLeftCountdown() {
 	if (task_exists(TASK_STARTVERSUS)) // when player send agstart, freeze timer
 		return;
 
-	if (gTimeLeft > 0)
-		gTimeLeft--;
-	else if (gTimeLeft == 0)
+	if (gTimeLeft == 0) {
 		StartIntermissionMode();
+		return;
+	}
 
 	ShowTimeLeft();
+
+	set_task(1.0, "TimeLeftCountdown", TASK_TIMELEFT);
+
+	gTimeLeft--;
 }
 
 public ShowTimeLeft() {
@@ -524,7 +527,7 @@ public ShowTimeLeft() {
 		ShowSyncHudMsg(0, gHudShowTimeLeft, "%l", "TIMER_UNLIMITED");
 	}
 
-	return PLUGIN_CONTINUE;
+	return;
 }
 
 FormatTimeLeft(timeleft, output[], length) {
@@ -624,18 +627,14 @@ public StartVersus() {
 	// Reset map
 	ResetMap();
 
-	gStartVersusTime = 10;
+	gStartVersusTime = 9;
 	StartVersusCountdown();
 }
 
 public StartVersusCountdown() {
-	gStartVersusTime--;
+	PlayNumSound(0, gStartVersusTime);
 
-	PlaySound(0, gCountSnd[gStartVersusTime]);
-		
 	if (gStartVersusTime == 0) {
-		remove_task(TASK_STARTVERSUS); // stop countdown
-
 		gVersusStarted = true;
 
 		gBlockCmdDrop = false;
@@ -664,8 +663,13 @@ public StartVersusCountdown() {
 			}
 		}
 
+		// it's seems that startversus is in the same frame when it's called, so it still being called
+		remove_task(TASK_TIMELEFT);
+		remove_task(TASK_STARTVERSUS);
+
 		// set new timeleft according to timelimit
-		gTimeLeft = gTimeLimit == 0 ? TIMELEFT_SETUNLIMITED : gTimeLimit * 60;
+		gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
+		TimeLeftCountdown();
 
 		return;
 	}
@@ -676,6 +680,8 @@ public StartVersusCountdown() {
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartVersusTime);
 
 	set_task(1.0, "StartVersusCountdown", TASK_STARTVERSUS);
+
+	gStartVersusTime--;
 }
 
 /* 

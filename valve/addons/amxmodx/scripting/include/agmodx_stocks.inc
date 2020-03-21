@@ -128,3 +128,8 @@ stock GetUserWeaponEntId(id, weapon) {
 	get_weaponname(weapon, classname, charsmax(classname));
 	return find_ent_by_owner(0, classname, id);
 }
+
+stock PlayNumSound(id, second) {
+	if (second >= 0 && second <= sizeof(gCountSnd))
+		PlaySound(id, gCountSnd[second]);
+}
