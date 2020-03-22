@@ -83,16 +83,6 @@ stock ag_get_team_alives(teamIndex) {
 	return num;
 }
 
-stock GetTeamListModels(output[][], size) {
-	new teamlist[192];
-	get_cvar_string("mp_teamlist", teamlist, charsmax(teamlist));
-
-	new nIdx, nLen = (1 + copyc(output[nIdx], size, teamlist, ';'));
-
-	while (nLen < strlen(teamlist) && ++nIdx < HL_MAX_TEAMS)
-		nLen += (1 + copyc(output[nIdx], size, teamlist[nLen], ';'));
-}
-
 // when user spectates, his teams is 0, so you have to check his model..
 stock ag_get_team_numplayers(teamIndex, teamlistModels[][]) {
 	new players[MAX_PLAYERS], numPlayers;
@@ -133,4 +123,32 @@ stock GetUserWeaponEntId(id, weapon) {
 stock PlayNumSound(id, second) {
 	if (second >= 0 && second <= sizeof(gCountSnd))
 		PlaySound(id, gCountSnd[second]);
+}
+
+// Cache this in plugin_precache() or plugin_init() because the team code doesn't want to deal with changing this in the middle of a game
+stock GetTeamListModels(output[][], size, &numTeams = 0) {
+	new teamlist[512];
+	get_cvar_string("mp_teamlist", teamlist, charsmax(teamlist));
+
+	new nLen, teamname[HL_TEAMNAME_LENGTH];
+	while (nLen < strlen(teamlist) && numTeams < HL_MAX_TEAMS)
+	{
+		strtok(teamlist[nLen], teamname, charsmax(teamname), "", 0, ';');
+		nLen += strlen(teamname) + 1;
+		if (GetTeamIndex(teamname, output, numTeams) < 0)
+		{
+			copy(output[numTeams], size, teamname);
+			numTeams++;
+		}
+	}
+
+	if (numTeams < 2)
+		numTeams = 0;
+}
+
+stock GetTeamIndex(const teamname[], teamlist[][], numTeams){
+	for (new i = 0; i < numTeams; i++)
+		if (equali(teamlist[i], teamname))
+			return i;
+	return -1;
 }

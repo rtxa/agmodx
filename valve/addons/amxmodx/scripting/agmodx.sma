@@ -81,10 +81,15 @@ new bool:gBlockCmdDrop;
 new bool:gBlockPlayerSpawn;
 new bool:gSendVictimToSpec;
 new bool:gSendConnectingToSpec;
+new bool:gIsSuddenDeath;
 
 // agstart
 new bool:gVersusStarted;
 new gStartVersusTime;
+
+// Team info
+new gTeamScores[HL_MAX_TEAMS];
+new gNumTeams;
 
 // hud sync handles
 new gHudShowVote;
@@ -262,7 +267,7 @@ public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
 	// Cache models from teamlist
-	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS); // This will fix VGUI Viewport
+	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS, gNumTeams); // This will fix VGUI Viewport
 	CacheTeamListModels(gTeamListModels, HL_MAX_TEAMS);
 
 	// Get locations from locs/<mapname>.loc file
@@ -281,7 +286,7 @@ public plugin_init() {
 
 	// player's hooks
 	RegisterHam(Ham_TraceAttack, "player", "PlayerTraceAttack");
-	RegisterHam(Ham_Killed, "player", "PlayerPreKilled");
+	RegisterHam(Ham_Killed, "player", "PlayerPostKilled", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPostSpawn", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
 
@@ -449,9 +454,13 @@ public client_kill() {
 	return PLUGIN_CONTINUE;
 }
 
-public PlayerPreKilled(victim, attacker) {
+public PlayerPostKilled(victim, attacker) {
 	if (gSendVictimToSpec)
 		set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
+
+	if (gIsSuddenDeath) {
+		StartIntermissionMode();
+	}
 }
 
 stock bool:PlayerKilledHimself(victim, attacker) {
@@ -493,8 +502,13 @@ public TimeLeftCountdown() {
 		return;
 
 	if (gTimeLeft == 0) {
-		StartIntermissionMode();
-		return;
+		UpdateTeamScores(gTeamScores, gNumTeams);
+		if (IsATieBreakNeeded(gTeamScores, gNumTeams)) {
+			gIsSuddenDeath = true;
+		} else {
+			StartIntermissionMode();
+			return;
+		}
 	}
 
 	ShowTimeLeft();
@@ -509,20 +523,34 @@ public ShowTimeLeft() {
 	new g = gHudGreen;
 	new b = gHudBlue;
 
-	if (gTimeLeft >= 0) {
+	new timerText[128];
 
+	// sudden death
+	if (gTimeLeft <= 0 && gIsSuddenDeath) {
+		r = 255; 
+		g = 50;
+		b = 50;
+
+		FormatTimeLeft(abs(gTimeLeft), timerText, charsmax(timerText));
+		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
+		ShowSyncHudMsg(0, gHudShowTimeLeft, "%s^n%l", timerText, "SUDDEN_DEATH");
+
+		return;
+	}
+
+	// normal behaviour
+	if (gTimeLeft > 0) { 
 		if (gTimeLeft < 60) { // set red color
 			r = 255; 
 			g = 50;
 			b = 50; 
 		}
 
-		new timerText[128];
 		FormatTimeLeft(gTimeLeft, timerText, charsmax(timerText));
 
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
 		ShowSyncHudMsg(0, gHudShowTimeLeft, timerText);
-	} else {
+	} else { // unlimited time
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01); // flicks the hud with out this, maybe is a bug
 		ShowSyncHudMsg(0, gHudShowTimeLeft, "%l", "TIMER_UNLIMITED");
 	}
@@ -609,6 +637,7 @@ public StartVersus() {
 	gBlockCmdKill = true;
 	gSendConnectingToSpec = true;
 	gBlockPlayerSpawn = true; // if player is dead on agstart countdown, he will be able to spawn...
+	gIsSuddenDeath = false;
 
 	// reset score and freeze players who are going to play versus
 	new players[MAX_PLAYERS], numPlayers, player;
@@ -702,6 +731,12 @@ public AbortVersus() {
 	gBlockCmdKill = false;
 	gSendConnectingToSpec = false;
 	gBlockPlayerSpawn = false;
+	gIsSuddenDeath = false;
+
+	// restore timeleft according to timelimit
+	if (gIsSuddenDeath) {
+		gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
+	}
 
 	new players[32], numPlayers, player;
 	get_players(players, numPlayers);
@@ -2223,6 +2258,44 @@ public StartIntermissionMode() {
 	new ent = create_entity("game_end");
 	if (is_valid_ent(ent))
 		ExecuteHamB(Ham_Use, ent, 0, 0, 1.0, 0.0);
+}
+
+UpdateTeamScores(team_scores[HL_MAX_TEAMS], numTeams) {
+	if (numTeams < 2)
+		return;
+
+	arrayset(team_scores, 0, HL_MAX_TEAMS);
+
+	new players[32], numPlayers;
+	get_players(players, numPlayers);
+	
+	new plr, team;
+	for (new i; i < numPlayers; i++) {
+		plr = players[i];
+		team = hl_get_user_team(plr); // actually if he is in spectator, he has no team...
+		if (team)
+			team_scores[team - 1] += hl_get_user_frags(plr);
+	}
+}
+
+IsATieBreakNeeded(team_scores[HL_MAX_TEAMS], numTeams) {
+	if (numTeams < 2)
+		return false;
+
+	// get max score
+	new maxScore = team_scores[0];
+	for (new i; i < numTeams; i++) {
+		if (team_scores[i] > maxScore)
+			maxScore = team_scores[i];
+	}
+
+	new matches;
+	for (new i; i < numTeams; i++) {
+		if (team_scores[i] == maxScore)
+			matches++;
+	}
+
+	return matches > 1 ? true : false;
 }
 
 public CacheTeamListModels(teamlist[][], size) {

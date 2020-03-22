@@ -1,4 +1,5 @@
 [en]
+SUDDEN_DEATH = Sudden Death!
 CMD_NOINFO = - No info.
 LOG_VOTE_STARTED = Vote: "%s" called by "%N" has started
 LOG_VOTE_ACCEPTED = Vote: "%s" called by "%N" has been accepted
@@ -38,6 +39,7 @@ INVALID_NUMBER = Number is invalid
 SPEC_CANTTALK = Spectators can't talk to people playing a match. Use say_team to talk with other spectators.
 
 [es]
+SUDDEN_DEATH = Muerte instantanea!
 CMD_NOINFO = - No hay info.
 LOG_VOTE_STARTED = Voto: "%s" llamado por "%N" ha empezado
 LOG_VOTE_ACCEPTED = Voto: "%s" llamado por "%N" ha sido aceptado
