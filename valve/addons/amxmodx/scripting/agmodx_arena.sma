@@ -60,9 +60,14 @@ public plugin_precache() {
 		return;
 	}
 
-	new color[12];
-	get_pcvar_string(get_cvar_pointer("sv_ag_hud_color"), color, charsmax(color));
-	SetHudColorCvarByString(color, gHudRed, gHudGreen, gHudBlue);
+	new pHudColor = get_cvar_pointer("sv_ag_hud_color");
+
+	new color[32];
+	get_pcvar_string(pHudColor, color, charsmax(color));
+	GetStrColor(color, gHudRed, gHudGreen, gHudBlue);
+	
+	// keep ag hud color updated
+	hook_cvar_change(pHudColor, "CvarHudColorHook");
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
 		gCvarStartWeapons[i] = get_cvar_pointer(gAgStartWeapons[i]);
@@ -306,12 +311,6 @@ SetGodModeAlives() {
 		set_user_godmode(players[i], true);
 }
 
-SetHudColorCvarByString(const color[], &red, &green, &blue) {
-	new r[4], g[4], b[4];
-
-	parse(color, r, charsmax(r), g, charsmax(g), b, charsmax(b));
-
-	red = str_to_num(r);
-	green = str_to_num(g);
-	blue = str_to_num(b);
+public CvarHudColorHook(pcvar, const old_value[], const new_value[]) {
+	GetStrColor(new_value, gHudRed, gHudGreen, gHudBlue);
 }

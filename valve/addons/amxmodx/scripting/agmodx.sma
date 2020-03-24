@@ -244,9 +244,12 @@ public plugin_precache() {
 	// AG Hud Color
 	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER | FCVAR_SPONLY); // yellow
 
-	new color[12];
+	new color[32];
 	get_pcvar_string(gCvarHudColor, color, charsmax(color));
-	SetHudColorCvarByString(color, gHudRed, gHudGreen, gHudBlue);
+	GetStrColor(color, gHudRed, gHudGreen, gHudBlue);
+
+    // keep ag hud color updated
+	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
 
 	// Load mode cvars
 	new mode[32];
@@ -335,10 +338,6 @@ public plugin_init() {
 	// so if someone get disconnect by any reason, the score will be restored when he returns
 	gTrieScoreAuthId = TrieCreate();
 	
-
-	// this is used for change hud colors of ag mod x
-	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
-
 	CreateVoteSystem();
 	StartTimeLeft();
 	LoadGameMode();
@@ -2219,18 +2218,8 @@ ResetScore(id) {
 	hl_set_user_deaths(id, 0);
 }
 
-SetHudColorCvarByString(const color[], &red, &green, &blue) {
-	new r[4], g[4], b[4];
-
-	parse(color, r, charsmax(r), g, charsmax(g), b, charsmax(b));
-
-	red = str_to_num(r);
-	green = str_to_num(g);
-	blue = str_to_num(b);
-}
-
 public CvarHudColorHook(pcvar, const old_value[], const new_value[]) {
-	SetHudColorCvarByString(new_value, gHudRed, gHudGreen, gHudBlue);
+	GetStrColor(new_value, gHudRed, gHudGreen, gHudBlue);
 }
 
 public EventIntermissionMode() {

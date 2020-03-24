@@ -173,3 +173,13 @@ stock GetTeamIndex(const teamname[], teamlist[][], numTeams){
 			return i;
 	return -1;
 }
+
+stock GetStrColor(const input[], &red, &green, &blue) {
+	new r[4], g[4], b[4];
+
+	parse(input, r, charsmax(r), g, charsmax(g), b, charsmax(b));
+
+	red = str_to_num(r);
+	green = str_to_num(g);
+	blue = str_to_num(b);
+}
