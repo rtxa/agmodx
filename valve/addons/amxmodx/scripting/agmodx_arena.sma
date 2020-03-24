@@ -306,27 +306,6 @@ SetGodModeAlives() {
 		set_user_godmode(players[i], true);
 }
 
-PlaySound(id, const sound[]) {
-	new snd[128];
-	RemoveExtension(sound, snd, charsmax(snd), ".wav"); // // Remove .wav file extension (console starts to print "missing sound file _period.wav" for every sound)
-	client_cmd(id, "spk %s", snd);
-}
-
-stock GetNumAlives() {
-	new alives[32], numAlives;
-	get_players(alives, numAlives, "a");
-	return numAlives;
-}
-
-stock RemoveExtension(const input[], output[], length, const ext[]) {
-	copy(output, length, input);
-
-	new idx = strlen(input) - strlen(ext);
-	if (idx < 0) return 0;
-	
-	return replace(output[idx], length, ext, "");
-}
-
 SetHudColorCvarByString(const color[], &red, &green, &blue) {
 	new r[4], g[4], b[4];
 
