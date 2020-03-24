@@ -91,8 +91,8 @@ stock ag_get_team_numplayers(teamIndex, teamlistModels[][]) {
 	new model[16], numTeam;
 	for (new i; i < numPlayers; i++) {
 		hl_get_user_model(players[i], model, charsmax(model));
-		// ignore case, sometimes a player set his model to barNey...
-		if (equali(model, teamlistModels[teamIndex - 1])) 
+		strtolower(model);
+		if (equal(model, teamlistModels[teamIndex - 1])) 
 			numTeam++; 
 	}
 
@@ -123,6 +123,27 @@ stock GetUserWeaponEntId(id, weapon) {
 stock PlayNumSound(id, second) {
 	if (second >= 0 && second <= sizeof(gCountSnd))
 		PlaySound(id, gCountSnd[second]);
+}
+
+stock PlaySound(id, const sound[]) {
+	new snd[128];
+	RemoveExtension(sound, snd, charsmax(snd), ".wav"); // // Remove .wav file extension (console starts to print "missing sound file _period.wav" for every sound)
+	client_cmd(id, "spk %s", snd);
+}
+
+stock RemoveExtension(const input[], output[], length, const ext[]) {
+	copy(output, length, input);
+
+	new idx = strlen(input) - strlen(ext);
+	if (idx < 0) return 0;
+	
+	return replace(output[idx], length, ext, "");
+}
+
+stock GetNumAlives() {
+	new alives[32], numAlives;
+	get_players(alives, numAlives, "a");
+	return numAlives;
 }
 
 // Cache this in plugin_precache() or plugin_init() because the team code doesn't want to deal with changing this in the middle of a game

@@ -25,7 +25,8 @@ new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
 
 // gameplay cvars
-new gTeamListModels[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
+new gNumTeams;
+new gTeamsName[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
 
 // arena vars
 new gStartMatchTime; 
@@ -53,10 +54,10 @@ public plugin_precache() {
 }
 
 public plugin_init() {
-	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
+	GetTeamListModels(gTeamsName, HL_MAX_TEAMS, gNumTeams);
 
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Pre");
-	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre");
+	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Post", true);
 	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");
 	RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
 
@@ -114,7 +115,7 @@ public SendVictimToSpec(taskid) {
 	}
 }
 
-public OnPlayerKilled_Pre(victim, attacker) {
+public OnPlayerKilled_Post(victim, attacker) {
 	set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
 
 	if (!PlayerKilledHimself(victim, attacker))
@@ -130,18 +131,16 @@ public StartMatchLts() {
 	for (new id = 1; id <= MaxClients; id++)
 		remove_task(id + TASK_SENDVICTIMTOSPEC);
 
-	new numBlue = ag_get_team_numplayers(1, gTeamListModels);
-	new numRed = ag_get_team_numplayers(2, gTeamListModels);
-
-	if (get_playersnum() < 2 || numBlue < 1 || numRed < 1) {
+	// wait for more players...
+	if (get_playersnum() < 2 || !IsThereEnoughPlayers()) { // i should add a message displaying there aren't enough player in one team to start...
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
 		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
 		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
 		return;
+	} else { // start countdown
+		gStartMatchTime = 4;
+		LtsMatchCountdown();
 	}
-
-	gStartMatchTime = 5;
-	LtsMatchCountdown();
 }
 
 public LtsMatchCountdown() {
@@ -153,6 +152,8 @@ public LtsMatchCountdown() {
 		new players[32], numPlayers, player;
 		get_players(players, numPlayers);
 
+		ResetMap();
+
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
 			if (hl_get_user_spectator(player))
@@ -162,10 +163,6 @@ public LtsMatchCountdown() {
 		}
 
 		remove_task(TASK_STARTMATCH);
-
-		EndMatchLts();
-
-		ResetMap();
 
 		return;
 	}
@@ -186,32 +183,65 @@ SetGodModeAlives() {
 		set_user_godmode(players[i], true);
 }
 
+// team index starting from 1
+// if return false, it means there are 2 teams with alives player yet, or all is dead
+// if returns true, means only one team is alive (in this case, the winner)
+GetLastTeamStanding() {
+	if (gNumTeams < 2)
+		return 0;
+
+	new team, alives;
+
+	new matches;
+	for (new i = 1; i <= gNumTeams; i++) {
+		alives = ag_get_team_alives(i);
+		if (alives > 0) {
+			team = i;
+			matches++;
+		}
+	}
+
+	return matches == 1 ? team : 0;
+}
+
+// check if there is enough players (at leats 1 per team) to start the match
+IsThereEnoughPlayers() {
+	if (gNumTeams < 2)
+		return 0;
+
+	new matches;
+	for (new i = 1; i <= gNumTeams; i++) {
+		new numPlayers = ag_get_team_numplayers(i, gTeamsName);
+		if (numPlayers > 0) {
+			matches++;
+		}
+	}
+
+	return matches >= gNumTeams ? true : false;
+}
+
 public EndMatchLts() {
 	if (task_exists(TASK_STARTMATCH))
 		return; // this has already been triggered, so ignore.
 
-	new numAlivesBlue = ag_get_team_alives(1);
-	new numAlivesRed = ag_get_team_alives(2);
-	
-	if (numAlivesBlue == 0 && numAlivesRed > 0) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER_RED");
-		SetGodModeAlives();
-		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
-	} else if (numAlivesRed == 0 && numAlivesBlue > 0) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER_BLUE");
-		SetGodModeAlives();
-		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
-	} else if (numAlivesRed == 0 && numAlivesBlue == 0) {
+	if (GetNumAlives() == 0) {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
 		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_DRAW");
 		SetGodModeAlives();
 		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
-	}	
+		return;
+	}
+
+	new team = GetLastTeamStanding();
+	
+	if (team) {
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5, -1); 
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER_TEAM", gTeamsName[team - 1]);
+		SetGodModeAlives();
+		set_task(5.0, "StartMatchLts", TASK_STARTMATCH);
+	} 
 }
 
-// SI no es arena realmente, parar le modo con amx_pausecfg stop nombredelplugin
 public client_putinserver(id) {
 	set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
 }
@@ -224,33 +254,6 @@ stock bool:PlayerKilledHimself(victim, attacker) {
 public client_remove(id) {
 	EndMatchLts();
 	return PLUGIN_HANDLED;
-}
-
-stock swap(&x, &y) {
-	x = x + y;
-	y = x - y;
-	x = x - y;
-}
-
-PlaySound(id, const sound[]) {
-	new snd[128];
-	RemoveExtension(sound, snd, charsmax(snd), ".wav"); // // Remove .wav file extension (console starts to print "missing sound file _period.wav" for every sound)
-	client_cmd(id, "spk %s", snd);
-}
-
-stock GetNumAlives() {
-	new alives[32], numAlives;
-	get_players(alives, numAlives, "a");
-	return numAlives;
-}
-
-stock RemoveExtension(const input[], output[], length, const ext[]) {
-	copy(output, length, input);
-
-	new idx = strlen(input) - strlen(ext);
-	if (idx < 0) return 0;
-	
-	return replace(output[idx], length, ext, "");
 }
 
 SetHudColorCvarByString(const color[], &red, &green, &blue) {

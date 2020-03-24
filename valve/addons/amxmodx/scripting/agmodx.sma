@@ -49,8 +49,6 @@ enum (+=100) {
 
 new Array:gAgCmdList;
 
-// Team models (this is used to fix team selection from VGUI Viewport)
-new gTeamListModels[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
 
 // Location system
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
@@ -88,8 +86,9 @@ new bool:gVersusStarted;
 new gStartVersusTime;
 
 // Team info
-new gTeamScores[HL_MAX_TEAMS];
 new gNumTeams;
+new gTeamsName[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
+new gTeamsScore[HL_MAX_TEAMS];
 
 // hud sync handles
 new gHudShowVote;
@@ -267,8 +266,8 @@ public plugin_init() {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
 	// Cache models from teamlist
-	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS, gNumTeams); // This will fix VGUI Viewport
-	CacheTeamListModels(gTeamListModels, HL_MAX_TEAMS);
+	GetTeamListModels(gTeamsName, HL_MAX_TEAMS, gNumTeams); // This will fix VGUI Viewport
+	CacheTeamListModels(gTeamsName, HL_MAX_TEAMS);
 
 	// Get locations from locs/<mapname>.loc file
 	GetLocations(gLocationName, 32, gLocationOrigin, gNumLocations);
@@ -502,8 +501,8 @@ public TimeLeftCountdown() {
 		return;
 
 	if (gTimeLeft == 0) {
-		UpdateTeamScores(gTeamScores, gNumTeams);
-		if (IsATieBreakNeeded(gTeamScores, gNumTeams)) {
+		UpdateTeamScores(gTeamsScore, gNumTeams);
+		if (IsATieBreakNeeded(gTeamsScore, gNumTeams)) {
 			gIsSuddenDeath = true;
 		} else {
 			StartIntermissionMode();
@@ -1044,8 +1043,8 @@ public CmdJoinTeam(id) {
 	new option = read_argv_int(1); 
 	switch (option) {
 		case 1, 2, 3, 4: { // in vgui viewport there are only four buttons where you choose the first 4 teams, maybe is better to show a menu to show all team (max 10 teams)
-			if (!equal(gTeamListModels[option - 1], "")) {
-				hl_set_user_model(id, gTeamListModels[option - 1]);
+			if (!equal(gTeamsName[option - 1], "")) {
+				hl_set_user_model(id, gTeamsName[option - 1]);
 				if (hl_get_user_spectator(id))
 					client_cmd(id, "spectate");
 			}
@@ -2048,12 +2047,6 @@ public ChangeMap(const map[]) {
 	StartIntermissionMode();
 } 
 
-PlaySound(id, const sound[]) {
-	new snd[128];
-	RemoveExtension(sound, snd, charsmax(snd), ".wav"); // // Remove .wav file extension (console starts to print "missing sound file _period.wav" for every sound)
-	client_cmd(id, "spk %s", snd);
-}
-
 public PlayTeam(caller) {
 	if (gPlayTeamDelayTime[caller] < get_gametime()) 
 		gPlayTeamDelayTime[caller] = get_gametime() + 0.75;
@@ -2314,15 +2307,6 @@ bool:IsObserver(id) {
 
 bool:IsInWelcomeCam(id) {
 	return IsObserver(id) && !hl_get_user_spectator(id) && get_ent_data(id, "CBasePlayer", "m_iHideHUD") & (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
-}
-
-stock RemoveExtension(const input[], output[], length, const ext[]) {
-	copy(output, length, input);
-
-	new idx = strlen(input) - strlen(ext);
-	if (idx < 0) return 0;
-	
-	return replace(output[idx], length, ext, "");
 }
 
 IsUserServer(id) {
