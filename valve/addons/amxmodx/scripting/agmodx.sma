@@ -502,7 +502,7 @@ public TimeLeftCountdown() {
 
 	if (gTimeLeft == 0) {
 		UpdateTeamScores(gTeamsScore, gNumTeams);
-		if (IsATieBreakNeeded(gTeamsScore, gNumTeams)) {
+		if (gVersusStarted && IsATieBreakNeeded(gTeamsScore, gNumTeams)) {
 			gIsSuddenDeath = true;
 		} else {
 			StartIntermissionMode();
