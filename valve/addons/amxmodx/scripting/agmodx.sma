@@ -1935,7 +1935,13 @@ CalculateVote(&numFor, &numAgainst, &numUndecided) {
 }
 
 DisplayVote(option) {
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 3.0, 0.0, 0.0);
+	// reduce flickering by using long hold times.
+	if (option == VOTE_RUNNING) {
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, get_pcvar_num(gCvarVoteDuration) + 5.0, 0.0, 0.0);
+	} else {
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 5.0, 0.0, 0.0);
+	}
+	
 	switch (option) {
 		case VOTE_ACCEPTED:	ShowSyncHudMsg(0, gHudDisplayVote, "%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
 		case VOTE_DENIED: 	ShowSyncHudMsg(0, gHudDisplayVote, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
