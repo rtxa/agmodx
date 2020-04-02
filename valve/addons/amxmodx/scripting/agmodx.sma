@@ -1130,7 +1130,7 @@ public CmdAgPause(id, level, cid) {
 
 	log_amx("AgPause: %N", id);
 
-	PauseGame(id);
+	PauseGame();
 
 	return PLUGIN_HANDLED;	
 }
@@ -1636,7 +1636,7 @@ public OnVoteAgPause(id, check, argc) {
 	}
 
 	if (!check) {
-		PauseGame(id);
+		PauseGame();
 	}
 	
 	return true;
@@ -2208,9 +2208,15 @@ public DisplayInfo(id) {
 }
 
 // We can't pause the game from the server because is not connected, unless you have created the sv in-game. "Can't pause, not connected."
-PauseGame(id) {
+PauseGame() {
+	new players[MAX_PLAYERS], numPlayers;
+	get_players(players, numPlayers);
+
+	if (numPlayers < 1)
+		return;
+	
 	set_cvar_num("pausable", 1);
-	console_cmd(id, "pause; pauseAg");
+	console_cmd(players[0], "pause; pauseAg");
 
 	gIsPause = gIsPause ? false : true;
 }
