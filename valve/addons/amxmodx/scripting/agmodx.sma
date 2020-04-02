@@ -41,14 +41,11 @@ enum (+=100) {
 	TASK_STARTVERSUS,
 	TASK_SENDVICTIMTOSPEC,
 	TASK_SENDTOSPEC,
-	TASK_SHOWVOTE,
 	TASK_SHOWSETTINGS,
-	TASK_DENYVOTE,
 	TASK_TIMELEFT
 };
 
 new Array:gAgCmdList;
-
 
 // Location system
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
@@ -91,7 +88,7 @@ new gTeamsName[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
 new gTeamsScore[HL_MAX_TEAMS];
 
 // hud sync handles
-new gHudShowVote;
+new gHudDisplayVote;
 new gHudShowMatch;
 new gHudShowTimeLeft;
 
@@ -105,19 +102,43 @@ new gGameModeName[32];
 #define SCORE_DEATHS 1
 new Trie:gTrieScoreAuthId; // handle where it saves all the authids of players playing a versus for rescore system...
 
-// vote system
+// ============= vote system ===============
 #define VOTE_YES 1
 #define VOTE_NO -1
+
+#define VOTE_RUNNING 0
+#define VOTE_DENIED 1
+#define VOTE_ACCEPTED 2
+
 new Trie:gTrieVoteList;
-new bool:gVoteStarted;
+
+new gVotePlayers[MAX_PLAYERS + 1]; // 1: vote yes; 0: didn't vote; -1; vote no;
+
+new gVoteNumFor;
+new gVoteNumAgainst;
+new gVoteNumUndecided;
+
+new gVoteOption;
+
+new bool:gVoteIsRunning;
+
 new Float:gVoteFailedTime; // in seconds
-new gVotePlayers[33]; // 1: vote yes; 0: didn't vote; -1; vote no; 
+new Float:gVoteEndTime;
+new Float:gVoteDisplayEndTime;
+
 new gVoteCallerName[MAX_NAME_LENGTH];
 new gVoteCallerUserId;
+
+new gNumVoteArgs;
 new gVoteArg1[32];
 new gVoteArg2[32];
+
 new gVoteOptionFwHandle;
-new gNumVoteArgs;
+
+new Float:gVoteNextThink = -1.0;
+new Float:gVoteDisplayNextThink = -1.0;
+
+// ============= END vote system ===============
 
 // cvar pointers
 new gCvarDebugVote;
@@ -129,6 +150,7 @@ new gCvarSpecTalk;
 new gCvarAllowVote;
 new gCvarVoteFailedTime;
 new gCvarVoteDuration;
+new gCvarVoteOldStyle;
 new gCvarAgStartMinPlayers;
 new gCvarAgStartAllowUnlimited;
 new gCvarAmxNextMap;
@@ -207,6 +229,7 @@ public plugin_precache() {
 	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15", FCVAR_SERVER | FCVAR_SPONLY, "", true, 0.0, true, 999.0);
 	gCvarVoteDuration = create_cvar("sv_ag_vote_duration", "30", FCVAR_SERVER, "", true, 0.0, true, 999.0);
+	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0", FCVAR_SERVER);
 
 	// Gamemode cvars
 	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
@@ -330,7 +353,10 @@ public plugin_init() {
 	register_message(get_user_msgid("SayText"), "MsgSayText");
 	register_forward(FM_Voice_SetClientListening, "FwVoiceSetClientListening");
 
-	gHudShowVote = CreateHudSyncObj();
+	// Useful for vote think, because it executes every server frame and works even in pause (workaround for set_task())
+	register_forward(FM_AllowLagCompensation, "FwAllowLagCompensation");
+
+	gHudDisplayVote = CreateHudSyncObj();
 	gHudShowMatch = CreateHudSyncObj();
 	gHudShowTimeLeft = CreateHudSyncObj();
 
@@ -342,6 +368,16 @@ public plugin_init() {
 	StartTimeLeft();
 	LoadGameMode();
 	StartMode();
+}
+
+public FwAllowLagCompensation() {
+	if (GetServerUpTime() >= gVoteNextThink && gVoteNextThink != -1) {
+		VoteThink();
+	}
+
+	if (GetServerUpTime() >= gVoteDisplayNextThink && gVoteDisplayNextThink != -1) {
+		VoteDisplayThink();
+	}
 }
 
 public plugin_cfg() {
@@ -406,17 +442,6 @@ public client_disconnected(id) {
 		SaveScore(id, frags, deaths);
 		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
 		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
-	}
-
-	return PLUGIN_HANDLED;
-}
-
-// here is_user_alive(id) will show 0 :)
-public client_remove(id) {
-	// reset player's vote and updated hud
-	if (gVoteStarted) {
-		gVotePlayers[id] = 0;
-		ShowVote();
 	}
 
 	return PLUGIN_HANDLED;
@@ -1753,22 +1778,12 @@ public CmdGenericVote(id) {
 }
 
 public CmdVoteYes(id) {
-	if (gVoteStarted) {
-		gVotePlayers[id] = VOTE_YES;
-		if (gIsPause) // when server is in pause, tasks are not going to get executed, so players have to update vote themselves.
-			ShowVote();
-	}
-
+	gVotePlayers[id] = VOTE_YES;
 	return PLUGIN_HANDLED;
 }
 
 public CmdVoteNo(id) {
-	if (gVoteStarted) {
-		gVotePlayers[id] = VOTE_NO;
-		if (gIsPause) // when server is in pause, tasks are not going to get executed, so players have to update vote themselves.
-			ShowVote();
-	}
-
+	gVotePlayers[id] = VOTE_NO;
 	return PLUGIN_HANDLED;
 }
 
@@ -1786,18 +1801,19 @@ public CmdVote(id) {
 		return PLUGIN_HANDLED;
 	}
 
-	// get delay time
-	new Float:timeleft = gVoteFailedTime - get_gametime();
+	// get timeleft to call a new vote
+	new Float:timeleft = gVoteFailedTime - GetServerUpTime();
 
-	if (timeleft > 0.0) {	
+	if (timeleft > 0) {	
 		client_print(id, print_console, "%l", "VOTE_DELAY", floatround(timeleft, floatround_floor));
 		return PLUGIN_HANDLED;
-	} else if (gVoteStarted) {
+	} else if (gVoteIsRunning) {
 		client_print(id, print_console, "%l", "VOTE_RUNNING");
 		return PLUGIN_HANDLED;
 	}
 
-	gVoteArg1[0] = gVoteArg2[0] = '^0';
+	ResetVote();
+
 	read_argv(1, gVoteArg1, charsmax(gVoteArg1));
 	read_argv(2, gVoteArg2, charsmax(gVoteArg2));
 
@@ -1810,15 +1826,12 @@ public CmdVote(id) {
 		return PLUGIN_HANDLED;
 	}
 	
+	// execute vote callback, this checks that the required arguments are correct and gives a result
 	new voteResult;
 	ExecuteForward(gVoteOptionFwHandle, voteResult, id, true, gNumVoteArgs, PrepareArray(gVoteArg1, sizeof(gVoteArg1), true), PrepareArray(gVoteArg2, sizeof(gVoteArg2), true));
 
 	if (!voteResult)
 		return PLUGIN_HANDLED;
-
-	gVoteStarted = true;
-
-	gVotePlayers[id] = VOTE_YES;
 
 	get_user_name(id, gVoteCallerName, charsmax(gVoteCallerName));
 
@@ -1834,58 +1847,113 @@ public CmdVote(id) {
 	log_amx("%L", LANG_SERVER, "LOG_VOTE_STARTED", voteArgs, id);
 
 	// ==============
+	new Float:time = GetServerUpTime();
 
-	new time = get_pcvar_num(gCvarVoteDuration);
+	// Start Vote
+	gVoteIsRunning = true;
+	gVotePlayers[id] = VOTE_YES;
 
-	ShowVote();
-	
-	if (gVoteStarted) {
-		set_task(float(time), "DenyVote", TASK_DENYVOTE); // show vote only for 30 seconds (warning: if sv is in pause, tasks are paused too)
-		set_task_ex(1.0, "ShowVote", TASK_SHOWVOTE, _, _, SetTask_Repeat, time);
-	}
+	gVoteNextThink = gVoteDisplayNextThink = time;
+	gVoteEndTime = time + get_pcvar_num(gCvarVoteDuration);
+	gVoteDisplayEndTime = gVoteEndTime + 3.0; // add 3 more seconds to show vote was denied or accepted
 
 	return PLUGIN_HANDLED;
 }
 
-public ShowVote() {
-	if (get_pcvar_num(gCvarDebugVote))
-		server_print("ShowVote");
+public VoteDisplayThink() {
+	if (GetServerUpTime() > gVoteDisplayEndTime) {
+		gVoteDisplayNextThink = -1.0;
+		return;
+	}
 
-	new numVoteFor, numVoteAgainst, numUndecided;
+	if (get_pcvar_num(gCvarVoteOldStyle) <= 0)
+		DisplayVote(gVoteOption);
+	else
+		DisplayVoteOldStyle(gVoteOption);
+	
+	gVoteDisplayNextThink = GetServerUpTime() + 1.0;
+}
+
+public VoteThink() {
+	if (get_pcvar_num(gCvarDebugVote))
+		server_print("VoteThink");
+
+	new Float:time = GetServerUpTime();
+
+	if (!gVoteIsRunning) {
+		gVoteDisplayEndTime = time + 3.0;
+		gVoteNextThink = -1.0;
+		return;
+	}
+
+	if (time > gVoteEndTime) {
+		gVoteIsRunning = false;
+		
+		gVoteOption = VOTE_DENIED;
+		DenyVote();
+
+		gVoteNextThink = -1.0;
+		return;
+	}
+
+	gVoteOption = CalculateVote(gVoteNumFor, gVoteNumAgainst, gVoteNumUndecided);
+
+	switch (gVoteOption) {
+		case VOTE_ACCEPTED: DoVote();
+		case VOTE_DENIED: DenyVote();
+	}
+
+	if (gVoteOption != VOTE_RUNNING)
+		gVoteIsRunning = false;
+
+	gVoteNextThink = GetServerUpTime() + 1.0;
+}
+
+CalculateVote(&numFor, &numAgainst, &numUndecided) {
+	new players[MAX_PLAYERS], numPlayers;
+	get_players(players, numPlayers);
+
+	numFor = numAgainst = numUndecided = 0;
 
 	// count votes
-	for (new id = 1; id <= MaxClients; id++) {
-		switch (gVotePlayers[id]) {
-			case VOTE_YES: numVoteFor++;
-			case VOTE_NO: numVoteAgainst++;
+	for (new i; i < numPlayers; i++) {
+		switch (gVotePlayers[players[i]]) {
+			case VOTE_YES: numFor++;
+			case VOTE_NO: numAgainst++;
 		}
 	}
 	
-	numUndecided = get_playersnum() - (numVoteFor + numVoteAgainst);
+	numUndecided = get_playersnum() - (numFor + numAgainst);
 
 	// show vote hud
-	if (numVoteFor > numVoteAgainst && numVoteFor > numUndecided) { // accepted
-		DoVote();
-	} else if (numVoteAgainst > numVoteFor && numVoteAgainst > numUndecided) { // denied
-		DenyVote();
-	} else { // in progress
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, get_pcvar_float(gCvarVoteDuration) * 2, 0.2);
-		ShowSyncHudMsg(0, gHudShowVote, "%l", "VOTE_START", gVoteArg1, gVoteArg2, gVoteCallerName, numVoteFor, numVoteAgainst, numUndecided);
+	if (numFor > numAgainst && numFor > numUndecided) // accepted
+		return VOTE_ACCEPTED;
+	else if (numAgainst > numFor && numAgainst > numUndecided) // denied
+		return VOTE_DENIED;
+	else // in progress
+		return VOTE_RUNNING;
+}
+
+DisplayVote(option) {
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 3.0, 0.0, 0.0);
+	switch (option) {
+		case VOTE_ACCEPTED:	ShowSyncHudMsg(0, gHudDisplayVote, "%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
+		case VOTE_DENIED: 	ShowSyncHudMsg(0, gHudDisplayVote, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
+		case VOTE_RUNNING: 	ShowSyncHudMsg(0, gHudDisplayVote, "%l", "VOTE_START", gVoteArg1, gVoteArg2, gVoteCallerName, gVoteNumFor, gVoteNumAgainst, gVoteNumUndecided);
+	}
+}
+
+DisplayVoteOldStyle(option) {
+	switch (option) {
+		case VOTE_ACCEPTED:	client_print(0, print_center,"%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
+		case VOTE_DENIED: 	client_print(0, print_center, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
+		case VOTE_RUNNING: 	client_print(0, print_center,"%l", "VOTE_START", gVoteArg1, gVoteArg2, gVoteCallerName, gVoteNumFor, gVoteNumAgainst, gVoteNumUndecided);
 	}
 }
 
 public DoVote() {
 	if (get_pcvar_num(gCvarDebugVote))
 		server_print("DoVote");
-
-	// show vote is accepted
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 10.0);
-	ShowSyncHudMsg(0, gHudShowVote, "%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
-
-	// sometimes  hud doesnt show, show old style vote too
-	client_print(0, print_center, "%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
-	
-	RemoveVote();
 
 	new caller = find_player_ex(FindPlayer_MatchUserId, gVoteCallerUserId);
 	
@@ -1928,29 +1996,19 @@ public DenyVote() {
 
 	// ==============
 
-
-	RemoveVote();
-
-	gVoteFailedTime = get_gametime() + get_pcvar_num(gCvarVoteFailedTime);
-
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 10.0);
-	ShowSyncHudMsg(0, gHudShowVote, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
-
-	// sometimes  hud doesnt show, so show old style vote too
-	client_print(0, print_center, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
+	gVoteFailedTime = GetServerUpTime() + get_pcvar_num(gCvarVoteFailedTime);
 }
 
-public RemoveVote() {
+public ResetVote() {
 	if (get_pcvar_num(gCvarDebugVote))
-		server_print("RemoveVote");
+		server_print("ResetVote");
 
-	gVoteStarted = false;
+	gVoteIsRunning = false;
 
-	remove_task(TASK_DENYVOTE);
-	remove_task(TASK_SHOWVOTE);
+	gVoteArg1[0] = gVoteArg2[0] = '^0';
 
 	// reset user votes
-	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
+	arrayset(gVotePlayers, 0, sizeof gVotePlayers);	
 }
 
 public CmdVoteHelp(id) {
@@ -2145,8 +2203,6 @@ public DisplayInfo(id) {
 
 // We can't pause the game from the server because is not connected, unless you have created the sv in-game. "Can't pause, not connected."
 PauseGame(id) {
-	RemoveVote();
-
 	set_cvar_num("pausable", 1);
 	console_cmd(id, "pause; pauseAg");
 

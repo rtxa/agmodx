@@ -11,6 +11,10 @@
 
 #define IsPlayer(%0) (%0 > 0 && %0 <= MaxClients)
 
+stock Float:GetServerUpTime() {
+	return Float:engfunc(EngFunc_Time);
+}
+
 stock ResetMap() {
 	ClearField();
 	ClearCorpses();
