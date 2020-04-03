@@ -814,9 +814,9 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	new sender = get_msg_arg_int(1);
 	new isReceiverSpec = hl_get_user_spectator(receiver);
 
-	// Add or change channel tags	
+	// note: if it's a player message, then it will start with escape character '2' (sets color with no sound)
 	if (hl_get_user_spectator(sender)) {
-		if (contain(text, "^x02(TEAM)") != -1) {
+		if (contain(text, "^x02(TEAM)") == 0) {
 			if (!isReceiverSpec) // only show messages to spectator
 				return PLUGIN_HANDLED;
 			else
@@ -826,17 +826,19 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 				if (sender == receiver)
 					client_print(sender, print_chat, "%l", "SPEC_CANTTALK");
 				return PLUGIN_HANDLED;
-			} else
-				format(text, charsmax(text), "^x02(S)%s", text); // Spectator
+			} else {
+				replace(text, charsmax(text), "^x02", "^x02(S) ");
+			}
 		}
 	} else {
-		if (contain(text, "^x02(TEAM)") != -1) { // Team
+		if (contain(text, "^x02(TEAM)") == 0) { // Team
 			if (isReceiverSpec)
 				return PLUGIN_HANDLED;
 			else
 				replace(text, charsmax(text), "(TEAM)", "(T)"); 
 		} else
-			format(text, charsmax(text), "^x02(A)%s", text); // All
+			replace(text, charsmax(text), "^x02", "^x02(A) ");
+			
 	}
 
 	// replace all %h with health
