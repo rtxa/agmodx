@@ -1854,9 +1854,8 @@ public CmdVote(id) {
 	gVotePlayers[id] = VOTE_YES;
 
 	gVoteNextThink = gVoteDisplayNextThink = time;
-	gVoteEndTime = time + get_pcvar_num(gCvarVoteDuration);
-	gVoteDisplayEndTime = gVoteEndTime + 3.0; // add 3 more seconds to show vote was denied or accepted
-
+	gVoteEndTime = gVoteDisplayEndTime = time + get_pcvar_num(gCvarVoteDuration);
+	
 	return PLUGIN_HANDLED;
 }
 
@@ -1880,12 +1879,6 @@ public VoteThink() {
 
 	new Float:time = GetServerUpTime();
 
-	if (!gVoteIsRunning) {
-		gVoteDisplayEndTime = time + 3.0;
-		gVoteNextThink = -1.0;
-		return;
-	}
-
 	if (time > gVoteEndTime) {
 		gVoteIsRunning = false;
 		
@@ -1903,8 +1896,12 @@ public VoteThink() {
 		case VOTE_DENIED: DenyVote();
 	}
 
-	if (gVoteOption != VOTE_RUNNING)
+	if (gVoteOption != VOTE_RUNNING) {
 		gVoteIsRunning = false;
+		gVoteDisplayEndTime = time + 3.0; // add 3 more seconds to show vote was denied or accepted
+		gVoteNextThink = -1.0;
+		return;
+	}
 
 	gVoteNextThink = GetServerUpTime() + 1.0;
 }
