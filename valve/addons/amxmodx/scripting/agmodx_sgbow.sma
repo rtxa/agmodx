@@ -9,7 +9,7 @@
 #include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X SgBow"
-#define VERSION "Beta 2.0"
+#define VERSION "Beta 2.1"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
