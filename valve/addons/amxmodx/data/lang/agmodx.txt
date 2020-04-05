@@ -35,7 +35,7 @@ VOTE_DELAY =  Last vote was not accepted - %i seconds until next vote can be cal
 INVALID_MAP = Map is invalid
 INVALID_MODE = Mode is invalid. Type 'vote' in console to see available modes
 INVALID_NUMBER = Number is invalid
-SPEC_CANTTALK = Spectators can't talk to people playing a match. Use say_team to talk with other spectators.
+SPEC_CANTTALK = Say disabled for spectators. Use 'say_team' to talk with other spectators.
 
 [es]
 SUDDEN_DEATH = Muerte instantanea!
@@ -74,4 +74,4 @@ VOTE_DELAY = El ultimo voto no ha sido aceptado - Faltan %i segundos para poder 
 INVALID_MAP = Mapa invalido
 INVALID_MODE = Modo invalido. Escriba 'vote' en consola para ver los modos disponibles
 INVALID_NUMBER = Numero invalido
-SPEC_CANTTALK = Los espectadores no pueden hablar a la gente jugando una partida. Utilice say_team para hablar con otros espectadores.
+SPEC_CANTTALK = El comando 'say' esta deshabilitado. Utiliza 'say_team' para hablar con los demas espectadores.
