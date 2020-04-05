@@ -1397,6 +1397,7 @@ CreateVoteSystem() {
 	gTrieVoteList = TrieCreate();
 	ag_vote_add("agabort", "OnVoteAgAbort");
 	ag_vote_add("agallow", "OnVoteAgAllow");
+	ag_vote_add("agkick", "OnVoteAgKick");
 	ag_vote_add("agnextmap", "OnVoteAgNextMap");
 	ag_vote_add("agnextmode", "OnVoteAgNextMode");
 	ag_vote_add("agpause", "OnVoteAgPause");
@@ -1414,6 +1415,30 @@ CreateVoteSystem() {
 	ag_vote_add("mp_timelimit", "OnVoteTimeLimit");
 	ag_vote_add("mp_weaponstay", "OnVoteWeaponStay");
 	ag_vote_add("ag_gauss_fix", "OnVoteGaussFix");
+}
+
+public OnVoteAgKick(id, check, argc, arg1[], arg2[]) {
+	if (argc > 2) {
+		client_print(id, print_console, "%l", "VOTE_INVALID");
+		return false;
+	}
+
+	static userid;
+	if (!check) {
+		server_cmd("kick #%d", userid);
+	} else {
+		new player;
+		if (!strlen(arg2)) { 
+			return false;
+		} else if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF))) {
+			get_user_name(player, arg2, 31);
+			userid = get_user_userid(player);
+		} else {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 public OnVoteTimeLimit(id, check, argc, arg1[], arg2[]) {
