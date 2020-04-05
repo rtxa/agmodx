@@ -33,6 +33,8 @@
 #define VERSION "Beta 2.1"
 #define AUTHOR  "rtxA"
 
+#define CONTACT_INFO "More info: rtxa#6795 (Discord)"
+
 #pragma semicolon 1
 
 // TaskIDs
@@ -1098,10 +1100,13 @@ public ShowSettings(id) {
 		return;
 		
 	new arg[32], buildDate[32];
+	GetPluginBuildDate(buildDate, charsmax(buildDate));
+
+	get_pcvar_string(gCvarContact, arg, charsmax(arg));
+	if (!arg[0]) 
+		formatex(arg, charsmax(arg), CONTACT_INFO);
 
 	// left - top
-	GetPluginBuildDate(buildDate, charsmax(buildDate));
-	get_pcvar_string(gCvarContact, arg, charsmax(arg));
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.02, 0, 0.0, 10.0, 0.2);
 	show_dhudmessage(id, "AG Mod X %s Build %s^n%s", VERSION, buildDate, arg);
 
