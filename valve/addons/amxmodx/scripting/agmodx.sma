@@ -44,7 +44,7 @@ enum (+=100) {
 	TASK_SENDVICTIMTOSPEC,
 	TASK_SENDTOSPEC,
 	TASK_SHOWSETTINGS,
-	TASK_TIMELEFT
+	TASK_AGTIMER
 };
 
 new Array:gAgCmdList;
@@ -92,7 +92,7 @@ new gTeamsScore[HL_MAX_TEAMS];
 // hud sync handles
 new gHudDisplayVote;
 new gHudShowMatch;
-new gHudShowTimeLeft;
+new gHudShowAgTimer;
 
 // agpause
 new bool:gIsPause;
@@ -273,7 +273,7 @@ public plugin_precache() {
 	get_pcvar_string(gCvarHudColor, color, charsmax(color));
 	GetStrColor(color, gHudRed, gHudGreen, gHudBlue);
 
-    // keep ag hud color updated
+	// keep ag hud color updated
 	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
 
 	// Load mode cvars
@@ -360,14 +360,15 @@ public plugin_init() {
 
 	gHudDisplayVote = CreateHudSyncObj();
 	gHudShowMatch = CreateHudSyncObj();
-	gHudShowTimeLeft = CreateHudSyncObj();
+	gHudShowAgTimer = CreateHudSyncObj();
 
 	// this saves score of players that're playing a match
 	// so if someone get disconnect by any reason, the score will be restored when he returns
 	gTrieScoreAuthId = TrieCreate();
 	
 	CreateVoteSystem();
-	StartTimeLeft();
+	InitAgTimer();
+	StartAgTimer();
 	LoadGameMode();
 	StartMode();
 }
@@ -500,31 +501,47 @@ public ResetBpAmmo(id) {
 }
 
 public CmdTimeLeft(id) {
-	client_print(id, print_console, "timeleft: %i:%02i", 
-		gTimeLeft == TIMELEFT_SETUNLIMITED ? 0 : gTimeLeft / 60, // minutes
-		gTimeLeft == TIMELEFT_SETUNLIMITED ? 0 : gTimeLeft % 60); // seconds
+	new text[128];
+	if (gIsSuddenDeath)
+		formatex(text, charsmax(text), "0");
+	else
+		FormatTimeLeft(gTimeLeft, text, charsmax(text));
+	client_print(id, print_console, "timeleft: %s", text);
 	return PLUGIN_HANDLED;
 }
 
 /*
-* Timeleft/Timelimit System
+* AG Timer System
 */
-public StartTimeLeft() {
+public InitAgTimer() {
 	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
 
 	// set mp_timelimit always to empty (this way i can always track changes) and don't let anyone modify it.
 	set_pcvar_string(gCvarTimeLimit, "");
 	gHookCvarTimeLimit = hook_cvar_change(gCvarTimeLimit, "CvarTimeLimitHook");
-
-	// Start my own timeleft
-	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
-	TimeLeftCountdown();
 }
 
-public TimeLeftCountdown() {
-	if (task_exists(TASK_STARTVERSUS)) // when player send agstart, freeze timer
-		return;
+StartAgTimer() {
+	remove_task(TASK_AGTIMER);
+	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
+	if (CheckAgTimer()) {
+		ShowAgTimer();
+		set_task_ex(1.0, "AgTimerThink", TASK_AGTIMER, .flags = SetTask_Repeat);
+	}
+}
+
+public AgTimerThink() {
+	gTimeLeft--;
+	if (CheckAgTimer())
+		ShowAgTimer();
+}
+
+CheckAgTimer() {
+	if (task_exists(TASK_STARTVERSUS)) { // when player send agstart, freeze timer
+		remove_task(TASK_AGTIMER);
+		return false;
+	}
 
 	if (gTimeLeft == 0) {
 		UpdateTeamScores(gTeamsScore, gNumTeams);
@@ -532,18 +549,15 @@ public TimeLeftCountdown() {
 			gIsSuddenDeath = true;
 		} else {
 			StartIntermissionMode();
-			return;
+			remove_task(TASK_AGTIMER);
+			return false;
 		}
 	}
 
-	ShowTimeLeft();
-
-	set_task(1.0, "TimeLeftCountdown", TASK_TIMELEFT);
-
-	gTimeLeft--;
+	return true;
 }
 
-public ShowTimeLeft() {
+public ShowAgTimer() {
 	new r = gHudRed;
 	new g = gHudGreen;
 	new b = gHudBlue;
@@ -558,7 +572,7 @@ public ShowTimeLeft() {
 
 		FormatTimeLeft(abs(gTimeLeft), timerText, charsmax(timerText));
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
-		ShowSyncHudMsg(0, gHudShowTimeLeft, "%s^n%l", timerText, "SUDDEN_DEATH");
+		ShowSyncHudMsg(0, gHudShowAgTimer, "%s^n%l", timerText, "SUDDEN_DEATH");
 
 		return;
 	}
@@ -574,10 +588,10 @@ public ShowTimeLeft() {
 		FormatTimeLeft(gTimeLeft, timerText, charsmax(timerText));
 
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
-		ShowSyncHudMsg(0, gHudShowTimeLeft, timerText);
+		ShowSyncHudMsg(0, gHudShowAgTimer, timerText);
 	} else { // unlimited time
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01); // flicks the hud with out this, maybe is a bug
-		ShowSyncHudMsg(0, gHudShowTimeLeft, "%l", "TIMER_UNLIMITED");
+		ShowSyncHudMsg(0, gHudShowAgTimer, "%l", "TIMER_UNLIMITED");
 	}
 
 	return;
@@ -631,6 +645,8 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 		gTimeLeft =  timeLimit * 60;
 		gTimeLimit = timeLimit;
 	}
+
+	StartAgTimer();
 
 	// always leave it empty, so players can't change the cvar value and finish the map (go to intermission mode) by accident...	
 	set_pcvar_string(pcvar, ""); 
@@ -718,12 +734,10 @@ public StartVersusCountdown() {
 		}
 
 		// it's seems that startversus is in the same frame when it's called, so it still being called
-		remove_task(TASK_TIMELEFT);
 		remove_task(TASK_STARTVERSUS);
 
 		// set new timeleft according to timelimit
-		gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
-		TimeLeftCountdown();
+		StartAgTimer();
 
 		return;
 	}
