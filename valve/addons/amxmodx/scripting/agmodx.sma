@@ -2125,6 +2125,10 @@ public PlayTeam(caller) {
 
 	new team = hl_get_user_team(caller);
 
+	// don't play sound if he doesn't have a team (that's why is called play_team)
+	if (!team)
+		return PLUGIN_HANDLED;
+
 	new players[32], numPlayers, player;
 	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
 
