@@ -182,7 +182,6 @@ new gCvarBanAmmo[SIZE_AMMOENTS];
 new gCvarBanBattery;
 new gCvarBanHealthKit;
 new gCvarBanLongJump;
-new gCvarReplaceEgonWithAmmo;
 
 new const gWeaponClass[][] = {
 	"weapon_357",
@@ -241,7 +240,6 @@ public plugin_precache() {
 	gCvarBanHealthKit = create_cvar("sv_ag_ban_healthkit", "0");
 	gCvarBanBattery = create_cvar("sv_ag_ban_battery", "0");
 	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
-	gCvarReplaceEgonWithAmmo = create_cvar("sv_ag_replace_egonwithammo", "0");
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
 	gCvarStartArmor = create_cvar("sv_ag_start_armor", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
@@ -2207,10 +2205,6 @@ StartMode() {
 	new arg[32];
 	get_pcvar_string(gCvarGameType, arg, charsmax(arg));
 		
-	// doesn't work in plugin_precache :/
-	if (get_pcvar_num(gCvarReplaceEgonWithAmmo))
-		ReplaceEgonWithAmmo();
-
 	BanGamemodeEnts();
 
 	SetGameModePlayerEquip(); //  set an equipment when user spawns
@@ -2294,24 +2288,6 @@ PauseGame() {
 public CmdPauseAg(id) {
 	set_cvar_num("pausable", 0);	
 	return PLUGIN_HANDLED;
-}
-
-public ReplaceEgonWithAmmo() {
-	new num, idx, ents[64], Float:origin[3];
-
-	while (num < sizeof ents && (ents[num] = find_ent_by_class(idx, "weapon_egon"))) {
-		idx = ents[num];
-		num++;
-	}
-
-	for (new i; i < num; i++) {
-		pev(ents[i], pev_origin, origin);
-		remove_entity(ents[i]);
-
-		ents[i] = create_entity("ammo_gaussclip");
-		entity_set_origin(ents[i], origin);
-		DispatchSpawn(ents[i]);
-	}
 }
 
 /*
