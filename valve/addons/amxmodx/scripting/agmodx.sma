@@ -1313,7 +1313,7 @@ public CmdAgNextMap(id, level, cid) {
 	return PLUGIN_HANDLED;
 }
 
-public CmdChangeMode(id, level, cid) {
+public CmdGameMode(id, level, cid) {
 	new arg[32];
 	read_argv(0, arg, charsmax(arg));
 	strtolower(arg);
@@ -1766,7 +1766,7 @@ public OnVoteAgAllow(id, check, argc, arg1[], arg2[]) {
 	return true;
 }
 
-public OnVoteChangeMode(id, check, argc, arg1[]) {
+public OnVoteGameMode(id, check, argc, arg1[]) {
 	if (!check) {
 		ChangeMode(arg1);
 		return true;
@@ -1825,8 +1825,8 @@ LoadGameMode() {
 				gGameModeName = name;
 
 			// create cmd and vote for gamemode
-			ag_register_concmd(fileName, "CmdChangeMode", ADMIN_BAN, fmt("- %s", info));
-			ag_vote_add(fileName, "OnVoteChangeMode"); 
+			ag_register_concmd(fileName, "CmdGameMode", ADMIN_BAN, fmt("- %s", info));
+			ag_vote_add(fileName, "OnVoteGameMode"); 
 
 			strtoupper(fileName);
 			AddTranslation("en", CreateLangKey(fmt("%s%s", "AGVOTE_", fileName)), fmt("- %s", info));
