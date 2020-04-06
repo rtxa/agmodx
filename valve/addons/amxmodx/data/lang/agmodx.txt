@@ -1,4 +1,5 @@
 [en]
+GAMEMODE_NOTALLOWED = Gamemode not allowed by server admin.
 SUDDEN_DEATH = Sudden Death!
 CMD_NOINFO = - No info.
 LOG_VOTE_STARTED = Vote: "%s" called by "%N" has started
@@ -38,6 +39,7 @@ INVALID_NUMBER = Number is invalid
 SPEC_CANTTALK = Say disabled for spectators. Use 'say_team' to talk with other spectators.
 
 [es]
+GAMEMODE_NOTALLOWED = Modo de juego deshabilitado por el servidor.
 SUDDEN_DEATH = Muerte instantanea!
 CMD_NOINFO = - No hay info.
 LOG_VOTE_STARTED = Voto: "%s" llamado por "%N" ha empezado

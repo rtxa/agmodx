@@ -145,6 +145,7 @@ new Float:gVoteDisplayNextThink = -1.0;
 // cvar pointers
 new gCvarDebugVote;
 new gCvarContact;
+new gCvarAllowedGameModes;
 new gCvarGameMode;
 new gCvarGameType;
 new gCvarHudColor;
@@ -234,6 +235,7 @@ public plugin_precache() {
 	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0", FCVAR_SERVER);
 
 	// Gamemode cvars
+	gCvarAllowedGameModes = create_cvar("sv_ag_allowed_gamemodes", "", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarBanHealthKit = create_cvar("sv_ag_ban_healthkit", "0");
@@ -1765,9 +1767,30 @@ public OnVoteAgAllow(id, check, argc, arg1[], arg2[]) {
 }
 
 public OnVoteChangeMode(id, check, argc, arg1[]) {
-	if (!check)
+	if (!check) {
 		ChangeMode(arg1);
-	return true;
+		return true;
+	} else {
+		new listModes[512];
+		get_pcvar_string(gCvarAllowedGameModes, listModes, charsmax(listModes));
+		
+		// all gamemodes are allowed if cvar is empty
+		if (!strlen(listModes)) {
+			return true;
+		}
+
+		new mode[32];
+		while (strlen(listModes)) {
+			strtok(listModes, mode, charsmax(mode), listModes, charsmax(listModes), ';');
+			if (equali(mode, arg1)) {
+				return true;
+			}
+		}
+
+		console_print(id, "%l", "GAMEMODE_NOTALLOWED");
+		return false;
+	}
+	
 }
 
 LoadGameMode() {
