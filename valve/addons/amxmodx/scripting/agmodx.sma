@@ -151,6 +151,11 @@ new gCvarGameType;
 new gCvarHudColor;
 new gCvarSpecTalk;
 new gCvarAllowVote;
+new gCvarAllowVoteGameMode;
+new gCvarAllowVoteAgAllow;
+new gCvarAllowVoteAgStart;
+new gCvarAllowVoteMap;
+new gCvarAllowVoteKick;
 new gCvarVoteFailedTime;
 new gCvarVoteDuration;
 new gCvarVoteOldStyle;
@@ -227,8 +232,15 @@ public plugin_precache() {
 	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
 	gCvarAgStartAllowUnlimited = create_cvar("sv_ag_start_allowunlimited", "0", FCVAR_SERVER); // block start versus with unlimited time
 	
-	// Vote cvars
+	// Allowed vote cvars
 	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVoteGameMode = create_cvar("sv_ag_vote_gamemode", "1", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVoteAgAllow = create_cvar("sv_ag_vote_allow", "1", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVoteAgStart = create_cvar("sv_ag_vote_start", "1", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER | FCVAR_SPONLY);
+
+	// Vote cvars
 	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15", FCVAR_SERVER | FCVAR_SPONLY, "", true, 0.0, true, 999.0);
 	gCvarVoteDuration = create_cvar("sv_ag_vote_duration", "30", FCVAR_SERVER, "", true, 0.0, true, 999.0);
 	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0", FCVAR_SERVER);
@@ -1427,6 +1439,11 @@ public OnVoteAgKick(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		server_cmd("kick #%d", userid);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteKick)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		new player;
 		if (!strlen(arg2)) { 
 			return false;
@@ -1651,8 +1668,14 @@ public OnVoteAgAbort(id, check, argc) {
 		return false;
 	}
 
-	if (!check)
+	if (!check) {
 		AbortVersus();
+	} else {
+		if (!get_pcvar_num(gCvarAllowVoteAgStart)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+	}
 	
 	return true;
 }
@@ -1666,6 +1689,11 @@ public OnVoteAgStart(id, check, argc) {
 	if (!check) {
 		StartVersus();
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteAgStart)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (get_playersnum() < get_pcvar_num(gCvarAgStartMinPlayers)) {
 			console_print(id, "%l", "MATCH_MINPLAYERS", get_pcvar_num(gCvarAgStartMinPlayers));
 			return false;
@@ -1683,6 +1711,12 @@ public OnVoteAgPause(id, check, argc) {
 
 	if (!check) {
 		PauseGame();
+	} else {
+		if (!get_pcvar_num(gCvarAllowVoteAgStart)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 	}
 	
 	return true;
@@ -1700,6 +1734,11 @@ public OnVoteAgMap(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		ChangeMap(arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteMap)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_map_valid(arg2)) {
 			client_print(id, print_console, "%l", "INVALID_MAP");
 			return false;
@@ -1718,6 +1757,11 @@ public OnVoteAgNextMap(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarAmxNextMap, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteMap)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_map_valid(arg2)) {
 			client_print(id, print_console, "%l", "INVALID_MAP");
 			return false;
@@ -1735,6 +1779,11 @@ public OnVoteAgNextMode(id, check, argc, arg1[], arg2[]) {
 
 	if (!check) {
 		ChangeMode(arg2);
+	} else {
+		if (!get_pcvar_num(gCvarAllowVoteGameMode)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
 	}
 
 	return true;
@@ -1750,6 +1799,11 @@ public OnVoteAgAllow(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		AllowPlayer(find_player_ex(FindPlayer_MatchUserId, userid));
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteAgStart) || !get_pcvar_num(gCvarAllowVoteAgAllow)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		new player;
 		if (equal(arg2, "")) { // allow yourself
 			userid = get_user_userid(id);
@@ -1769,6 +1823,11 @@ public OnVoteGameMode(id, check, argc, arg1[]) {
 		ChangeMode(arg1);
 		return true;
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteGameMode)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		new listModes[512];
 		get_pcvar_string(gCvarAllowedGameModes, listModes, charsmax(listModes));
 		
