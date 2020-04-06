@@ -150,17 +150,22 @@ new gCvarGameMode;
 new gCvarGameType;
 new gCvarHudColor;
 new gCvarSpecTalk;
+
 new gCvarAllowVote;
 new gCvarAllowVoteGameMode;
 new gCvarAllowVoteAgAllow;
 new gCvarAllowVoteAgStart;
 new gCvarAllowVoteMap;
 new gCvarAllowVoteKick;
+new gCvarAllowVoteSetting;
+
 new gCvarVoteFailedTime;
 new gCvarVoteDuration;
 new gCvarVoteOldStyle;
+
 new gCvarAgStartMinPlayers;
 new gCvarAgStartAllowUnlimited;
+
 new gCvarAmxNextMap;
 
 new gCvarBunnyHop;
@@ -239,6 +244,7 @@ public plugin_precache() {
 	gCvarAllowVoteAgStart = create_cvar("sv_ag_vote_start", "1", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER | FCVAR_SPONLY);
 
 	// Vote cvars
 	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15", FCVAR_SERVER | FCVAR_SPONLY, "", true, 0.0, true, 999.0);
@@ -1467,6 +1473,11 @@ public OnVoteTimeLimit(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarTimeLimit, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1490,6 +1501,11 @@ public OnVoteFriendlyFire(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarFriendlyFire, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1508,6 +1524,11 @@ public OnVoteBunnyHop(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarBunnyHop, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1526,6 +1547,11 @@ public OnVoteFallDamage(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarFallDamage, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1544,6 +1570,11 @@ public OnVoteFlashLight(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarFlashLight, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1562,6 +1593,11 @@ public OnVoteFootSteps(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarFootSteps, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1580,6 +1616,11 @@ public OnVoteFragLimit(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarFragLimit, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1598,6 +1639,11 @@ public OnVoteSelfGauss(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarSelfGauss, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1617,6 +1663,11 @@ public OnVoteGaussFix(id, check, argc, arg1[], arg2[]) {
 		new num = str_to_num(arg2);
 		set_pcvar_num(gCvarSelfGauss, !num);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1635,6 +1686,11 @@ public OnVoteForceRespawn(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarForceRespawn, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
@@ -1653,6 +1709,11 @@ public OnVoteWeaponStay(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
 		set_pcvar_string(gCvarWeaponStay, arg2);
 	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
