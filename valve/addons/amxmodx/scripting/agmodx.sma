@@ -1432,7 +1432,7 @@ CreateVoteSystem() {
 	ag_vote_add("mp_selfgauss", "OnVoteSelfGauss");
 	ag_vote_add("mp_timelimit", "OnVoteTimeLimit");
 	ag_vote_add("mp_weaponstay", "OnVoteWeaponStay");
-	ag_vote_add("ag_gauss_fix", "OnVoteGaussFix");
+	ag_vote_add("ag_gauss_fix", "OnVoteSelfGauss");
 }
 
 public OnVoteAgKick(id, check, argc, arg1[], arg2[]) {
@@ -1637,31 +1637,10 @@ public OnVoteSelfGauss(id, check, argc, arg1[], arg2[]) {
 	}
 
 	if (!check) {
-		set_pcvar_string(gCvarSelfGauss, arg2);
-	} else {
-		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
-			console_print(id, "%l", "VOTE_NOTALLOWED");
-			return false;
-		}
-
-		if (!is_str_num(arg2)) {
-			console_print(id, "%l", "INVALID_NUMBER");
-			return false;
-		}
-	}
-
-	return true;
-}
-
-public OnVoteGaussFix(id, check, argc, arg1[], arg2[]) {
-	if (argc != 2) {
-		console_print(id, "%l", "VOTE_INVALID");
-		return false;
-	}
-
-	if (!check) {
 		new num = str_to_num(arg2);
-		set_pcvar_num(gCvarSelfGauss, !num);
+		if (equal(arg1, "ag_gauss_fix"))
+			num = num > 0 ? 0 : 1;
+		set_pcvar_num(gCvarSelfGauss, num);
 	} else {
 		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
 			console_print(id, "%l", "VOTE_NOTALLOWED");
