@@ -188,6 +188,23 @@ stock GetStrColor(const input[], &red, &green, &blue) {
 	blue = str_to_num(b);
 }
 
+stock ag_cmd_target(id, const arg[], argIdx = 0) {
+	new player = ag_find_player(arg);
+
+	// check if there is more player coincidences
+	if (player != ag_find_player(arg, .lastMatched = true) && (player = find_player_ex(FindPlayer_MatchName, arg)) == 0) {
+		console_print(id, "%L (Arg %d: ^"%s^")", id, "MORE_CL_MATCHT", argIdx, arg);
+		return 0;
+	}
+
+	if (!player) {
+		console_print(id, "%L (Arg %d: ^"%s^")", id, "CL_NOT_FOUND", argIdx, arg);
+		return 0;
+	}
+
+	return player;
+}
+
 stock ag_find_player(const arg[], lastMatched = false) {
 	new FindPlayerFlags:flags = FindPlayer_MatchNameSubstring | FindPlayer_CaseInsensitive;
 

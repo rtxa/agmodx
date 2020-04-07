@@ -1197,21 +1197,8 @@ public CmdAgStart(id, level, cid) {
 
 	for (new i = 1; i < read_argc(); i++) {
 		read_argv(i, arg, charsmax(arg));
-
-		player = ag_find_player(arg);
-
-		// check if there is more player matches
-		if (player != ag_find_player(arg, .lastMatched = true) && (player = find_player_ex(FindPlayer_MatchName, arg)) == 0) {
-			console_print(id, "%L (Arg %d: ^"%s^")", id, "MORE_CL_MATCHT", i, arg);
-			return PLUGIN_HANDLED;
-		}
-
-		if (player) {
-			target[player] = player;
-		} else {
-			console_print(id, "%L (Arg %d: ^"%s^")", id, "CL_NOT_FOUND", i, arg);
-			return PLUGIN_HANDLED;
-		}
+		player = ag_cmd_target(id, arg, i);
+		target[player] = player;
 	}
 
 	// only let play selected players
