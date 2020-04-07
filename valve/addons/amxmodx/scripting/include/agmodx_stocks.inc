@@ -187,3 +187,58 @@ stock GetStrColor(const input[], &red, &green, &blue) {
 	green = str_to_num(g);
 	blue = str_to_num(b);
 }
+
+stock ag_find_player(const arg[], lastMatched = false) {
+	new FindPlayerFlags:flags = FindPlayer_MatchNameSubstring | FindPlayer_CaseInsensitive;
+
+	if (lastMatched)
+		flags |= FindPlayer_LastMatched;
+
+	new player;
+
+	// find by name substring first
+	player = find_player_ex(flags, arg);
+	
+	if (player)
+		return player;
+
+	// try again but with color codes removed
+	new name[MAX_NAME_LENGTH];
+	for (new i = 1; i <= MaxClients; i++) {
+		if (!is_user_connected(i))
+			continue;
+
+		get_user_name(i, name, charsmax(name));
+		RemoveColorCodes(name, charsmax(name));
+
+		if (strfind(name, arg, true) != -1) {
+			player = i;
+			if (!lastMatched) // return the first match
+				return player;
+		}
+	}
+
+	if (player)
+		return player;
+
+	// try to find by userid
+	if (strlen(arg) >= 2 && arg[0] == '#' && arg[1])
+		player = find_player_ex(FindPlayer_MatchUserId, str_to_num(arg[1]));
+	
+	return player;
+}
+
+stock RemoveColorCodes(input[], len) {
+	new i;
+	while (i < len) {
+		if (i + 1 < len) {
+			if (input[i] == '^^' && input[i+1] >= '0' && input[i+1] <= '9') {
+				replace(input, len, fmt("^^%c", input[i+1]), "");
+			} else {
+				i++;
+			}
+		} else {
+			break;
+		}
+	}
+}
