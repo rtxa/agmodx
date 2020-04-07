@@ -1201,7 +1201,7 @@ public CmdAgStart(id, level, cid) {
 		player = ag_find_player(arg);
 
 		// check if there is more player matches
-		if (player != ag_find_player(arg, .lastMatched = true)) {
+		if (player != ag_find_player(arg, .lastMatched = true) && (player = find_player_ex(FindPlayer_MatchName, arg)) == 0) {
 			console_print(id, "%L (Arg %d: ^"%s^")", id, "MORE_CL_MATCHT", i, arg);
 			return PLUGIN_HANDLED;
 		}
