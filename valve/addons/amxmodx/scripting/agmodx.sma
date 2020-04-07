@@ -1193,7 +1193,7 @@ public CmdAgStart(id, level, cid) {
 	}
 
 	// from here, where're going to get which players are going to play versus...
-	new target[33], player;
+	new target[MAX_PLAYERS + 1], player;
 
 	for (new i = 1; i < read_argc(); i++) {
 		read_argv(i, arg, charsmax(arg));
@@ -1204,16 +1204,16 @@ public CmdAgStart(id, level, cid) {
 			return PLUGIN_HANDLED;
 	}
 
-	
+	// only let play selected players
 	for (new i = 1; i <= MaxClients; i++) {
 		if (is_user_connected(i)) {
-			if (i == target[i])
+			if (i == target[i]) {
 				hl_set_user_spectator(i, false);
-			else {
+			} else {
 				hl_set_user_spectator(i, true);
-				set_pev(id, pev_flags, pev(id, pev_flags) & ~FL_FROZEN);
+				set_pev(i, pev_flags, pev(i, pev_flags) & ~FL_FROZEN);
 			}
-		}		
+		}
 	}
 
 	log_amx("AgStart: %N", id);
