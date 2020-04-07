@@ -69,7 +69,7 @@ new cvarhook:gHookCvarTimeLimit;
 new gHudRed, gHudGreen, gHudBlue;
 
 // play_team cmd
-new Float:gPlayTeamDelayTime[33];
+new Float:gPlaySoundDelayTime[33];
 	
 // gamerules flags
 new bool:gBlockCmdKill;
@@ -352,7 +352,9 @@ public plugin_init() {
 	ag_register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "AGCMD_NO", _, true);
 	ag_register_clcmd("settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
 	ag_register_clcmd("say settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
-	ag_register_clcmd("play_team", "PlayTeam", ADMIN_ALL, "AGCMD_PLAYTEAM", _, true);
+	ag_register_clcmd("say_close", "CmdSayClose", ADMIN_ALL, "AGCMD_SAYCLOSE", _, true);
+	ag_register_clcmd("play_close", "CmdPlayClose", ADMIN_ALL, "AGCMD_PLAYCLOSE", _, true);
+	ag_register_clcmd("play_team", "CmdPlayTeam", ADMIN_ALL, "AGCMD_PLAYTEAM", _, true);
 
 	register_concmd("help", "CmdHelp", ADMIN_ALL, "AGCMD_HELP", _, true);
 
@@ -2273,10 +2275,11 @@ public ChangeMap(const map[]) {
 	StartIntermissionMode();
 } 
 
-public PlayTeam(caller) {
-	if (gPlayTeamDelayTime[caller] < get_gametime()) 
-		gPlayTeamDelayTime[caller] = get_gametime() + 0.75;
-	else 
+public CmdPlayTeam(caller) {
+	if (get_gametime() < gPlaySoundDelayTime[caller])
+		return PLUGIN_HANDLED;
+
+	if (read_argc() < 2)
 		return PLUGIN_HANDLED;
 
 	new sound[128];
@@ -2297,6 +2300,92 @@ public PlayTeam(caller) {
 			PlaySound(player, sound);
 	}
 
+	gPlaySoundDelayTime[caller] = get_gametime() + 0.75;
+	return PLUGIN_HANDLED;
+}
+
+public CmdSayClose(caller) {
+	if (read_argc() < 2)
+		return PLUGIN_HANDLED;
+
+	new teamCaller = hl_get_user_team(caller);
+
+	// don't play sound if he doesn't have a team
+	if (!teamCaller)
+		return PLUGIN_HANDLED;
+
+	new text[191];
+	read_argv(1, text, charsmax(text));
+
+	new name[MAX_NAME_LENGTH];
+	get_user_name(caller, name, charsmax(name));
+
+	// avoid repeating code by formating message like a real one so MsgSayText can handle it
+	format(text, charsmax(text), "%c(TEAM) %s: %s^n", 2, name, text);
+	new Float:callerPos[3], Float:targetPos[3];
+
+	pev(caller, pev_origin, callerPos);
+
+	new players[MAX_PLAYERS], numPlayers;
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
+
+	new target;
+	for (new i; i < numPlayers; i++) {
+		target = players[i];
+
+		if (teamCaller != hl_get_user_team(target))
+			continue;
+
+		pev(target, pev_origin, targetPos);
+
+		if (vector_distance(callerPos, targetPos) <= 700) {
+			emessage_begin(MSG_ONE, get_user_msgid("SayText"), .player = target);
+			ewrite_byte(caller);
+			ewrite_string(text);
+			emessage_end();
+		}
+	}
+	return PLUGIN_HANDLED;
+}
+
+public CmdPlayClose(caller) {
+	if (read_argc() < 2)
+		return PLUGIN_HANDLED;
+
+	if (get_gametime() < gPlaySoundDelayTime[caller])
+		return PLUGIN_HANDLED;
+
+	new teamCaller = hl_get_user_team(caller);
+
+	// don't play sound if he doesn't have a team
+	if (!teamCaller)
+		return PLUGIN_HANDLED;
+
+	new sound[128];
+	read_argv(1, sound, charsmax(sound));
+		
+	// return the index of the nearest location for the player from an array
+	new Float:callerPos[3], Float:targetPos[3];
+	
+	pev(caller, pev_origin, callerPos);
+
+	new players[MAX_PLAYERS], numPlayers;
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeDead);
+
+	new target;
+	for (new i; i < numPlayers; i++) {
+		target = players[i];
+
+		if (teamCaller != hl_get_user_team(target))
+			continue;
+
+		pev(target, pev_origin, targetPos);
+		if (vector_distance(callerPos, targetPos) <= 700) {
+			PlaySound(target, sound);
+		}
+	}
+
+	gPlaySoundDelayTime[caller] = get_gametime() + 0.75;
 	return PLUGIN_HANDLED;
 }
 
