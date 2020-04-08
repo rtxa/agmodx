@@ -1256,7 +1256,12 @@ public CmdAgStart(id, level, cid) {
 
 	for (new i = 1; i < read_argc(); i++) {
 		read_argv(i, arg, charsmax(arg));
+
 		player = ag_cmd_target(id, arg, i);
+
+		if (!player)
+			return PLUGIN_HANDLED;
+			
 		target[player] = player;
 	}
 
