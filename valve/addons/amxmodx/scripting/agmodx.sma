@@ -344,6 +344,8 @@ public plugin_init() {
 	ag_register_concmd("agnextmode", "CmdAgNextMode", ADMIN_BAN, "AGCMD_AGNEXTMODE", _, true);
 	ag_register_concmd("agnextmap", "CmdAgNextMap", ADMIN_BAN, "AGCMD_AGNEXTMAP", _, true);
 	ag_register_concmd("agmap", "CmdAgMap", ADMIN_BAN, "AGCMD_AGMAP", _, true);
+	ag_register_concmd("agforcespectator", "CmdAgForceSpectator", ADMIN_BAN, "AGCMD_FORCESPECTATOR", _, true);
+	ag_register_concmd("agforceteamup", "CmdAgForceTeamUp", ADMIN_BAN, "AGCMD_FORCETEAMUP", _, true);
 	
 	ag_register_concmd("aglistvotes", "CmdVoteHelp", ADMIN_ALL, "AGCMD_LISTVOTES", _, true);
 	ag_register_concmd("timeleft", "CmdTimeLeft", ADMIN_ALL, "AGCMD_TIMELEFT", _, true);
@@ -1163,6 +1165,59 @@ public ShowSettings(id) {
 		get_pcvar_num(gCvarSelfGauss) ? "On" : "Off");
 
 	set_task(10.0, "ShowSettings", id + TASK_SHOWSETTINGS); // this will stop hud overlap
+}
+
+public CmdAgForceSpectator(id, level, cid) {
+	if (!cmd_access(id, level, cid, 1))
+		return PLUGIN_HANDLED;
+
+	new arg[32];
+	read_argv(1, arg, charsmax(arg));
+
+	new target = ag_cmd_target(id, arg);
+
+	if (!target)
+		return PLUGIN_HANDLED;
+
+	if (!hl_get_user_spectator(target))
+		hl_set_user_spectator(target);
+
+	return PLUGIN_HANDLED;
+}
+
+public CmdAgForceTeamUp(id, level, cid) {
+	if (!cmd_access(id, level, cid, 2))
+		return PLUGIN_HANDLED;
+
+	new arg1[32], arg2[32];
+	read_argv(1, arg1, charsmax(arg1));
+
+	new target = ag_cmd_target(id, arg1);
+
+	if (!target)
+		return PLUGIN_HANDLED;
+
+	read_argv(2, arg2, charsmax(arg2));
+
+	// if it is a #teamid (example: agforceteamup Player2 #1)
+	if (strlen(arg2) >= 2 && arg2[0] == '#' && arg2[1]) {
+		new team = str_to_num(arg2[1]);
+		if (team <= 0 || team > gNumTeams + 1) {
+			console_print(id, "%l", "INVALID_TEAMID");
+			return PLUGIN_HANDLED;
+		}
+		copy(arg2, charsmax(arg2), gTeamsName[team - 1]);
+	}
+
+	// check if model name is valid
+	if (GetTeamIndex(arg2, gTeamsName, gNumTeams) == -1) {
+		console_print(id, "%l", "INVALID_TEAMNAME");
+		return PLUGIN_HANDLED;
+	}
+
+	hl_set_user_model(target, arg2);
+	
+	return PLUGIN_HANDLED;
 }
 
 public CmdAgPause(id, level, cid) {
