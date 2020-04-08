@@ -1253,7 +1253,7 @@ public CmdAgAllow(id, level, cid) {
 	if (equal(arg, ""))
 		player = id;
 	else 
-		player = cmd_target(id, arg, CMDTARGET_ALLOW_SELF);
+		player = ag_cmd_target(id, arg);
 
 	if (!player)
 		return PLUGIN_HANDLED;
@@ -1452,7 +1452,7 @@ public OnVoteAgKick(id, check, argc, arg1[], arg2[]) {
 		new player;
 		if (!strlen(arg2)) { 
 			return false;
-		} else if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF))) {
+		} else if ((player = ag_cmd_target(id, arg2))) {
 			get_user_name(player, arg2, 31);
 			userid = get_user_userid(player);
 		} else {
@@ -1846,7 +1846,7 @@ public OnVoteAgAllow(id, check, argc, arg1[], arg2[]) {
 		new player;
 		if (equal(arg2, "")) { // allow yourself
 			userid = get_user_userid(id);
-		} else if ((player = cmd_target(id, arg2, CMDTARGET_ALLOW_SELF))) {
+		} else if ((player = ag_cmd_target(id, arg2))) {
 			get_user_name(player, arg2, 31);
 			userid = get_user_userid(player);
 		} else {
