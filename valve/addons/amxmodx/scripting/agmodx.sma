@@ -484,7 +484,11 @@ public PlayerPreSpawn(id) {
 }
 
 public PlayerPostSpawn(id) {
-	if (is_user_alive(id)) {// when player joins the server for the first time, he spawns dead...
+	// when player joins the server for the first time, he spawns dead...
+	if (is_user_alive(id)) {
+		// ignore gamemode cvars if map has a game_player_equip
+		// this avoid problems in maps like 357_box or bootbox
+		// todo: add cvar to disable this behaviour
 		if (!gGamePlayerEquipExists) {
 			SetPlayerEquipment(id);
 		}
@@ -2392,38 +2396,37 @@ StartMode() {
 		
 	BanGamemodeEnts();
 
-	SetGameModePlayerEquip(); //  set an equipment when user spawns
+	FindGamePlayerEquip();
 }
 
 /*
-* Set player equipment of current gamemode
+* Finds game player equipment of the map
 */
-SetGameModePlayerEquip() {
-	// i need to add maybe a check for game_player_equip that are not used in masters, whatever, only in spawn...
-	new ent = find_ent_by_class(0, "game_player_equip");
-
-	// if map has a game_player_equip, ignore gamemode cvars, looks like miniag works like that
-	// also this will avoid problems in maps like 357_box or bootbox
-	if (ent) {
-		gGamePlayerEquipExists = true;
-		return;
-	}
-	
-	ent = create_entity("game_player_equip");
-
-	for (new i; i < SIZE_WEAPONS; i++) {
-		if (get_pcvar_num(gCvarStartWeapons[i]))
-			DispatchKeyValue(ent, gWeaponClass[i], "1");
-	}
-
-	if (get_pcvar_bool(gCvarStartLongJump)) {
-		DispatchKeyValue(ent, "item_longjump", "1");
+FindGamePlayerEquip() {
+	new ent, i;
+	while ((ent = find_ent_by_class(i, "game_player_equip"))) {
+		// ignore the ones with use flag, they don't give weapons to all players
+		if (pev(ent, pev_spawnflags) & SF_PLAYEREQUIP_USEONLY) {
+			i++;
+		} else {
+			gGamePlayerEquipExists = true;
+			return;
+		}
 	}
 }
 
 SetPlayerEquipment(id) {
 	set_user_health(id, get_pcvar_num(gCvarStartHealth));
 	set_user_armor(id, get_pcvar_num(gCvarStartArmor));
+
+	for (new i; i < SIZE_WEAPONS; i++) {
+		if (get_pcvar_num(gCvarStartWeapons[i]))
+			give_item(id, gWeaponClass[i]);
+	}
+
+	if (get_pcvar_bool(gCvarStartLongJump)) {
+			give_item(id, "item_longjump");
+	}
 
 	ResetBpAmmo(id);
 }
