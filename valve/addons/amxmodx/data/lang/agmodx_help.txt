@@ -15,6 +15,10 @@ AGCMD_SETTINGS = - shows a splash hud with the current settings of the server.
 AGCMD_PLAYTEAM = <file>.wav - plays the sound file to the team.
 AGCMD_TIMELEFT = - shows match time left.
 AGCMD_LISTVOTES = - shows available votes.
+AGCMD_FORCESPECTATOR = <name or #userid> - force a player into spectator mode.
+AGCMD_FORCETEAMUP = <name or #teamid> - force a player into a team.
+AGCMD_PLAYCLOSE = <file>.wav - Play wav files to your teammates close to you.
+AGCMD_SAYCLOSE = - Only teammates close to you receive your message. 
 
 [es]
 TITLE_CMDHELP = AG Mod X Ayuda: Comandos
@@ -33,3 +37,7 @@ AGCMD_SETTINGS = - muestra los ajustes del AG Mod X
 AGCMD_PLAYTEAM = <file>.wav - reproduce el nombre del sonido ingresado a todo el equipo.
 AGCMD_TIMELEFT = - muestra el tiempo restante de la partida
 AGCMD_LISTVOTES = - muestra los votos disponibles.
+AGCMD_FORCESPECTATOR = <name or #userid> - fuerza a un jugador a entrar al modo espectador.
+AGCMD_FORCETEAMUP = <name or #teamid> - fuerza al jugador a entrar a un equipo.
+AGCMD_PLAYCLOSE = <file>.wav - reproduce un sonido a un compañero cercano a ti.
+AGCMD_SAYCLOSE = - solo los compañeros cercanos reciben tu mensaje.
