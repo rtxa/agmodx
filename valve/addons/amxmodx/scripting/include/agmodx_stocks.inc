@@ -265,3 +265,8 @@ stock RemoveColorCodes(input[], len) {
 		}
 	}
 }
+
+stock DisableVote(const name[], const callback[]) {
+	ag_vote_remove(name);
+	ag_vote_add(name, callback);
+}

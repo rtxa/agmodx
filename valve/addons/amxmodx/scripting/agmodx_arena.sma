@@ -6,6 +6,7 @@
 #include <hamsandwich>
 #include <hlstocks>
 #include <fun>
+#include <agmodx>
 #include <agmodx_stocks>
 #include <agmodx_const>
 
@@ -87,7 +88,16 @@ public plugin_init() {
 	gHudShowMatch = CreateHudSyncObj();
 	gArenaQueue = ArrayCreate();
 
+	DisableVote("agstart", "OnVoteNotAllowed");
+	DisableVote("agpause", "OnVoteNotAllowed");
+	DisableVote("agallow", "OnVoteNotAllowed");
+
 	StartArena();
+}
+
+public OnVoteNotAllowed(id) {
+	console_print(id, "%l", "VOTE_NOTALLOWED_GAMEMODE");
+	return false;
 }
 
 public plugin_end() {
