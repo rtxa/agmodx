@@ -288,7 +288,7 @@ public plugin_precache() {
 		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0", FCVAR_SERVER);
 
 	// Multiplayer cvars
-	gCvarHeadShot = create_cvar("mp_headshot", "1.0", FCVAR_SERVER);
+	gCvarHeadShot = create_cvar("sv_ag_headshot", "3", FCVAR_SERVER);
 	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
 	gCvarFallDamage = get_cvar_pointer("mp_falldamage");
 	gCvarFlashLight = get_cvar_pointer("mp_flashlight");
@@ -299,6 +299,8 @@ public plugin_precache() {
 	gCvarSelfGauss = get_cvar_pointer("mp_selfgauss");
 	gCvarTimeLimit = get_cvar_pointer("mp_timelimit");
 	gCvarWeaponStay = get_cvar_pointer("mp_weaponstay");
+
+	hook_cvar_change(gCvarHeadShot, "CvarAgHeadShotHook");
 
 	// AG Hud Color
 	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER | FCVAR_SPONLY); // yellow
@@ -346,7 +348,6 @@ public plugin_init() {
 	register_forward(FM_GetGameDescription, "FwGameDescription");
 
 	// player's hooks
-	RegisterHam(Ham_TraceAttack, "player", "PlayerTraceAttack");
 	RegisterHam(Ham_Killed, "player", "PlayerPostKilled", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPostSpawn", true);
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
@@ -487,12 +488,6 @@ public client_disconnected(id) {
 
 	return PLUGIN_HANDLED;
 }
-
-public PlayerTraceAttack(victim, attacker, Float:damage, Float:dir[3], ptr, bits) {
-	if (get_tr2(ptr, TR_iHitgroup) == HIT_HEAD)
-		SetHamParamFloat(3, damage * get_pcvar_float(gCvarHeadShot));
-	return HAM_IGNORED;
-} 
 
 public PlayerPreSpawn(id) {
 	// if player has to spec, don't let him spawn...
@@ -667,6 +662,11 @@ FormatTimeLeft(timeleft, output[], length) {
 		formatex(output, length, "%i:%02i", minutes, seconds);
 	else // seconds
 		formatex(output, length, "%i", seconds);
+}
+
+public CvarAgHeadShotHook(pcvar, const old_value[], const new_value[]) {
+	new skill = clamp(get_cvar_num("skill"), 1, 3);
+	set_cvar_string(fmt("sk_player_head%d", skill), new_value);
 }
 
 public CvarMpDmgHook(pcvar, const old_value[], const new_value[]) {
