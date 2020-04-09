@@ -179,6 +179,10 @@ new gCvarSelfGauss;
 new gCvarTimeLimit;
 new gCvarWeaponStay;
 new gCvarHeadShot;
+new gCvarGaussFix;
+new gCvarWallGauss;
+new gCvarBlastRadius;
+new gCvarRpgFix;
 
 new gCvarStartHealth;
 new gCvarStartArmor;
@@ -289,6 +293,10 @@ public plugin_precache() {
 
 	// Multiplayer cvars
 	gCvarHeadShot = create_cvar("sv_ag_headshot", "3", FCVAR_SERVER);
+	gCvarBlastRadius = create_cvar("sv_ag_blastradius", "1", FCVAR_SERVER);
+	gCvarWallGauss = create_cvar("sv_ag_wallgauss", "1", FCVAR_SERVER);
+	gCvarGaussFix = create_cvar("ag_gauss_fix", "0", FCVAR_SERVER);
+	gCvarRpgFix = create_cvar("ag_rpg_fix", "0", FCVAR_SERVER);
 	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
 	gCvarFallDamage = get_cvar_pointer("mp_falldamage");
 	gCvarFlashLight = get_cvar_pointer("mp_flashlight");
@@ -301,6 +309,10 @@ public plugin_precache() {
 	gCvarWeaponStay = get_cvar_pointer("mp_weaponstay");
 
 	hook_cvar_change(gCvarHeadShot, "CvarAgHeadShotHook");
+	hook_cvar_change(gCvarBlastRadius, "CvarBlastRadiusHook");
+	hook_cvar_change(gCvarWallGauss, "CvarWallGaussHook");
+	hook_cvar_change(gCvarRpgFix, "CvarAgRpgFixHook");
+	hook_cvar_change(gCvarGaussFix, "CvarAgGaussFixHook");
 
 	// AG Hud Color
 	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER | FCVAR_SPONLY); // yellow
@@ -667,6 +679,23 @@ FormatTimeLeft(timeleft, output[], length) {
 public CvarAgHeadShotHook(pcvar, const old_value[], const new_value[]) {
 	new skill = clamp(get_cvar_num("skill"), 1, 3);
 	set_cvar_string(fmt("sk_player_head%d", skill), new_value);
+}
+
+public CvarBlastRadiusHook(pcvar, const old_value[], const new_value[]) {
+	set_cvar_string("mp_blastradius", new_value);
+}
+
+public CvarWallGaussHook(pcvar, const old_value[], const new_value[]) {
+	set_cvar_string("mp_wallgauss", new_value);
+}
+
+public CvarAgRpgFixHook(pcvar, const old_value[], const new_value[]) {
+	set_cvar_string("mp_rpg_fix", new_value);
+}
+
+public CvarAgGaussFixHook(pcvar, const old_value[], const new_value[]) {
+	new num = clamp(str_to_num(new_value), 0, 1);
+	set_pcvar_num(gCvarSelfGauss, num ? 0 : 1);
 }
 
 public CvarMpDmgHook(pcvar, const old_value[], const new_value[]) {
