@@ -6,6 +6,7 @@
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
 #define SIZE_AMMO 11 
+#define SIZE_DMGWEAPONS 16
 
 #define SIZE_BANWEAPONS 14
 #define SIZE_AMMOENTS 9
@@ -105,5 +106,43 @@ stock const gCountSnd[][] = {
 	"fvox/eight", 
 	"fvox/nine"
 };
+
+stock const gMpDmgWeapons[][] = {
+	"mp_dmg_crowbar",
+	"mp_dmg_glock",
+	"mp_dmg_357",
+	"mp_dmg_mp5",
+	"mp_dmg_shotgun",
+	"mp_dmg_xbow_scope",
+	"mp_dmg_xbow_noscope",
+	"mp_dmg_rpg",
+	"mp_dmg_gauss_primary",
+	"mp_dmg_gauss_secondary",
+	"mp_dmg_egon",
+	"mp_dmg_hornet",
+	"mp_dmg_hgrenade",
+	"mp_dmg_satchel",
+	"mp_dmg_tripmine",
+	"mp_dmg_m203",
+}
+
+stock const gAgDmgWeapons[][] = {
+	"sv_ag_dmg_crowbar",
+	"sv_ag_dmg_glock",
+	"sv_ag_dmg_357",
+	"sv_ag_dmg_mp5",
+	"sv_ag_dmg_shotgun",
+	"sv_ag_dmg_crossbow",
+	"sv_ag_dmg_bolts",
+	"sv_ag_dmg_rpg",
+	"sv_ag_dmg_gauss",
+	"sv_ag_dmg_gauss_secondary",
+	"sv_ag_dmg_egon_wide",
+	"sv_ag_dmg_hornet",
+	"sv_ag_dmg_hgrenade",
+	"sv_ag_dmg_satchel",
+	"sv_ag_dmg_tripmine",
+	"sv_ag_dmg_m203",
+}
 
 stock const gBeepSnd[] = "fvox/beep";

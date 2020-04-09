@@ -186,6 +186,8 @@ new gCvarStartLongJump;
 
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
+new gCvarMpDmgWeapons[SIZE_DMGWEAPONS];
+new gCvarAgDmgWeapons[SIZE_DMGWEAPONS];
 
 new gCvarBanWeapons[SIZE_BANWEAPONS];
 new gCvarBanAmmo[SIZE_AMMOENTS];
@@ -261,6 +263,20 @@ public plugin_precache() {
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
 	gCvarStartArmor = create_cvar("sv_ag_start_armor", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
+
+	new value[32];
+
+	// Damage cvars
+	for (new i; i < SIZE_DMGWEAPONS; i++ ) {
+		gCvarMpDmgWeapons[i] = get_cvar_pointer(gMpDmgWeapons[i]);
+
+		// get default value
+		get_pcvar_string(gCvarMpDmgWeapons[i], value, charsmax(value));
+
+		// bind sv_ag_dmg_xx cvars with the ones from bugfixed hl...
+		gCvarAgDmgWeapons[i] = create_cvar(gAgDmgWeapons[i], value, FCVAR_SERVER | FCVAR_SPONLY);
+		hook_cvar_change(gCvarAgDmgWeapons[i], "CvarMpDmgHook");
+	}
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
 		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0", FCVAR_SERVER);
@@ -651,6 +667,15 @@ FormatTimeLeft(timeleft, output[], length) {
 		formatex(output, length, "%i:%02i", minutes, seconds);
 	else // seconds
 		formatex(output, length, "%i", seconds);
+}
+
+public CvarMpDmgHook(pcvar, const old_value[], const new_value[]) {
+	for (new i; i < sizeof gCvarAgDmgWeapons; i++) {
+		if (gCvarAgDmgWeapons[i] == pcvar) {
+			set_pcvar_string(gCvarMpDmgWeapons[i], new_value);
+			return;
+		}
+	}
 }
 
 // Ex: If you set mp_timelimit to the same value, this will not get executed
