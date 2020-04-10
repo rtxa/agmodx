@@ -159,6 +159,11 @@ new gCvarAllowVoteMap;
 new gCvarAllowVoteKick;
 new gCvarAllowVoteSetting;
 
+new gCvarVoteTimeLimitMax;
+new gCvarVoteTimeLimitMin;
+new gCvarVoteFragLimitMax;
+new gCvarVoteFragLimitMin;
+
 new gCvarVoteFailedTime;
 new gCvarVoteDuration;
 new gCvarVoteOldStyle;
@@ -251,6 +256,12 @@ public plugin_precache() {
 	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER | FCVAR_SPONLY);
+
+	// Limits for vote cvars
+	gCvarVoteTimeLimitMax = create_cvar("sv_ag_vote_mp_timelimit_high", "1440", FCVAR_SERVER | FCVAR_SPONLY); // one day
+	gCvarVoteTimeLimitMin = create_cvar("sv_ag_vote_mp_timelimit_low", "10", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarVoteFragLimitMax = create_cvar("sv_ag_vote_mp_fraglimit_high", "999", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarVoteFragLimitMin = create_cvar("sv_ag_vote_mp_fraglimit_low", "0", FCVAR_SERVER | FCVAR_SPONLY);
 
 	// Vote cvars
 	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15", FCVAR_SERVER | FCVAR_SPONLY, "", true, 0.0, true, 999.0);
@@ -1600,9 +1611,13 @@ public OnVoteTimeLimit(id, check, argc, arg1[], arg2[]) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
 		}
+
 		new num = str_to_num(arg2);
-		if (num < 0) {
-			console_print(id, "%l", "INVALID_NUMBER");
+		if (num > get_pcvar_num(gCvarVoteTimeLimitMax)) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MAX", get_pcvar_num(gCvarVoteTimeLimitMax));
+			return false;
+		} else if (num < get_pcvar_num(gCvarVoteTimeLimitMin)) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MIN", get_pcvar_num(gCvarVoteTimeLimitMin));
 			return false;
 		}
 	}
@@ -1741,6 +1756,15 @@ public OnVoteFragLimit(id, check, argc, arg1[], arg2[]) {
 
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
+			return false;
+		}
+
+		new num = str_to_num(arg2);
+		if (num > get_pcvar_num(gCvarVoteFragLimitMax)) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MAX", get_pcvar_num(gCvarVoteFragLimitMax));
+			return false;
+		} else if (num < get_pcvar_num(gCvarVoteFragLimitMin)) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MIN", get_pcvar_num(gCvarVoteFragLimitMin));
 			return false;
 		}
 	}
