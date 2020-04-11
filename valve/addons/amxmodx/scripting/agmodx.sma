@@ -99,10 +99,14 @@ new bool:gIsPause;
 
 new gGameModeName[32];
 
-// restore score system: array index
-#define SCORE_FRAGS 0
-#define SCORE_DEATHS 1
-new Trie:gTrieScoreAuthId; // handle where it saves all the authids of players playing a versus for rescore system...
+// Restore Score System
+// ========================
+// The dynamic array saves DataPacks inside in this way:
+// 1. authid
+// 2. ip
+// 3. frags
+// 4. deaths
+new Array:gRestoreScorePlayers;
 
 // ============= vote system ===============
 #define VOTE_YES 1
@@ -426,8 +430,8 @@ public plugin_init() {
 
 	// this saves score of players that're playing a match
 	// so if someone get disconnect by any reason, the score will be restored when he returns
-	gTrieScoreAuthId = TrieCreate();
-	
+	gRestoreScorePlayers = ArrayCreate();	
+
 	CreateVoteSystem();
 	InitAgTimer();
 	StartAgTimer();
@@ -468,9 +472,10 @@ public plugin_end() {
 	}
 	TrieIterDestroy(handle);
 	TrieDestroy(gTrieVoteList);
-	TrieDestroy(gTrieScoreAuthId);
 
 	ArrayDestroy(gAgCmdList);
+	ArrayDestroy(gRestoreScorePlayers);
+	
 }
 
 // Gamemode name that should be displayed in server browser and in splash with server settings data
@@ -480,12 +485,9 @@ public FwGameDescription() {
 }
 
 public client_putinserver(id) {
-	new authid[MAX_AUTHID_LENGTH];
-	get_user_authid(id, authid, charsmax(authid));
-
 	// restore score by authid
-	if (ScoreExists(authid))
-		set_task(1.0, "RestoreScore", id, authid, sizeof authid); // delay to avoid some scoreboard glitchs
+	if (RestoreScore_FindPlayer(id))
+		RestoreScore_RestorePlayer(id);
 	else if (gSendConnectingToSpec)
 		set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
 
@@ -494,17 +496,14 @@ public client_putinserver(id) {
 }
 
 public client_disconnected(id) {
-	new authid[MAX_AUTHID_LENGTH];
-	get_user_authid(id, authid, charsmax(authid));
-
 	remove_task(TASK_SENDTOSPEC + id);
 	remove_task(TASK_SENDVICTIMTOSPEC + id);
 
 	// save score by authid
-	if (gVersusStarted && ScoreExists(authid)) {
+	if (gVersusStarted && RestoreScore_FindPlayer(id)) {
 		new frags = get_user_frags(id);
 		new deaths = hl_get_user_deaths(id);
-		SaveScore(id, frags, deaths);
+		RestoreScore_SavePlayer(id, frags, deaths);
 		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
 		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
 	}
@@ -760,8 +759,8 @@ public StartVersus() {
 	// remove previous start match even if doesn't exist
 	remove_task(TASK_STARTVERSUS);
 
-	// clean list of authids to begin a new match
-	TrieClear(gTrieScoreAuthId);
+	// clear old list of players playing a match
+	RestoreScore_Clear();
 
 	// gamerules
 	gBlockCmdSpec = true;
@@ -780,7 +779,7 @@ public StartVersus() {
 		if (IsInWelcomeCam(player)) { // send to spec players in welcome cam 
 			hl_set_user_spectator(player);
 		} else if (!hl_get_user_spectator(player)) {
-			SaveScore(player);
+			RestoreScore_SavePlayer(player);
 		}
 		FreezePlayer(player);
 	}
@@ -802,7 +801,10 @@ public StartVersusCountdown() {
 		gBlockCmdKill = false;
 		gBlockPlayerSpawn = false;
 
-		TrieClear(gTrieScoreAuthId);
+		// little hack i did, to allow players that are gonna to play versus to spec
+		// i add them to the list of restore score
+		// i ahve to remove this hack
+		RestoreScore_Clear();
 
 		// message holds a lot of time to avoid flickering, so I remove it manually
 		ClearSyncHud(0, gHudShowMatch);
@@ -812,13 +814,11 @@ public StartVersusCountdown() {
 
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
-			if (!hl_get_user_spectator(player)) {
-				if (!IsInWelcomeCam(player)) {				
-					ResetScore(player);
-					SaveScore(player);
-					hl_user_spawn(player);
-					set_task(0.5, "ShowSettings", player);
-				}
+			if (!hl_get_user_spectator(player) && !IsInWelcomeCam(player)) {			
+				ResetScore(player);
+				RestoreScore_SavePlayer(player);
+				hl_user_spawn(player);
+				set_task(0.5, "ShowSettings", player);
 			} else {
 				FreezePlayer(player, false);
 			}
@@ -849,8 +849,8 @@ public StartVersusCountdown() {
 public AbortVersus() {
 	gVersusStarted = false;
 
-	// clear authids to prepare for the next match
-	TrieClear(gTrieScoreAuthId);
+	// clear old list of players playing a match
+	RestoreScore_Clear();
 
 	// remove start match hud
 	remove_task(TASK_STARTVERSUS);
@@ -1141,14 +1141,11 @@ ProcessCmdHelp(id, start_argindex, bool:do_search, const main_command[], const s
 
 
 public CmdSpectate(id) {
-	new authid[MAX_AUTHID_LENGTH];
-	get_user_authid(id, authid, charsmax(authid));
-
 	if (!hl_get_user_spectator(id)) // note: setting score while player is in spec will mess up scoreboard (bugfixed hl bug?)
 		ResetScore(id);
 
 	if (gBlockCmdSpec) {
-		if (!ScoreExists(authid)) // only players playing a match can spectate
+		if (!RestoreScore_FindPlayer(id)) // only players playing a match can spectate
 			return PLUGIN_HANDLED;
 	}
 
@@ -1399,12 +1396,13 @@ public AllowPlayer(id) {
 		return PLUGIN_HANDLED;
 
 	if (hl_get_user_spectator(id)) {
-		// create a key for this new guy so i can save his score when he gets disconnect...
-		SaveScore(id);
 
 		hl_set_user_spectator(id, false);
 
 		ResetScore(id);
+
+		// create a key for this new guy so i can save his score when he gets disconnect...
+		RestoreScore_SavePlayer(id);
 
 		client_print(0, print_console, "%l", "MATCH_ALLOW", id);
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, -1.0, 0, 0.0, 5.0); 
@@ -2641,40 +2639,93 @@ public CmdPauseAg(id) {
 }
 
 /*
-* Restore Score
+* Restore Score system for matchs
 */
-public bool:ScoreExists(const authid[]) {
-	return TrieKeyExists(gTrieScoreAuthId, authid);
-}
-
-// save score by authid
-SaveScore(id, frags = 0, deaths = 0) {
-	new authid[MAX_AUTHID_LENGTH], score[2];
+bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
+	new authid[MAX_AUTHID_LENGTH], ip[MAX_IP_LENGTH];
 
 	get_user_authid(id, authid, charsmax(authid));
+	get_user_ip(id, ip, charsmax(ip), .without_port = true);
 
-	score[SCORE_FRAGS] = frags;
-	score[SCORE_DEATHS] = deaths;
+	new buffer[64], DataPack:handle;
+	for (new i; i < ArraySize(gRestoreScorePlayers); i++) {
+		handle = ArrayGetCell(gRestoreScorePlayers, i);
 
-	TrieSetArray(gTrieScoreAuthId, authid, score, sizeof score);
-}
+		ResetPack(handle);
 
-public GetScore(const authid[], &frags, &deaths) {
-	new score[2];
-	TrieGetArray(gTrieScoreAuthId, authid, score, sizeof score);
+		// read authid
+		ReadPackString(handle, buffer, charsmax(buffer));
 
-	frags = score[SCORE_FRAGS];
-	deaths = score[SCORE_DEATHS];
-}
+		// if it's STEAM_ID_LAN, it's not safe, check by ip
+		if (equal(buffer, authid) && !equal(buffer, "STEAM_ID_LAN")) {
+			handle_player = handle;
+			return true;
+		}
 
-public RestoreScore(authid[], id) {	
-	new frags, deaths;
+		// read ip
+		ReadPackString(handle, buffer, charsmax(buffer));
 
-	if (ScoreExists(authid)) {
-		GetScore(authid, frags, deaths);
-		set_user_frags(id, frags);
-		hl_set_user_deaths(id, deaths);
+		if (equal(buffer, ip)) {
+			handle_player = handle;
+			return true;
+		}
 	}
+
+	return false;
+}
+
+RestoreScore_SavePlayer(id, frags = 0, deaths = 0) {
+	new DataPack:handle;
+
+	new playerExists = RestoreScore_FindPlayer(id, handle);
+
+	// if player already exists in the list, save it in the same handle
+	if (playerExists) {
+		ResetPack(handle);
+	} else { // then add a new one
+		handle = CreateDataPack();
+	}
+
+	new authid[MAX_AUTHID_LENGTH], ip[MAX_IP_LENGTH];
+	get_user_authid(id, authid, charsmax(authid));
+	get_user_ip(id, ip, charsmax(ip), .without_port = true);
+
+	WritePackString(handle, authid);
+	WritePackString(handle, ip);
+	WritePackCell(handle, frags);
+	WritePackCell(handle, deaths);
+
+	if (!playerExists)
+		ArrayPushCell(gRestoreScorePlayers, handle);
+}
+
+RestoreScore_GetSavedScore(id, &frags, &deaths) {
+	new DataPack:handle;
+	if (!RestoreScore_FindPlayer(id, handle))
+		return 0;
+
+	ResetPack(handle);
+
+	new buffer[64];
+
+	// leave cursor pos where score starts
+	ReadPackString(handle, buffer, charsmax(buffer));
+	ReadPackString(handle, buffer, charsmax(buffer));
+
+	frags = ReadPackCell(handle);
+	deaths = ReadPackCell(handle);
+
+	return 1;
+}
+
+RestoreScore_RestorePlayer(id) {	
+	new frags, deaths;
+	RestoreScore_GetSavedScore(id, frags, deaths);
+	hl_set_user_score(id, frags, deaths);
+}
+
+RestoreScore_Clear() {
+	ArrayClear(gRestoreScorePlayers);
 }
 
 ResetScore(id) {
