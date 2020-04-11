@@ -521,6 +521,10 @@ public PlayerPreSpawn(id) {
 }
 
 public PlayerPostSpawn(id) {
+	// ag clients needs this to allow them to bunnyhop
+	if (get_pcvar_bool(gCvarBunnyHop))
+		engfunc(EngFunc_SetPhysicsKeyValue, id, "bj", "1");
+
 	// restore score system
 	if (!get_ent_data(id, "CBasePlayer", "m_fGameHUDInitialized")) {
 		if (RestoreScore_FindPlayer(id)) {
