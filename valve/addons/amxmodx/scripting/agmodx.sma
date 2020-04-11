@@ -484,12 +484,10 @@ public FwGameDescription() {
 	return FMRES_SUPERCEDE;
 }
 
-public client_putinserver(id) {
-	// restore score by authid
-	if (RestoreScore_FindPlayer(id))
-		RestoreScore_RestorePlayer(id);
-	else if (gSendConnectingToSpec)
+public client_authorized(id) {
+	if (gSendConnectingToSpec && !RestoreScore_FindPlayer(id)) {
 		set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
+	}
 
 	set_task(3.0, "ShowSettings", id);
 	set_task(25.0, "DisplayInfo", id);
@@ -498,12 +496,16 @@ public client_putinserver(id) {
 public client_disconnected(id) {
 	remove_task(TASK_SENDTOSPEC + id);
 	remove_task(TASK_SENDVICTIMTOSPEC + id);
+	remove_task(id);
 
-	// save score by authid
+	// save player score
 	if (gVersusStarted && RestoreScore_FindPlayer(id)) {
 		new frags = get_user_frags(id);
 		new deaths = hl_get_user_deaths(id);
+
 		RestoreScore_SavePlayer(id, frags, deaths);
+
+		// log
 		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
 		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
 	}
@@ -519,6 +521,14 @@ public PlayerPreSpawn(id) {
 }
 
 public PlayerPostSpawn(id) {
+	// restore score system
+	if (!get_ent_data(id, "CBasePlayer", "m_fGameHUDInitialized")) {
+		if (RestoreScore_FindPlayer(id)) {
+			RestoreScore_RestorePlayer(id);
+			set_task(0.1, "PrintScoreRestored", id);
+		}
+	}
+
 	// when player joins the server for the first time, he spawns dead...
 	if (is_user_alive(id)) {
 		// ignore gamemode cvars if map has a game_player_equip
@@ -531,6 +541,10 @@ public PlayerPostSpawn(id) {
 
 	// when he spawn, the hud gets reset so allow him to show settings again
 	remove_task(id + TASK_SHOWSETTINGS);
+}
+
+public PrintScoreRestored(id) {
+	client_print(id, print_center, "%l", "SCORE_RESTORED");
 }
 
 public client_kill() {
