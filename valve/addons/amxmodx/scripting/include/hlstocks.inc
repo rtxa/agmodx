@@ -22,7 +22,8 @@
 * Version 1.6 (date: 03.03.2020) Author: rtxa
 * - Get back HL_MAX_TEAMNAME_LENGTH to keep backward compatibility
 * - Fixed typos in some functions.
-*
+* Version 1.7 (date: 10.04.2020)
+* - Fixed typo in hl_set_user_score()
 * http://aghl.ru/forum/ - Russian Half-Life and Adrenaline Gamer Community
 *
 */
@@ -119,7 +120,7 @@ stock hl_set_user_deaths(client, deaths)
 */
 stock hl_set_user_score(client, frags, deaths)
 {
-	set_pev(id, pev_frags, float(frags));
+	set_pev(client, pev_frags, float(frags));
 	set_ent_data(client, "CBasePlayer", "m_iDeaths", deaths);
 
 	static ScoreInfo;
