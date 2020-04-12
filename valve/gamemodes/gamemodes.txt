@@ -1,76 +1,109 @@
 Here are the gamemode configuration files.
 Feel free to add your own gamemode - just copy paste from one the existing ones.
+
 The first line specifies what game name that should be displayed in server browser and in splash with server settings data.
 The second line is a help text displayed when someone types help in console.
 
--- New in ag mod x --
-Some cvars were renamed to be more descriptive or removed.
+Gamemode example with hints
+============================
+//AG TDM
+//Team Death Match mode (FF1, WS0).
 
-Set the game type, this will be used inside of ag mod x to do some actions for special modes (arena, lts, etc).
-sv_ag_gametype			"arcade"
+// Set the game type, this will be used inside of ag mod x to do some actions for special modes (arena, lts, etc).
+sv_ag_gametype			""
+sv_ag_pure 			    0
 
-This set the health, ammo, and LJ with which player spawns.
-sv_ag_start_health			100
-sv_ag_start_armor			0
-sv_ag_start_longjump		0-1
+mp_teamlist				"scientist;barney"
+mp_teamplay				1
+mp_friendlyfire			1
+mp_forcerespawn			0
+mp_weaponstay			0
+mp_timelimit			20
+mp_fraglimit			0
+mp_falldamage			0
 
-This set the weapons with which player spawns.
-sv_ag_start_357			0-1
-sv_ag_start_9mmar		0-1
-sv_ag_start_9mmhandgun	0-1
-sv_ag_start_crossbow	0-1
-sv_ag_start_crowbar		0-1
-sv_ag_start_egon		0-1
-sv_ag_start_gauss		0-1
-sv_ag_start_hgrenade	0-1
-sv_ag_start_hornetgun	0-1
-sv_ag_start_rpg			0-1
-sv_ag_start_satchel		0-1
-sv_ag_start_shotgun		0-1
-sv_ag_start_snark		0-1
-sv_ag_start_tripmine	0-1
+sv_ag_lj_timer			0
+sv_ag_wallgauss			1
+sv_ag_headshot			3
+sv_ag_blastradius		1
+sv_ag_oldphysics		1
+sv_ag_spawn_volume		1
 
-This set the ammo of weapons with which player spawns.
-sv_ag_start_ammo_shotgun	0
-sv_ag_start_ammo_9mm		0
-sv_ag_start_ammo_m203		0
-sv_ag_start_ammo_357		0
-sv_ag_start_ammo_gauss		0
-sv_ag_start_ammo_rpg		0
-sv_ag_start_ammo_crossbow	0
-sv_ag_start_ammo_tripmine	0
-sv_ag_start_ammo_satchel	0
-sv_ag_start_ammo_hgrenade	0
-sv_ag_start_ammo_snark		0
-
-This remove the weapons from the map.
-sv_ag_ban_357			0-1
-sv_ag_ban_9mmar			0-1
-sv_ag_ban_9mmhandgun	0-1
-sv_ag_ban_crossbow		0-1
+// removes weapons from the map
 sv_ag_ban_crowbar		0-1
-sv_ag_ban_egon			0-1
-sv_ag_ban_gauss			0-1
-sv_ag_ban_hgrenade	    0-1
-sv_ag_ban_hornetgun		0-1
-sv_ag_ban_rpg			0-1
-sv_ag_ban_satchel		0-1
+sv_ag_ban_glock			0-1
+sv_ag_ban_357			0-1
+sv_ag_ban_mp5			0-1
 sv_ag_ban_shotgun		0-1
-sv_ag_ban_snark			0-1
+sv_ag_ban_crossbow		0-1
+sv_ag_ban_rpg			0-1
+sv_ag_ban_gauss			0-1
+sv_ag_ban_egon			0-1
+sv_ag_ban_hornet		0-1
+sv_ag_ban_hgrenade		0-1
+sv_ag_ban_satchel		0-1
 sv_ag_ban_tripmine		0-1
+sv_ag_ban_snark			0-1
 
-This removes the ammunition from the map.
-sv_ag_ban_ammo_m203		0-1
-sv_ag_ban_ammo_9mm		0-1
-sv_ag_ban_ammo_shotgun	0-1
-sv_ag_ban_ammo_gauss	0-1
-sv_ag_ban_ammo_crossbow	0-1
-sv_ag_ban_ammo_rpg		0-1
-sv_ag_ban_ammo_357		0-1
+// removes ammunition from the map
+sv_ag_ban_9mmar			0-1   // removes all 9mm ammo type from map
+sv_ag_ban_m203			0-1
+sv_ag_ban_bockshot		0-1
+sv_ag_ban_uranium		0-1
+sv_ag_ban_bolts			0-1
+sv_ag_ban_rockets		0-1
+sv_ag_ban_357ammo       0-1
 
-This remove the items and block the chargers from the map.
+// removes items and block the chargers from the map
+sv_ag_ban_health		0-1   // removes health kits from map
+sv_ag_ban_armour		0-1   // removes batteries from map
+sv_ag_ban_recharg		0-1   // disables health and hev chargers
 sv_ag_ban_longjump		0-1
-sv_ag_ban_battery		0-1
-sv_ag_ban_healthkit		0-1
-sv_ag_ban_healthcharger	0-1
-sv_ag_ban_hevcharger	0-1
+
+// weapons to give to the player when he spawns
+sv_ag_start_crowbar		0-1
+sv_ag_start_glock		0-1
+sv_ag_start_357			0-1
+sv_ag_start_mp5			0-1
+sv_ag_start_shotgun		0-1
+sv_ag_start_crossbow	0-1
+sv_ag_start_rpg			0-1
+sv_ag_start_gauss		0-1
+sv_ag_start_egon		0-1
+sv_ag_start_hornet		0-1
+sv_ag_start_hgrenade	0-10
+sv_ag_start_satchel		0-5
+sv_ag_start_tripmine	0-5
+sv_ag_start_snark		0-15
+
+// ammo to give to the player when he spawns
+sv_ag_start_9mmar		0-255  // sets 9mm backpack ammo on player spawn
+sv_ag_start_m203		0-10
+sv_ag_start_bockshot	0-125
+sv_ag_start_uranium		0-100
+sv_ag_start_bolts		0-50
+sv_ag_start_rockets		0-5
+sv_ag_start_357ammo		0-36
+
+// sets health, armor, and LJ to the player when he spawns
+sv_ag_start_armour		0-100
+sv_ag_start_health		0-100
+sv_ag_start_longjump	0-1
+
+// sets damage of weapons
+sv_ag_dmg_crowbar       25
+sv_ag_dmg_glock         12
+sv_ag_dmg_357           40
+sv_ag_dmg_mp5           12
+sv_ag_dmg_shotgun	    20
+sv_ag_dmg_crossbow		120 // using scope
+sv_ag_dmg_bolts         40  // not using scope
+sv_ag_dmg_rpg           120
+sv_ag_dmg_gauss         20 
+sv_ag_dmg_egon_wide     20  
+sv_ag_dmg_egon_narrow   10  // ignored, only wide is used in multiplayer
+sv_ag_dmg_hornet        10
+sv_ag_dmg_hgrenade      100
+sv_ag_dmg_satchel       120
+sv_ag_dmg_tripmine      150
+sv_ag_dmg_m203          100
