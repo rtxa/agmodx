@@ -517,12 +517,18 @@ public client_disconnected(id) {
 }
 
 public PlayerPreSpawn(id) {
-	// if player has to spec, don't let him spawn...
-	if (task_exists(TASK_SENDVICTIMTOSPEC + id) || gBlockPlayerSpawn)
+	// never block the first spawn or it will cause some glitchs
+	if (!get_ent_data(id, "CBasePlayer", "m_fGameHUDInitialized"))
+		return HAM_IGNORED;
+
+ 	if (gBlockPlayerSpawn)
+	 	return HAM_SUPERCEDE;
+
+	if (task_exists(TASK_SENDVICTIMTOSPEC + id)) 
 		return HAM_SUPERCEDE;
+
 	return HAM_IGNORED;
 }
-
 public PlayerPostSpawn(id) {
 	// ag clients needs this to allow them to bunnyhop
 	if (get_pcvar_bool(gCvarBunnyHop))
