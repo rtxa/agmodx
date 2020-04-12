@@ -57,9 +57,7 @@ public plugin_precache() {
 public plugin_init() {
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Pre");
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre");
-	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");
-	RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
-
+	
 	register_clcmd("drop", "CmdDrop");
 	register_clcmd("spectate", "CmdSpectate");
 
@@ -89,11 +87,6 @@ public CmdDrop() {
 public CmdSpectate() {
 	// notready function has to be added
 	return PLUGIN_HANDLED;
-}
-
-public FwChargersUse() {
-	// block chargers
-	return HAM_SUPERCEDE;
 }
 
 public OnPlayerSpawn_Pre(id) {

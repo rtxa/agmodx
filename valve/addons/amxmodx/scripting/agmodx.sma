@@ -207,6 +207,7 @@ new gCvarBanAmmo[SIZE_AMMOENTS];
 new gCvarBanBattery;
 new gCvarBanHealthKit;
 new gCvarBanLongJump;
+new gCvarBanChargers;
 
 new const gWeaponClass[][] = {
 	"weapon_357",
@@ -282,6 +283,7 @@ public plugin_precache() {
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
 	gCvarStartArmor = create_cvar("sv_ag_start_armour", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
+	gCvarBanChargers = create_cvar("sv_ag_ban_recharg", "0");
 
 	new value[32];
 
@@ -430,13 +432,23 @@ public plugin_init() {
 
 	// this saves score of players that're playing a match
 	// so if someone get disconnect by any reason, the score will be restored when he returns
-	gRestoreScorePlayers = ArrayCreate();	
+	gRestoreScorePlayers = ArrayCreate();
+
+	// hook chargers to block them in case the gamemodes requires it
+	RegisterHam(Ham_Use, "func_healthcharger", "FwChargersUse");
+	RegisterHam(Ham_Use, "func_recharge", "FwChargersUse");
 
 	CreateVoteSystem();
 	InitAgTimer();
 	StartAgTimer();
 	LoadGameMode();
 	StartMode();
+}
+
+public FwChargersUse() {
+	if (get_pcvar_bool(gCvarBanChargers))
+		return HAM_SUPERCEDE;
+	return HAM_IGNORED;
 }
 
 public FwAllowLagCompensation() {
