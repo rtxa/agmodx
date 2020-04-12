@@ -789,16 +789,14 @@ public StartVersus() {
 	gIsSuddenDeath = false;
 
 	// reset score and freeze players who are going to play versus
-	new players[MAX_PLAYERS], numPlayers, player;
+	new players[MAX_PLAYERS], numPlayers;
 	get_players(players, numPlayers);
 
+	new player;
 	for (new i; i < numPlayers; i++) {
 		player = players[i];
-		if (IsInWelcomeCam(player)) { // send to spec players in welcome cam 
-			hl_set_user_spectator(player);
-		} else if (!hl_get_user_spectator(player)) {
-			RestoreScore_SavePlayer(player);
-		}
+		// save his score even if he's not gonna play the match, just in case...
+		RestoreScore_SavePlayer(player);
 		FreezePlayer(player);
 	}
 
@@ -816,30 +814,31 @@ public StartVersusCountdown() {
 		gVersusStarted = true;
 
 		gBlockCmdDrop = false;
-		gBlockCmdKill = false;
 		gBlockPlayerSpawn = false;
 
-		// little hack i did, to allow players that are gonna to play versus to spec
-		// i add them to the list of restore score
-		// i ahve to remove this hack
 		RestoreScore_Clear();
 
-		// message holds a lot of time to avoid flickering, so I remove it manually
+		// message holds for a long time to avoid flickering, remove it when the countdown finishes
 		ClearSyncHud(0, gHudShowMatch);
 
-		new players[MAX_PLAYERS], numPlayers, player;
+		new players[MAX_PLAYERS], numPlayers;
 		get_players(players, numPlayers);
 
+		new player;
 		for (new i; i < numPlayers; i++) {
 			player = players[i];
-			if (!hl_get_user_spectator(player) && !IsInWelcomeCam(player)) {			
-				ResetScore(player);
-				RestoreScore_SavePlayer(player);
-				hl_user_spawn(player);
-				set_task(0.5, "ShowSettings", player);
-			} else {
-				FreezePlayer(player, false);
-			}
+
+			// unfreeze all players
+			FreezePlayer(player, false);
+
+			if (hl_get_user_spectator(player))			
+				continue;
+
+			ResetScore(player);
+			RestoreScore_SavePlayer(player);
+
+			hl_user_spawn(player);
+			set_task(0.5, "ShowSettings", player);
 		}
 
 		// it's seems that startversus is in the same frame when it's called, so it still being called
@@ -2662,7 +2661,6 @@ public CmdPauseAg(id) {
 bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
 	new authid[MAX_AUTHID_LENGTH], ip[MAX_IP_LENGTH];
 
-	get_user_authid(id, authid, charsmax(authid));
 	get_user_ip(id, ip, charsmax(ip), .without_port = true);
 
 	new buffer[64], DataPack:handle;
