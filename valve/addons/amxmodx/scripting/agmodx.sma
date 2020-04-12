@@ -484,9 +484,12 @@ public FwGameDescription() {
 	return FMRES_SUPERCEDE;
 }
 
-public client_authorized(id) {
-	if (gSendConnectingToSpec && !RestoreScore_FindPlayer(id)) {
-		set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
+public client_putinserver(id) {
+	if (gSendConnectingToSpec) {
+		// warning: authid checking can fail because client_authorized() can be called after this...
+		if (!gVersusStarted || !RestoreScore_FindPlayer(id)) {
+			set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
+		}
 	}
 
 	set_task(3.0, "ShowSettings", id);
@@ -2660,6 +2663,9 @@ public CmdPauseAg(id) {
 */
 bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
 	new authid[MAX_AUTHID_LENGTH], ip[MAX_IP_LENGTH];
+	
+	if (!get_user_authid(id, authid, charsmax(authid)))
+		log_amx("Warning: Trying to get authid from a player not authorized yet. Id: %d", id);
 
 	get_user_ip(id, ip, charsmax(ip), .without_port = true);
 
