@@ -32,14 +32,14 @@ enum _:AgStartWeapons {
 // cvars names
 stock const gAgStartWeapons[SIZE_WEAPONS][] = {
 	"sv_ag_start_357",
-	"sv_ag_start_9mmar",
-	"sv_ag_start_9mmhandgun",
+	"sv_ag_start_mp5",
+	"sv_ag_start_glock",
 	"sv_ag_start_crossbow",
 	"sv_ag_start_crowbar",
 	"sv_ag_start_gauss",
 	"sv_ag_start_egon",
 	"sv_ag_start_hgrenade",
-	"sv_ag_start_hornetgun",
+	"sv_ag_start_hornet",
 	"sv_ag_start_rpg",
 	"sv_ag_start_satchel",
 	"sv_ag_start_shotgun",
@@ -49,30 +49,30 @@ stock const gAgStartWeapons[SIZE_WEAPONS][] = {
 
 // cvars names
 stock const gAgStartAmmo[SIZE_AMMO][] = {
-	"sv_ag_start_ammo_shotgun",
-	"sv_ag_start_ammo_9mm",
-	"sv_ag_start_ammo_m203",
-	"sv_ag_start_ammo_357",
-	"sv_ag_start_ammo_gauss",
-	"sv_ag_start_ammo_rpg",
-	"sv_ag_start_ammo_crossbow",
-	"sv_ag_start_ammo_tripmine",
-	"sv_ag_start_ammo_satchel",
-	"sv_ag_start_ammo_hgrenade",
-	"sv_ag_start_ammo_snark",
+	"sv_ag_start_bockshot",
+	"sv_ag_start_9mmar",
+	"sv_ag_start_m203",
+	"sv_ag_start_357ammo",
+	"sv_ag_start_uranium",
+	"sv_ag_start_rockets",
+	"sv_ag_start_bolts",
+	"sv_ag_start_tripmine", // they're actually weapons, but we set here the amount to give
+	"sv_ag_start_satchel",
+	"sv_ag_start_hgrenade",
+	"sv_ag_start_snark",
 };
 
 // cvars names
 stock const gAgBanWeapons[SIZE_BANWEAPONS][] = {
 	"sv_ag_ban_357",
-	"sv_ag_ban_9mmar",
-	"sv_ag_ban_9mmhandgun",
+	"sv_ag_ban_mp5",
+	"sv_ag_ban_glock",
 	"sv_ag_ban_crossbow",
 	"sv_ag_ban_crowbar",
 	"sv_ag_ban_gauss",
 	"sv_ag_ban_egon",
 	"sv_ag_ban_hgrenade",
-	"sv_ag_ban_hornetgun",
+	"sv_ag_ban_hornet",
 	"sv_ag_ban_rpg",
 	"sv_ag_ban_satchel",
 	"sv_ag_ban_shotgun",
@@ -82,15 +82,15 @@ stock const gAgBanWeapons[SIZE_BANWEAPONS][] = {
 
 // cvars names
 stock const gAgBanAmmo[SIZE_AMMOENTS][] = {
-	"sv_ag_ban_ammo_357",		
-	"sv_ag_ban_ammo_9mm",
-	"sv_ag_ban_ammo_9mm",	
-	"sv_ag_ban_ammo_9mm",		
-	"sv_ag_ban_ammo_m203",	
-	"sv_ag_ban_ammo_crossbow",	
-	"sv_ag_ban_ammo_gauss",	
-	"sv_ag_ban_ammo_rpg",		
-	"sv_ag_ban_ammo_shotgun"	
+	"sv_ag_ban_357ammo",		
+	"sv_ag_ban_9mmar",
+	"sv_ag_ban_9mmar",	
+	"sv_ag_ban_9mmar",		
+	"sv_ag_ban_m203",	
+	"sv_ag_ban_bolts",	
+	"sv_ag_ban_uranium",	
+	"sv_ag_ban_rockets",		
+	"sv_ag_ban_bockshot" // actually is buckshot, but it's keeped for compatibility reasons
 };
 
 // countdown sounds

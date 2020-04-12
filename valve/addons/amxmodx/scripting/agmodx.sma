@@ -276,11 +276,11 @@ public plugin_precache() {
 	gCvarAllowedGameModes = create_cvar("sv_ag_allowed_gamemodes", "", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
 	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarBanHealthKit = create_cvar("sv_ag_ban_healthkit", "0");
-	gCvarBanBattery = create_cvar("sv_ag_ban_battery", "0");
+	gCvarBanHealthKit = create_cvar("sv_ag_ban_health", "0");
+	gCvarBanBattery = create_cvar("sv_ag_ban_armour", "0");
 	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
-	gCvarStartArmor = create_cvar("sv_ag_start_armor", "0");
+	gCvarStartArmor = create_cvar("sv_ag_start_armour", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
 
 	new value[32];
@@ -529,6 +529,7 @@ public PlayerPreSpawn(id) {
 
 	return HAM_IGNORED;
 }
+
 public PlayerPostSpawn(id) {
 	// ag clients needs this to allow them to bunnyhop
 	if (get_pcvar_bool(gCvarBunnyHop))
