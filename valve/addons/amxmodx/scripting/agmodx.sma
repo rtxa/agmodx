@@ -514,18 +514,24 @@ public client_disconnected(id) {
 	remove_task(id);
 
 	// save player score
-	if (gVersusStarted && RestoreScore_FindPlayer(id)) {
+	if (gVersusStarted) {
+		if (!RestoreScore_FindPlayer(id))
+			return;
+
 		new frags = get_user_frags(id);
 		new deaths = hl_get_user_deaths(id);
-
-		RestoreScore_SavePlayer(id, frags, deaths);
-
+		
 		// log
 		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
 		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
-	}
 
-	return PLUGIN_HANDLED;
+		// give a chance to the player to recover his score
+		if (hl_get_user_spectator(id)) { 
+			return;
+		} else {
+			RestoreScore_SavePlayer(id, frags, deaths);
+		}
+	}
 }
 
 public PlayerPreSpawn(id) {
@@ -1180,8 +1186,13 @@ ProcessCmdHelp(id, start_argindex, bool:do_search, const main_command[], const s
 
 
 public CmdSpectate(id) {
-	if (!hl_get_user_spectator(id)) // note: setting score while player is in spec will mess up scoreboard (bugfixed hl bug?)
+	if (!hl_get_user_spectator(id)) {
+		// saves his score before go to spec in case he entered by accident
+		if (RestoreScore_FindPlayer(id)) {
+			RestoreScore_SavePlayer(id, get_user_frags(id), hl_get_user_deaths(id));
+		}
 		ResetScore(id);
+	} 
 
 	if (gBlockCmdSpec) {
 		if (!RestoreScore_FindPlayer(id)) // only players playing a match can spectate
