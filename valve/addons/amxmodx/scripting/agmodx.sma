@@ -154,6 +154,7 @@ new gCvarGameMode;
 new gCvarGameType;
 new gCvarHudColor;
 new gCvarSpecTalk;
+new gCvarMaxSpectators;
 
 new gCvarAllowVote;
 new gCvarAllowVoteGameMode;
@@ -249,6 +250,8 @@ public plugin_precache() {
 	// Chat cvar
 	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER | FCVAR_SPONLY);
 
+	gCvarMaxSpectators = create_cvar("sv_ag_max_spectators", "10", FCVAR_SERVER | FCVAR_SPONLY);
+	
 	// Agstart cvars
 	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
 	gCvarAgStartAllowUnlimited = create_cvar("sv_ag_start_allowunlimited", "0", FCVAR_SERVER); // block start versus with unlimited time
@@ -497,6 +500,15 @@ public FwGameDescription() {
 }
 
 public client_putinserver(id) {
+	if (gVersusStarted) {
+		new numSpecs = CountSpecs();
+		if (numSpecs >= get_pcvar_num(gCvarMaxSpectators)) {
+			if (!is_user_admin(id) || !RestoreScore_FindPlayer(id)) {
+				server_cmd("kick #%d ^"%s^"", get_user_userid(id), "%l", "KICK_MAXSPECTATORS", get_pcvar_num(gCvarMaxSpectators));		
+			}
+		}
+	}
+
 	if (gSendConnectingToSpec) {
 		// warning: authid checking can fail because client_authorized() can be called after this...
 		if (!gVersusStarted || !RestoreScore_FindPlayer(id)) {

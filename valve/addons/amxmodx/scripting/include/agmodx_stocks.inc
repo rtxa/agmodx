@@ -270,3 +270,13 @@ stock DisableVote(const name[], const callback[]) {
 	ag_vote_remove(name);
 	ag_vote_add(name, callback);
 }
+
+stock CountSpecs() {
+	new numSpecs;
+	// count specs
+	for (new i = 1; i <= MaxClients; i++) {
+		if (is_user_connected(i) && hl_get_user_spectator(i))
+			numSpecs++;
+	}
+	return numSpecs;
+}
