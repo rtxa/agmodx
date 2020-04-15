@@ -840,9 +840,6 @@ public StartVersus() {
 		FreezePlayer(player);
 	}
 
-	// Reset map
-	ResetMap();
-
 	gStartVersusTime = 9;
 	StartVersusCountdown();
 }
@@ -879,6 +876,8 @@ public StartVersusCountdown() {
 
 			hl_user_spawn(player);
 			set_task(0.5, "ShowSettings", player);
+
+			ResetMap();
 		}
 
 		// it's seems that startversus is in the same frame when it's called, so it still being called
@@ -941,10 +940,8 @@ FreezePlayer(id, bool:freeze=true) {
 	new flags = pev(id, pev_flags);
 	if (freeze) {
 		set_pev(id, pev_flags, flags | FL_FROZEN);
-		set_pev(id, pev_solid, SOLID_NOT); // this will block weapon pick up
 	} else {
 		set_pev(id, pev_flags, flags & ~FL_FROZEN);
-		set_pev(id, pev_solid, SOLID_BBOX);
 	}
 }
 
