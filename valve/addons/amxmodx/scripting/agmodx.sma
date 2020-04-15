@@ -2277,6 +2277,7 @@ public VoteThink() {
 	if (time > gVoteEndTime) {
 		gVoteIsRunning = false;
 		
+		gVoteDisplayEndTime = time + 3.0; // add 3 more seconds to show vote was denied or accepted
 		gVoteOption = VOTE_DENIED;
 		DenyVote();
 
