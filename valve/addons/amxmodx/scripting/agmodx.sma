@@ -874,7 +874,14 @@ public StartVersusCountdown() {
 			ResetScore(player);
 			RestoreScore_SavePlayer(player);
 
-			hl_user_spawn(player);
+			// remove him from welcomecam
+			if (IsInWelcomeCam(player)) {
+				set_ent_data_float(player, "CBaseMonster", "m_flNextAttack", 0.0);
+				set_pev(player, pev_button, pev(player, pev_button) | IN_ATTACK);
+				ExecuteHam(Ham_Player_PreThink, player);
+			} else {
+				hl_user_spawn(player);
+			}
 			set_task(0.5, "ShowSettings", player);
 
 			ResetMap();
