@@ -884,9 +884,10 @@ public StartVersusCountdown() {
 			}
 			set_task(0.5, "ShowSettings", player);
 
-			ResetMap();
 		}
 
+		ResetMap();
+		
 		// it's seems that startversus is in the same frame when it's called, so it still being called
 		remove_task(TASK_STARTVERSUS);
 
