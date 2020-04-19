@@ -627,11 +627,12 @@ public CmdTimeLeft(id) {
 * AG Timer System
 */
 public InitAgTimer() {
-	// from now, i'm going to use my own timeleft and timelimit
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
-
-	// set mp_timelimit always to empty (this way i can always track changes) and don't let anyone modify it.
-	set_pcvar_string(gCvarTimeLimit, "");
+	
+	// from now, i'm gonna use my own timer
+	// by-pass timelimit from gamerules by setting it to unlimited time
+	// add an unprintable character to keep the unlimited time
+	set_pcvar_string(gCvarTimeLimit, fmt("%c%d", 2, gTimeLimit)); 
 	gHookCvarTimeLimit = hook_cvar_change(gCvarTimeLimit, "CvarTimeLimitHook");
 }
 
@@ -786,8 +787,8 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 
 	StartAgTimer();
 
-	// always leave it empty, so players can't change the cvar value and finish the map (go to intermission mode) by accident...	
-	set_pcvar_string(pcvar, ""); 
+	// add an unprintable character to keep the unlimited time and to able to track cvar changes
+	set_pcvar_string(pcvar, fmt("%c%d", 2, gTimeLimit)); 
 
 	enable_cvar_hook(gHookCvarTimeLimit);
 }
