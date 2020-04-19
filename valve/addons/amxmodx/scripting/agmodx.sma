@@ -771,7 +771,7 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 	// i disable the hook to avoid recursion (check cvars.inc)
 	disable_cvar_hook(gHookCvarTimeLimit);
 	
-	new timeLimit = str_to_num(new_value);
+	new timeLimit = clamp(str_to_num(new_value), 0);
 
 	if (timeLimit == 0) {
 		if (gVersusStarted) { // a match with unlimited time doesn't makes sense, we'll never get a winner
