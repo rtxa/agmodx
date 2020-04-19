@@ -766,29 +766,23 @@ public CvarMpDmgHook(pcvar, const old_value[], const new_value[]) {
 	}
 }
 
-// Ex: If you set mp_timelimit to the same value, this will not get executed
 public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
-	// i disable the hook to avoid recursion (check cvars.inc)
+	// disable hook to avoid recursion
 	disable_cvar_hook(gHookCvarTimeLimit);
 	
 	new timeLimit = clamp(str_to_num(new_value), 0);
 
-	if (timeLimit == 0) {
-		if (gVersusStarted) { // a match with unlimited time doesn't makes sense, we'll never get a winner
-			client_print(0, print_center, "%l", "MATCH_DENY_CHANGEUNLIMITED");
-		} else {
-			gTimeLeft = 0;
-			gTimeLimit = timeLimit;
-		}
+	// a match with unlimited time doesn't makes sense, we'll never get a winner
+	if (timeLimit == 0 && gVersusStarted) {
+		client_print(0, print_center, "%l", "MATCH_DENY_CHANGEUNLIMITED");
 	} else {
-		gTimeLeft =  timeLimit * 60;
 		gTimeLimit = timeLimit;
+
+		StartAgTimer();
+
+		// add an unprintable character to keep the unlimited time and to able to track cvar changes
+		set_pcvar_string(pcvar, fmt("%c%d", 2, gTimeLimit)); 
 	}
-
-	StartAgTimer();
-
-	// add an unprintable character to keep the unlimited time and to able to track cvar changes
-	set_pcvar_string(pcvar, fmt("%c%d", 2, gTimeLimit)); 
 
 	enable_cvar_hook(gHookCvarTimeLimit);
 }
