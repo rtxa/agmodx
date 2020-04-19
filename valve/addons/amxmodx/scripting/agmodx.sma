@@ -57,8 +57,6 @@ new gNumLocations;
 // Game player equip
 new bool:gGamePlayerEquipExists;
 
-#define TIMELEFT_SETUNLIMITED -1
-
 // timeleft / timelimit system
 new gTimeLeft; // if timeleft is set to -1, it means unlimited time
 new gTimeLimit;
@@ -641,7 +639,7 @@ public InitAgTimer() {
 
 StartAgTimer() {
 	remove_task(TASK_AGTIMER);
-	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
+	gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : 0;
 	if (CheckAgTimer()) {
 		ShowAgTimer();
 		set_task_ex(1.0, "AgTimerThink", TASK_AGTIMER, .flags = SetTask_Repeat);
@@ -660,7 +658,7 @@ CheckAgTimer() {
 		return false;
 	}
 
-	if (gTimeLeft == 0) {
+	if (gTimeLeft == 0 && gTimeLimit != 0) {
 		UpdateTeamScores(gTeamsScore, gNumTeams);
 		if (gVersusStarted && IsATieBreakNeeded(gTeamsScore, gNumTeams)) {
 			gIsSuddenDeath = true;
@@ -681,37 +679,31 @@ public ShowAgTimer() {
 
 	new timerText[128];
 
-	// sudden death
-	if (gTimeLeft <= 0 && gIsSuddenDeath) {
+	// unlimited time
+	if (gTimeLimit == 0) {
+		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01); // flicks the hud with out this, maybe is a bug
+		ShowSyncHudMsg(0, gHudShowAgTimer, "%l", "TIMER_UNLIMITED");
+		return;
+	} 
+
+	// set color red for sudden death or when time is almost out
+	if (gTimeLeft < 60) { 
 		r = 255; 
 		g = 50;
-		b = 50;
+		b = 50; 
+	}
 
+	// sudden death
+	if (gIsSuddenDeath && gTimeLeft <= 0) {
 		FormatTimeLeft(abs(gTimeLeft), timerText, charsmax(timerText));
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
 		ShowSyncHudMsg(0, gHudShowAgTimer, "%s^n%l", timerText, "SUDDEN_DEATH");
-
-		return;
-	}
-
 	// normal behaviour
-	if (gTimeLeft > 0) { 
-		if (gTimeLeft < 60) { // set red color
-			r = 255; 
-			g = 50;
-			b = 50; 
-		}
-
+	} else if (gTimeLeft > 0) {
 		FormatTimeLeft(gTimeLeft, timerText, charsmax(timerText));
-
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01);
 		ShowSyncHudMsg(0, gHudShowAgTimer, timerText);
-	} else { // unlimited time
-		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01); // flicks the hud with out this, maybe is a bug
-		ShowSyncHudMsg(0, gHudShowAgTimer, "%l", "TIMER_UNLIMITED");
 	}
-
-	return;
 }
 
 FormatTimeLeft(timeleft, output[], length) {
@@ -786,7 +778,7 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 		if (gVersusStarted && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // block start versus with unlimited time
 			client_print(0, print_center, "%l", "MATCH_DENY_CHANGEUNLIMITED");
 		} else {
-			gTimeLeft = TIMELEFT_SETUNLIMITED;
+			gTimeLeft = 0;
 			gTimeLimit = timeLimit;
 		}
 	} else {
@@ -887,7 +879,7 @@ public StartVersusCountdown() {
 		}
 
 		ResetMap();
-		
+
 		// it's seems that startversus is in the same frame when it's called, so it still being called
 		remove_task(TASK_STARTVERSUS);
 
@@ -929,7 +921,7 @@ public AbortVersus() {
 
 	// restore timeleft according to timelimit
 	if (gIsSuddenDeath) {
-		gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : TIMELEFT_SETUNLIMITED;
+		gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : 0;
 	}
 
 	new players[32], numPlayers, player;
