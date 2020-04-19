@@ -172,7 +172,6 @@ new gCvarVoteDuration;
 new gCvarVoteOldStyle;
 
 new gCvarAgStartMinPlayers;
-new gCvarAgStartAllowUnlimited;
 
 new gCvarAmxNextMap;
 
@@ -252,7 +251,6 @@ public plugin_precache() {
 	
 	// Agstart cvars
 	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
-	gCvarAgStartAllowUnlimited = create_cvar("sv_ag_start_allowunlimited", "0", FCVAR_SERVER); // block start versus with unlimited time
 	
 	// Allowed vote cvars
 	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER | FCVAR_SPONLY);
@@ -775,7 +773,7 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 	new timeLimit = str_to_num(new_value);
 
 	if (timeLimit == 0) {
-		if (gVersusStarted && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // block start versus with unlimited time
+		if (gVersusStarted) { // a match with unlimited time doesn't makes sense, we'll never get a winner
 			client_print(0, print_center, "%l", "MATCH_DENY_CHANGEUNLIMITED");
 		} else {
 			gTimeLeft = 0;
@@ -801,7 +799,7 @@ public StartVersus() {
 	if (get_playersnum() < get_pcvar_num(gCvarAgStartMinPlayers)) {
 		client_print(0, print_center, "%l", "MATCH_MINPLAYERS_CENTER", get_pcvar_num(gCvarAgStartMinPlayers));
 		return;
-	} else if (gTimeLimit <= 0 && !get_pcvar_num(gCvarAgStartAllowUnlimited)) { // block start versus with mp_timelimit 0
+	} else if (gTimeLimit <= 0) { // a match with unlimited time doesn't makes sense, we'll never get a winner
 		client_print(0, print_center, "%l", "MATCH_DENY_STARTUNLIMITED");
 		return;
 	}
