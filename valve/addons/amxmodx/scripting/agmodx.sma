@@ -896,6 +896,10 @@ public StartVersusCountdown() {
 * AgAbort
 */
 public AbortVersus() {
+	if (gIsSuddenDeath) {
+		return;
+	}
+
 	gVersusStarted = false;
 
 	// clear old list of players playing a match
@@ -912,10 +916,6 @@ public AbortVersus() {
 	gBlockPlayerSpawn = false;
 	gIsSuddenDeath = false;
 
-	// restore timeleft according to timelimit
-	if (gIsSuddenDeath) {
-		gTimeLeft = gTimeLimit > 0 ? gTimeLimit * 60 : 0;
-	}
 
 	new players[32], numPlayers, player;
 	get_players(players, numPlayers);
