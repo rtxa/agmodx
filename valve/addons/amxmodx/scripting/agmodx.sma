@@ -2711,8 +2711,8 @@ bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
 		// read authid
 		ReadPackString(handle, buffer, charsmax(buffer));
 
-		// if it's STEAM_ID_LAN, it's not safe, check by ip
-		if (equal(buffer, authid) && !equal(buffer, "STEAM_ID_LAN")) {
+		// if authid is STEAM_ID_LAN, it's not safe to check, use ip instead
+		if (equal(buffer, authid) && (!contain(buffer, "STEAM_") || !contain(buffer, "VALVE_")) && isdigit(buffer[7])) {
 			handle_player = handle;
 			return true;
 		}
