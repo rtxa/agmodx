@@ -216,7 +216,7 @@ public ArenaCountdown() {
 
 	PlaySound(0, gBeepSnd);
 
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_START_Y, 0, 3.0, 3.0, 0.2, 0.5); 
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_START_Y, 0, 3.0, 10.0, 0.2, 0.5); 
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_STARTARENA", gFirstPlayer, gSecondPlayer, gStartMatchTime);
 
 	set_task(1.0, "ArenaCountdown", TASK_ARENACOUNTDOWN);

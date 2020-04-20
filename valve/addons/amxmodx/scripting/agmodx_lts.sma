@@ -146,6 +146,8 @@ public LtsMatchCountdown() {
 	PlayNumSound(0, gStartMatchTime);
 
 	if (gStartMatchTime == 0) {
+		ClearSyncHud(0, gHudShowMatch);
+
 		new players[32], numPlayers, player;
 		get_players(players, numPlayers);
 
@@ -166,7 +168,7 @@ public LtsMatchCountdown() {
 
 	PlaySound(0, gBeepSnd);
 
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 4.0, 0.2, 0.5);
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, 0.2, 0, 3.0, 10.0, 0.2, 0.5);
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_START", gStartMatchTime);
 
 	set_task(1.0, "LtsMatchCountdown", TASK_STARTMATCH);
