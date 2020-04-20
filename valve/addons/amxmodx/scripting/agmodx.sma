@@ -2106,6 +2106,9 @@ public OnVoteGameMode(id, check, argc, arg1[]) {
 }
 
 LoadGameMode() {
+	// by default, no gamemode
+	copy(gGameModeName, charsmax(gGameModeName), "No Gamemode");
+
 	new fileName[32];
 	new handleDir = open_dir("gamemodes", fileName, charsmax(fileName));
 
