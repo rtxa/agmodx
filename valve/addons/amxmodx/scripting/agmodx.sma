@@ -2129,8 +2129,8 @@ LoadGameMode() {
 			read_file(fmt("gamemodes/%s", fileName), 0, name, charsmax(name)); // first line specifies what game name that should be displayed in server browser and in splash with server settings data
 			read_file(fmt("gamemodes/%s", fileName), 1, info, charsmax(info)); // second line is help text displayed when someone types help in console
 			
-			replace_string(info, charsmax(info), "/", ""); // remove comments
-			replace_string(name, charsmax(name), "/", ""); // remove comments
+			replace(info, charsmax(info), "//", ""); // remove comments
+			replace(name, charsmax(name), "//", ""); // remove comments
 
 			trim(fileName);
 			replace(fileName[len], charsmax(fileName), ".cfg", "");
