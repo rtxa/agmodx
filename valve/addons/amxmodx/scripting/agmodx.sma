@@ -2529,7 +2529,7 @@ public CmdSayClose(caller) {
 		return PLUGIN_HANDLED;
 
 	new text[191];
-	read_argv(1, text, charsmax(text));
+	read_args(text, charsmax(text));
 
 	new name[MAX_NAME_LENGTH];
 	get_user_name(caller, name, charsmax(name));
