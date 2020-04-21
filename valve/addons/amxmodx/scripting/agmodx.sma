@@ -1539,7 +1539,7 @@ public CmdAgMap(id, level, cid) {
 	} 
 
 	if (is_map_valid(arg)) {
-		log_amx("AgMap: ^"%s^" ^"%N^"", id, arg);
+		log_amx("AgMap: ^"%s^" ^"%N^"", arg, id);
 		ChangeMap(arg);
 	} else {
 		console_print(id, "%l", "INVALID_MAP");
