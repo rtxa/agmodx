@@ -542,6 +542,12 @@ public client_disconnected(id) {
 	}
 }
 
+public client_remove(id) {
+	if (gVersusStarted && IsSuddenDeath()) {
+		StartIntermissionMode();
+	}		
+}
+
 public PlayerPreSpawn(id) {
 	// never block the first spawn or it will cause some glitchs
 	if (!get_ent_data(id, "CBasePlayer", "m_fGameHUDInitialized"))
@@ -658,8 +664,7 @@ CheckAgTimer() {
 	}
 
 	if (gTimeLeft == 0 && gTimeLimit != 0) {
-		UpdateTeamScores(gTeamsScore, gNumTeams);
-		if (gVersusStarted && IsATieBreakNeeded(gTeamsScore, gNumTeams)) {
+		if (gVersusStarted && IsSuddenDeath()) {
 			gIsSuddenDeath = true;
 		} else {
 			StartIntermissionMode();
@@ -2833,20 +2838,32 @@ UpdateTeamScores(team_scores[HL_MAX_TEAMS], numTeams) {
 	}
 }
 
-IsATieBreakNeeded(team_scores[HL_MAX_TEAMS], numTeams) {
-	if (numTeams < 2)
+IsSuddenDeath() {
+	new numPlaying;
+	for (new i = 1; i <= MaxClients; i++) {
+		if (is_user_connected(i) && !(hl_get_user_spectator(i) || task_exists(TASK_SENDTOSPEC + i))) {
+			numPlaying++;
+		}
+	}
+
+	if (numPlaying < 2)
 		return false;
 
+	if (gNumTeams < 2)
+		return false;
+
+	UpdateTeamScores(gTeamsScore, gNumTeams);
+
 	// get max score
-	new maxScore = team_scores[0];
-	for (new i; i < numTeams; i++) {
-		if (team_scores[i] > maxScore)
-			maxScore = team_scores[i];
+	new maxScore = gTeamsScore[0];
+	for (new i; i < gNumTeams; i++) {
+		if (gTeamsScore[i] > maxScore)
+			maxScore = gTeamsScore[i];
 	}
 
 	new matches;
-	for (new i; i < numTeams; i++) {
-		if (team_scores[i] == maxScore)
+	for (new i; i < gNumTeams; i++) {
+		if (gTeamsScore[i] == maxScore)
 			matches++;
 	}
 
