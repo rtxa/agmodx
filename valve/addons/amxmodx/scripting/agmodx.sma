@@ -85,7 +85,12 @@ new gStartVersusTime;
 // Team info
 new gNumTeams;
 new gTeamsName[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
-new gTeamsScore[HL_MAX_TEAMS];
+
+// This array saves the score from all players/teams
+// Every element inside the array is a datapack with the next structure:
+// 1. Name of the player/team
+// 2. Frags
+new Array:gScoreLog;
 
 // hud sync handles
 new gHudDisplayVote;
@@ -381,6 +386,7 @@ public plugin_init() {
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
 
 	gAgCmdList = ArrayCreate();
+	gScoreLog = ArrayCreate();
 
 	ag_register_concmd("agabort", "CmdAgAbort", ADMIN_BAN, "AGCMD_AGABORT", _, true);
 	ag_register_concmd("agallow", "CmdAgAllow", ADMIN_BAN, "AGCMD_AGALLOW", _, true);
@@ -474,7 +480,12 @@ public plugin_end() {
 	disable_cvar_hook(gHookCvarTimeLimit);
 	set_pcvar_num(gCvarTimeLimit, gTimeLimit);
 
-	new TrieIter:handle = TrieIterCreate(gTrieVoteList);
+	// i use this handle in general
+	new any:handle;
+
+	// destroy vote list
+	handle = TrieIterCreate(gTrieVoteList);
+
 	new value;
 	while (!TrieIterEnded(handle)) {
 		TrieIterGetCell(handle, value);
@@ -483,6 +494,13 @@ public plugin_end() {
 	}
 	TrieIterDestroy(handle);
 	TrieDestroy(gTrieVoteList);
+
+	// destroy data contained in gScoreLog
+	for (new i; i < ArraySize(gScoreLog); i++) {
+		handle = ArrayGetCell(gScoreLog, i);
+		DestroyDataPack(handle);
+	}
+	ArrayDestroy(gScoreLog); // finally destroy gScoreLog
 
 	ArrayDestroy(gAgCmdList);
 	ArrayDestroy(gRestoreScorePlayers);
@@ -543,8 +561,10 @@ public client_disconnected(id) {
 }
 
 public client_remove(id) {
-	if (gVersusStarted && IsSuddenDeath()) {
-		StartIntermissionMode();
+	// check if we have a winner now when someones disconnects in sudden death
+	if (gIsSuddenDeath) {
+		if (!IsSuddenDeathNeeded())
+			StartIntermissionMode();
 	}		
 }
 
@@ -664,7 +684,7 @@ CheckAgTimer() {
 	}
 
 	if (gTimeLeft == 0 && gTimeLimit != 0) {
-		if (gVersusStarted && IsSuddenDeath()) {
+		if (gVersusStarted && IsSuddenDeathNeeded()) {
 			gIsSuddenDeath = true;
 		} else {
 			StartIntermissionMode();
@@ -2805,6 +2825,7 @@ public EventIntermissionMode() {
 	gBlockCmdSpec = true;
 	gBlockCmdDrop = true;
 	gVersusStarted = false; // allow specs at the end to talk
+	gIsSuddenDeath = false;
 
 	new players[MAX_PLAYERS], numPlayers;
 	get_players(players, numPlayers);
@@ -2820,50 +2841,94 @@ public StartIntermissionMode() {
 		ExecuteHamB(Ham_Use, ent, 0, 0, 1.0, 0.0);
 }
 
-UpdateTeamScores(team_scores[HL_MAX_TEAMS], numTeams) {
-	if (numTeams < 2)
-		return;
-
-	arrayset(team_scores, 0, HL_MAX_TEAMS);
-
-	new players[32], numPlayers;
-	get_players(players, numPlayers);
+ScoreLog_UpdateScores() {
+	new Float:isTeamPlay;
+	global_get(glb_teamplay, isTeamPlay);
 	
-	new plr, team;
-	for (new i; i < numPlayers; i++) {
-		plr = players[i];
-		team = hl_get_user_team(plr); // actually if he is in spectator, he has no team...
-		if (team)
-			team_scores[team - 1] += hl_get_user_frags(plr);
+	// i use this handle in general
+	new DataPack:handle;
+
+	// destroy old data
+	for (new i; i < ArraySize(gScoreLog); i++) {
+		handle = ArrayGetCell(gScoreLog, i);
+		DestroyDataPack(handle);
+	}
+
+	ArrayClear(gScoreLog);
+
+	new name[MAX_NAME_LENGTH];
+
+	new players[MAX_PLAYERS], numPlayers, plr;
+	get_players(players, numPlayers);
+
+	if (isTeamPlay) {
+		new teamScore[HL_MAX_TEAMS], bool:teamExists[HL_MAX_TEAMS];
+		// calculate team score
+		new team;
+		for (new i; i < numPlayers; i++) {
+			plr = players[i];
+			if (!ag_get_user_spectator(plr) && (team = hl_get_user_team(plr))) {
+				teamScore[team - 1] += hl_get_user_frags(plr);
+				teamExists[team - 1] = true;
+			}
+		}
+		// save it into the array
+		for (new i; i < HL_MAX_TEAMS; i++) {
+			if (teamExists[i]) {
+				handle = CreateDataPack();
+				WritePackString(handle, gTeamsName[i]);
+				WritePackCell(handle, teamScore[i]);
+				ArrayPushCell(gScoreLog, handle);
+			}
+		}
+	} else { // no teamplay
+		for (new i; i < numPlayers; i++) {
+			plr = players[i];
+			if (!ag_get_user_spectator(plr)) {
+				handle = CreateDataPack();
+				get_user_name(plr, name, charsmax(name));
+				WritePackString(handle, name);
+				WritePackCell(handle, hl_get_user_frags(plr));
+				ArrayPushCell(gScoreLog, handle);
+			}
+		}		
 	}
 }
 
-IsSuddenDeath() {
-	new numPlaying;
-	for (new i = 1; i <= MaxClients; i++) {
-		if (is_user_connected(i) && !(hl_get_user_spectator(i) || task_exists(TASK_SENDTOSPEC + i))) {
-			numPlaying++;
-		}
-	}
+// if you try to get the score from an invalid index, an error will be thrown
+ScoreLog_GetScore(idx, name[] = "", len = 0) {
+	new DataPack:handle = ArrayGetCell(gScoreLog, idx);
+	ResetPack(handle);
+	ReadPackString(handle, name, len);	
+	return ReadPackCell(handle); // frags
+}
 
-	if (numPlaying < 2)
-		return false;
-
-	if (gNumTeams < 2)
-		return false;
-
-	UpdateTeamScores(gTeamsScore, gNumTeams);
+ScoreLog_GetMaxScore() {
+	if (ArraySize(gScoreLog) < 2)
+		return 0;
 
 	// get max score
-	new maxScore = gTeamsScore[0];
-	for (new i; i < gNumTeams; i++) {
-		if (gTeamsScore[i] > maxScore)
-			maxScore = gTeamsScore[i];
+	new maxScore = ScoreLog_GetScore(0);
+	for (new i = 1; i < ArraySize(gScoreLog); i++) {
+		if (ScoreLog_GetScore(i) > maxScore)
+			maxScore = ScoreLog_GetScore(i);
 	}
+	return maxScore;
+}
 
+IsSuddenDeathNeeded() {
+	ScoreLog_UpdateScores();
+
+	// we need at least two players/teams to have a tie break
+	if (ArraySize(gScoreLog) < 2)
+		return false;
+
+	new maxScore = ScoreLog_GetMaxScore();
+
+	// check if there's at least two players/teams with the same score
 	new matches;
-	for (new i; i < gNumTeams; i++) {
-		if (gTeamsScore[i] == maxScore)
+	for (new i; i < ArraySize(gScoreLog); i++) {
+		if (ScoreLog_GetScore(i) == maxScore)
 			matches++;
 	}
 
@@ -2917,6 +2982,13 @@ ag_register_clcmd(const cmd[], const function[], flags = -1, const info[] = "", 
 		ArrayPushCell(gAgCmdList, idx);
 	}
 	return idx;
+}
+
+// This is a special case, because when a player enters the server and
+// he's supposed to be in spec mode, that will not happen after 0.1s
+// let's simulate the player is already in spec mode to avoid any issues
+bool:ag_get_user_spectator(id) {
+	return hl_get_user_spectator(id) || task_exists(TASK_SENDTOSPEC + id) ? true : false;
 }
 
 public native_ag_vote_add(plugin_id, argc) {
