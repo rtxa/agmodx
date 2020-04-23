@@ -1,11 +1,16 @@
 Custom version from Bugfixed HL by rtxA
 =================================================
 
+You can found this in my fork of Bugfixed HL, in the branch "features-and-fixes".
+
 Last version:
-- Windows: 0.2.91+9bebd59
-- Linux: 0.2.91+9bebd59+m
+- Windows: 0.2.92+8bea35d
+- Linux: 0.2.92+8bea35d+m
 
 # Changelog
+Date: 23/04/2020
+- Returned back fix for solid corpses.
+
 Date: 08/04/2020
 - Increased delay to be able to leave welcomecam from 0.2 to 0.5 to be more safe.
 - Fixed internal antiflood, now it doesn't block anymore in pause. It uses server-uptime instead of gametime because it gets freeze on pause.
