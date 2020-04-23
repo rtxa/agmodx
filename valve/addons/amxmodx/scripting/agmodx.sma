@@ -2524,8 +2524,8 @@ public CmdPlayTeam(caller) {
 	if (read_argc() < 2)
 		return PLUGIN_HANDLED;
 
-	new sound[128];
-	read_argv(1, sound, charsmax(sound));
+	new sound[256];
+	read_args(sound, charsmax(sound));
 
 	new team = hl_get_user_team(caller);
 
@@ -2603,8 +2603,8 @@ public CmdPlayClose(caller) {
 	if (!teamCaller)
 		return PLUGIN_HANDLED;
 
-	new sound[128];
-	read_argv(1, sound, charsmax(sound));
+	new sound[256];
+	read_args(sound, charsmax(sound));
 		
 	// return the index of the nearest location for the player from an array
 	new Float:callerPos[3], Float:targetPos[3];
