@@ -1,13 +1,16 @@
 Custom version from Bugfixed HL by rtxA
 =================================================
 
-You can found this in my fork of Bugfixed HL, in the branch "features-and-fixes".
+You can found this in my fork of Bugfixed HL in the branch "features-and-fixes".
 
 Last version:
-- Windows: 0.2.92+8bea35d
-- Linux: 0.2.92+8bea35d+m
+- Windows: 0.2.92+37e60ca
+- Linux: 0.2.92+37e60ca+m
 
 # Changelog
+Date: 24/04/2020
+- Server: Fix CBaseMonster offsets (binary compatibility for 8308 build)
+
 Date: 23/04/2020
 - Returned back fix for solid corpses.
 
