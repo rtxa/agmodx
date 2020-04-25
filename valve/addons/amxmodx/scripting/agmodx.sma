@@ -464,11 +464,6 @@ public FwAllowLagCompensation() {
 }
 
 public plugin_cfg() {
-	// pause it because "say timeleft" shows wrong timeleft, unless we modify the amx plugin, or put the plugin first and create our own timeleft cmd...
-	// humm, maybe use an agmodx_timeleft and disable this one...
-	// then read setinfo from user so you can hide the timeleft and only use the one from you clien with timeleft
-	pause("cd", "timeleft.amxx");
-
 	// this should fix bad cvar pointer
 	gCvarAmxNextMap = get_cvar_pointer("amx_nextmap");
 }
