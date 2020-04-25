@@ -2702,7 +2702,7 @@ PauseGame() {
 	
 	// use random players to reduce the chance of the command not getting executed when player isn't sending packets
 	set_cvar_num("pausable", 1);
-	client_cmd(players[random_num(1, numPlayers)], "pause; pauseAg"); 
+	client_cmd(players[random(numPlayers)], "pause; pauseAg"); 
 }
 
 public CmdPauseAg(id) {
