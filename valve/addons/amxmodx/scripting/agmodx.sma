@@ -97,9 +97,6 @@ new gHudDisplayVote;
 new gHudShowMatch;
 new gHudShowAgTimer;
 
-// agpause
-new bool:gIsPause;
-
 new gGameModeName[32];
 
 // Restore Score System
@@ -2700,18 +2697,17 @@ public DisplayInfo(id) {
 	client_print(id, print_chat, "%l", "DISPLAY_INFO2");
 }
 
-// We can't pause the game from the server because is not connected, unless you have created the sv in-game. "Can't pause, not connected."
+// Server can't pause the game, we always need to use real players to circumvent this problem
 PauseGame() {
 	new players[MAX_PLAYERS], numPlayers;
-	get_players(players, numPlayers);
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeHLTV | GetPlayers_ExcludeBots);
 
 	if (numPlayers < 1)
 		return;
 	
+	// use random players to reduce the chance of the command not getting executed when player isn't sending packets
 	set_cvar_num("pausable", 1);
-	console_cmd(players[0], "pause; pauseAg");
-
-	gIsPause = gIsPause ? false : true;
+	client_cmd(players[random_num(1, numPlayers)], "pause; pauseAg"); 
 }
 
 public CmdPauseAg(id) {
