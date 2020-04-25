@@ -1,2 +1,55 @@
-# Adrenaline Gamer Mod X
-An improved Mini AG alternative, made as a plugin for AMX Mod X from zero, to make it easier add improvements, features, fix annoying bugs, etc.
+![](https://imgur.com/EFxGF19.png)
+
+#### Author: rtxA | Last Version: Beta 2.1 | Last Update: 25/04/2020
+
+## ☉ Description
+
+AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X from the ground. It's easy to add new stuff, make improvements, do changes, etc.
+
+### ☰ Features
+- Uses Bugfixed HL in the core, a HL that fixes a lot of issues and comes with some features and improvements.
+- Some fixes and improvements to the original Mini AG.
+- Supports multilingual (English and Spanish are included).
+- Portability, because of the nature of the mod, it allows to use other plugins in your server, and in case it's interfering with other plugins, you can switch it off.
+
+### ☰ Improvements
+- Color codes are now displayed and they don't get removed anymore.
+- Weapons are displayed in spectator mode.
+- No more bug of standing/floating corpses from clients playing with high FPS.
+- Now antiflood doesn't get block anymore when game is paused.
+- Hud and votes are now displayed with the AG Style.
+- Now you can type on commands like agallow, agkick or agforcespectator the player's name partially and without adding color codes.
+- CTF game mode has been added.
+- Some sv_ag_dmg_xxx cvars were not working and they have been fixed.
+- New votes have been added.
+
+### ☰ To Do
+- Fix OpenAG/AG clients having increased the eye position in spectator mode. 
+- Make mp_timelimit works like HL (right now it only resets the timeleft to the new timelimit).
+
+## ☉ Commands
+You can found about the CVars and CMDs in the wiki (not done yet). They are almost the same as AG, with some exceptions in the functionality.
+
+## ☉ Installation
+
+### ☰ Requirements
+- Last HLDS/ReHLDS version (last HLDS build is 8308) installed.
+- [Metamod 1.21.37p](https://github.com/jkivilin/metamod-p/releases) (already included and ready to use in the full package) or [Metamod-R](https://github.com/theAsmodai/metamod-r) installed.
+- [Last AMXX 1.9](https://www.amxmodx.org/downloads-new.php) installed (already included and ready to use in the full package).
+
+### ☰ Instructions
+- Have a clean installation of Half-Life ready.
+- Download the release package or the full package (Metamod and AMXX included ready to use). You can found this in the releases tab on GitHub.
+- Open the package and extract the content of folder 'valve' in your server mod directory (e.g. 'C:\Half-Life\valve'). Replace if asked.
+
+## ☉ Notes
+- Mod is still in beta stage (90% done). Some commands maybe are missing, please let me know so about it.
+- When adding new gamemodes, values for sv_ag_dmg_crossbow and sv_ag_dmg_bolts need to be changed, because the cvars were fixed and the old values were wrong. You can take as a reference TDM gamemode.
+- Custom nextmap.amxx and antiflood.amxx plugins have been included. They have fixed issues with mp_chattime getting increased when changing the map and the antiflood not working when game is paused.
+
+## ☆ Thanks to:
+- BulliT for his AG Mod and some useful codes.
+- Lev for his Bugfixed HL and some useful codes.
+- KORD_12.7 for his HL Stocks include for AMXX.
+
+Please, feel free to create any issues or pull requests, any feedback will be appreciated.
