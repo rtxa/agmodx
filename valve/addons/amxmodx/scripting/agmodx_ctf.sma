@@ -108,9 +108,89 @@ public OnPlayerSpawn(id) {
 	client_print(id, print_center, "%l", "CTF_NOTCTFMAP");
 }
 
+bool:LoadCtfMapFile() {
+	new mapname[32];
+	get_mapname(mapname, charsmax(mapname));
+
+	new handle = fopen(fmt("ctf/%s.ctf", mapname), "r");
+
+	if (!handle)
+		return false;
+
+	new buffer[128], line = 1;
+	while (fgets(handle, buffer, charsmax(buffer))) {
+		new ent_name[32], Float:ent_origin[3], Float:ent_angles[3];
+
+		if (!ParseEntFromFile(buffer, ent_name, charsmax(ent_name), ent_origin, ent_angles))
+			log_amx("Warning: Bad parsing on line %d from file ^"%s.ctf^". Check if everything is correct.", line, mapname);
+		
+		// Debug
+		//log_amx("[Entity] Name: %s Origin: %f %f %f Angles: %f %f %f", ent_name, ent_origin[0], ent_origin[1], ent_origin[2], ent_angles[0], ent_angles[1], ent_angles[2]);
+		
+		if (equal(ent_name, INFO_FLAG_BLUE)) {
+			gFlagBlue = CreateCustomEnt(ent_name);	
+			SetFlagStartOrigin(gFlagBlue, ent_origin);
+			SetFlagStartAngles(gFlagBlue, ent_angles);
+		} else if (equal(ent_name, INFO_FLAG_RED)) {
+			gFlagRed = CreateCustomEnt(ent_name);	
+			SetFlagStartOrigin(gFlagRed, ent_origin);
+			SetFlagStartAngles(gFlagRed, ent_angles);
+		} else if (equal(ent_name, INFO_PLAYER_BLUE) || equal(ent_name, INFO_PLAYER_RED)) {
+			new ent = create_entity(INFO_PLAYER_DEATHMATCH);
+			set_pev(ent, pev_netname, equal(ent_name, INFO_PLAYER_BLUE) ? "blue" : "red");
+			set_pev(ent, pev_origin, ent_origin);
+			set_pev(ent, pev_angles, ent_angles);
+		} else {
+			new ent = create_entity(ent_name);
+			if (pev_valid(ent) == 0) {
+				log_amx("Warning: Classname ^"%s^" doesn't exists. Check if everything is correct on line %d from file ^"%s.ctf^"", ent_name, line, mapname);
+				continue;
+			}
+			set_pev(ent, pev_origin, ent_origin);
+			set_pev(ent, pev_angles, ent_angles);
+			DispatchSpawn(ent);
+		}
+
+		line++;
+	}
+
+	fclose(handle);
+
+	return true;
+}
+
+ParseEntFromFile(const input[], ent_name[], len, Float:ent_origin[3], Float:ent_angles[3]) {
+	// We read in the next order: 1. Entity name (1 arg) 2. Entity origin (3 args) 3. Entity angles (3 args)
+	// Input example: "item_flag_team1 973.734131 535.433899 36.031250 -4.268188 86.742554 0.000000"
+	new arg[32], pos, argc;
+	while (argc <= 6) {
+		pos = argparse(input, pos, arg, charsmax(arg));
+		if (pos == -1)
+			break;
+		if (argc == 0) { // READING ENT NAME
+			copy(ent_name, len, arg);
+		} else if (argc >= 1 && argc <= 3) { // READING ENT ORIGIN
+			ent_origin[argc - 1] = str_to_float(arg);
+		} else if (argc >= 4 && argc <= 6) { // READING ENT ANGLES
+			ent_angles[argc - 4] = str_to_float(arg);
+		}
+		++argc;
+	}
+
+	// we didn't get to read all the arguments, bad parsing
+	if (argc < 7)
+		return false;
+	else
+		return true;
+}
+
 public plugin_init() {
 	register_dictionary("agmodxctf.txt");
 
+	// i should add a check to avoid loading the ctf map file when map is actually CTF
+	// but i prefer not to add it in case we need to add more stuff to the map
+	gIsMapCtf = LoadCtfMapFile();
+	
 	if (!gIsMapCtf) {
 		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
 		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
