@@ -9,7 +9,7 @@
 #include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X CTF"
-#define VERSION "Beta 2.1"
+#define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -197,12 +197,13 @@ public plugin_init() {
 		return;
 	}
 
-	RemoveUselessSpawns();
 
 	register_clcmd("dropitems", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
 
 	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
+
+	RemoveUselessSpawns();
 
 	SpawnFlag(gFlagBlue);
 	SpawnFlag(gFlagRed);

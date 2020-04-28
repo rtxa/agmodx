@@ -30,7 +30,7 @@
 #include <hlstocks>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 2.1"
+#define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
 #define CONTACT_INFO "More info: rtxa#6795 (Discord)"
