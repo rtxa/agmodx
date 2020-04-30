@@ -91,19 +91,19 @@ sv_ag_start_health		0-100
 sv_ag_start_longjump	0-1
 
 // sets damage of weapons
-sv_ag_dmg_crowbar       25
-sv_ag_dmg_glock         12
-sv_ag_dmg_357           40
-sv_ag_dmg_mp5           12
-sv_ag_dmg_shotgun	    20
-sv_ag_dmg_crossbow		120 // using scope
-sv_ag_dmg_bolts         40  // not using scope
-sv_ag_dmg_rpg           120
-sv_ag_dmg_gauss         20 
-sv_ag_dmg_egon_wide     20  
-sv_ag_dmg_egon_narrow   10  // ignored, only wide is used in multiplayer
-sv_ag_dmg_hornet        10
-sv_ag_dmg_hgrenade      100
-sv_ag_dmg_satchel       120
-sv_ag_dmg_tripmine      150
-sv_ag_dmg_m203          100
+sv_ag_dmg_crowbar           25
+sv_ag_dmg_glock             12
+sv_ag_dmg_357               40
+sv_ag_dmg_mp5               12
+sv_ag_dmg_shotgun	        20
+sv_ag_dmg_bolts_normal		120 // using scope
+sv_ag_dmg_bolts_explosion   40  // not using scope
+sv_ag_dmg_rpg               120
+sv_ag_dmg_gauss             20 
+sv_ag_dmg_egon_wide         20  
+sv_ag_dmg_egon_narrow       10  // ignored, only wide is used in multiplayer
+sv_ag_dmg_hornet            10
+sv_ag_dmg_hgrenade          100
+sv_ag_dmg_satchel           120
+sv_ag_dmg_tripmine          150
+sv_ag_dmg_m203              100
