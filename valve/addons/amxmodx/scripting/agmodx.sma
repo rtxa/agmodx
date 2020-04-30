@@ -342,6 +342,9 @@ public plugin_precache() {
 	// keep ag hud color updated
 	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
 
+	// Put this before loading the gamemode .cfg to avoid any issues
+	CreateDeprecatedCvars();
+
 	// Load mode cvars
 	new mode[32];
 	get_pcvar_string(gCvarGameMode, mode, charsmax(mode));
@@ -2806,6 +2809,26 @@ RestoreScore_Clear() {
 ResetScore(id) {
 	set_user_frags(id, 0);
 	hl_set_user_deaths(id, 0);
+}
+
+CreateDeprecatedCvars() {
+	// List
+	new cvarXbow = create_cvar("sv_ag_dmg_crossbow", "");
+	new cvarBolts = create_cvar("sv_ag_dmg_bolts", "");
+	// Always reset their values to be able to track changes
+	set_pcvar_string(cvarXbow, "");
+	set_pcvar_string(cvarBolts, "");
+	// Hook contains the warning message
+	hook_cvar_change(cvarXbow, "CvarDeprecatedXbowHook");
+	hook_cvar_change(cvarBolts, "CvarDeprecatedBoltsHook");
+}
+
+public CvarDeprecatedXbowHook(pcvar, const old_value[], const new_value[]) {
+	log_amx("Warning: CVar ^"sv_ag_dmg_crossbow^" is deprecated. Use instead ^"sv_ag_dmg_bolts_normal^". More info on the wiki.");
+}
+
+public CvarDeprecatedBoltsHook(pcvar, const old_value[], const new_value[]) {
+	log_amx("Warning: CVar ^"sv_ag_dmg_bolts^" is deprecated. Use instead ^"sv_ag_dmg_bolts_explosion^". More info on the wiki.");
 }
 
 public CvarHudColorHook(pcvar, const old_value[], const new_value[]) {
