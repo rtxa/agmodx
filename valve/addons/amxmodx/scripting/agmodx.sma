@@ -2813,6 +2813,17 @@ public CvarHudColorHook(pcvar, const old_value[], const new_value[]) {
 }
 
 public EventIntermissionMode() {
+	new str[256], name[MAX_NAME_LENGTH], frags;
+
+	// print final match result
+	if (gVersusStarted) {
+		ScoreLog_UpdateScores();
+		for (new i; i < ArraySize(gScoreLog); i++) {
+			frags = ScoreLog_GetScore(i, name, charsmax(name));
+			add(str, charsmax(str), fmt("%s: %d ", name, frags));
+		}
+	}
+
 	gBlockCmdKill = true;
 	gBlockCmdSpec = true;
 	gBlockCmdDrop = true;
@@ -2824,14 +2835,6 @@ public EventIntermissionMode() {
 
 	for (new i; i < numPlayers; i++) {
 		FreezePlayer(players[i]); // sometimes in intermission mode, player can move...
-	}
-
-	// print final match result
-	new str[256], name[MAX_NAME_LENGTH], frags;
-	ScoreLog_UpdateScores();
-	for (new i; i < ArraySize(gScoreLog); i++) {
-		frags = ScoreLog_GetScore(i, name, charsmax(name));
-		add(str, charsmax(str), fmt("%s: %d ", name, frags));
 	}
 
 	// note: not possible to show all players/team scores in some cases
