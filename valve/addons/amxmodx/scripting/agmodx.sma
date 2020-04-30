@@ -249,7 +249,7 @@ public plugin_precache() {
 	// Chat cvar
 	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER | FCVAR_SPONLY);
 
-	gCvarMaxSpectators = create_cvar("sv_ag_max_spectators", "10", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarMaxSpectators = create_cvar("sv_ag_max_spectators", "32", FCVAR_SERVER | FCVAR_SPONLY);
 	
 	// Agstart cvars
 	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
