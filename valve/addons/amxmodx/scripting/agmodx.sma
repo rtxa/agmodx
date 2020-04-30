@@ -33,7 +33,7 @@
 #define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
-#define CONTACT_INFO "More info: rtxa#6795 (Discord)"
+#define CONTACT_INFO "More info: www.github.com/rtxa/agmodx"
 
 #pragma semicolon 1
 
