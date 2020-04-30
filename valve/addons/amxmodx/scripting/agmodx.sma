@@ -510,6 +510,7 @@ public client_putinserver(id) {
 		new numSpecs = CountSpecs();
 		if (numSpecs >= get_pcvar_num(gCvarMaxSpectators)) {
 			if (!is_user_admin(id) || !RestoreScore_FindPlayer(id)) {
+				SetGlobalTransTarget(id);
 				server_cmd("kick #%d ^"%l^"", get_user_userid(id), "KICK_MAXSPECTATORS", get_pcvar_num(gCvarMaxSpectators));		
 			}
 		}
