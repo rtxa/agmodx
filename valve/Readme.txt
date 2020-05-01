@@ -4,10 +4,15 @@ Custom version from Bugfixed HL by rtxA
 You can found this in my fork of Bugfixed HL in the branch "features-and-fixes".
 
 Last version:
-- Windows: 0.2.92+37e60ca
-- Linux: 0.2.92+37e60ca+m
+- Windows: 0.2.92+3ea80f8
+- Linux: 0.2.92+3ea80f8+m
 
 # Changelog
+Date: 01/05/2020
+- Added mp_respawn_delay cvar. Works only with mp_respawn_fix on.
+- Allowed to disable spectator cmd delay so plugins can send to spec without getting blocked.
+- Disabled ladder crouch fix for being gameplay changing.
+
 Date: 24/04/2020
 - Server: Fix CBaseMonster offsets (binary compatibility for 8308 build)
 
