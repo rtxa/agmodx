@@ -1032,7 +1032,8 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	replace_string(text, charsmax(text), "%p", isSenderSpec ? "" : str, false);
 
 	// replace all %l with location
-	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(sender, gLocationOrigin, gNumLocations)], false);
+	GetPlayerLocation(sender, str, charsmax(str));
+	replace_string(text, charsmax(text), "%l", str, false);
 
 	new ammo, bpammo, weaponid;
 	if (!isSenderSpec && (weaponid = get_user_weapon(sender, ammo, bpammo))) {
@@ -1150,6 +1151,11 @@ public FindNearestLocation(id, Float:locOrigin[][3], numLocs) {
 	}
 
 	return idxNearestLoc;
+}
+
+public GetPlayerLocation(id, locName[], len) {
+	new idx = FindNearestLocation(id, gLocationOrigin, gNumLocations);
+	copy(locName, len, gLocationName[idx]);
 }
 
 public CmdHelp(id, level, cid) {
