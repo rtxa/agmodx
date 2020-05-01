@@ -2732,30 +2732,32 @@ public CmdPauseAg(id) {
 bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
 	new authid[MAX_AUTHID_LENGTH], ip[MAX_IP_LENGTH];
 	
-	if (!get_user_authid(id, authid, charsmax(authid)))
-		log_amx("Warning: Trying to get authid from a player not authorized yet. Id: %d", id);
-
+	if (!is_user_authorized(id))
+		log_amx("Warning: Trying to get authid from a player not authorized. Id: %d", id);
+	
+	get_user_authid(id, authid, charsmax(authid));
 	get_user_ip(id, ip, charsmax(ip), .without_port = true);
 
-	new buffer[64], DataPack:handle;
+	new DataPack:handle;
+	new storedAuth[MAX_AUTHID_LENGTH];
+	new storedIp[MAX_IP_LENGTH];
+
 	for (new i; i < ArraySize(gRestoreScorePlayers); i++) {
 		handle = ArrayGetCell(gRestoreScorePlayers, i);
 
 		ResetPack(handle);
 
-		// read authid
-		ReadPackString(handle, buffer, charsmax(buffer));
+		ReadPackString(handle, storedAuth, charsmax(storedAuth));
+		ReadPackString(handle, storedIp, charsmax(storedIp));
 
-		// if authid is STEAM_ID_LAN, it's not safe to check, use ip instead
-		if (equal(buffer, authid) && (!contain(buffer, "STEAM_") || !contain(buffer, "VALVE_")) && isdigit(buffer[7])) {
+		// if authid isn't like this "STEAM_X:X:XXX", it's not safe to check, use ip instead
+		if (equal(storedAuth, authid) && (!contain(storedAuth, "STEAM_") || !contain(storedAuth, "VALVE_")) && isdigit(storedAuth[7])) {
 			handle_player = handle;
 			return true;
 		}
 
-		// read ip
-		ReadPackString(handle, buffer, charsmax(buffer));
-
-		if (equal(buffer, ip)) {
+		// check ip
+		if (equal(storedIp, ip)) {
 			handle_player = handle;
 			return true;
 		}
