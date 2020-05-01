@@ -987,10 +987,11 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 		return PLUGIN_CONTINUE;
 
 	new sender = get_msg_arg_int(1);
+	new isSenderSpec = hl_get_user_spectator(sender);
 	new isReceiverSpec = hl_get_user_spectator(receiver);
 
 	// note: if it's a player message, then it will start with escape character '2' (sets color with no sound)
-	if (hl_get_user_spectator(sender)) {
+	if (isSenderSpec) {
 		if (contain(text, "^x02(TEAM)") == 0) {
 			if (!isReceiverSpec) // only show messages to spectator
 				return PLUGIN_HANDLED;
@@ -1016,36 +1017,41 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 			
 	}
 
+	new str[32];
+
 	// replace all %h with health
-	replace_string(text, charsmax(text), "%h", fmt("%i", get_user_health(sender)), false);
+	formatex(str, charsmax(str), "%d", get_user_health(sender));
+	replace_string(text, charsmax(text), "%h", isSenderSpec ? "" : str, false);
 
 	// replace all %a with armor
-	replace_string(text, charsmax(text), "%a", fmt("%i", get_user_armor(sender)), false);
+	formatex(str, charsmax(str), "%d", get_user_armor(sender));
+	replace_string(text, charsmax(text), "%a", isSenderSpec ? "" : str, false);
 
 	// replace all %p with longjump
-	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(sender) ? "Yes" : "No", false);
+	formatex(str, charsmax(str), "%s", hl_get_user_longjump(sender) ? "Yes" : "No");
+	replace_string(text, charsmax(text), "%p", isSenderSpec ? "" : str, false);
 
 	// replace all %l with location
 	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(sender, gLocationOrigin, gNumLocations)], false);
 
-	// replace all %w with name of current weapon
-	new ammo, bpammo, weaponid = get_user_weapon(sender, ammo, bpammo);
-
-	if (weaponid) {
-		new weaponName[32];
-		get_weaponname(weaponid, weaponName, charsmax(weaponName));
-		replace_string(weaponName, charsmax(weaponName), "weapon_", "");
-		replace_string(text, charsmax(text), "%w", weaponName, false);
+	new ammo, bpammo, weaponid;
+	if (!isSenderSpec && (weaponid = get_user_weapon(sender, ammo, bpammo))) {
+		get_weaponname(weaponid, str, charsmax(str));
+		replace_string(str, charsmax(str), "weapon_", "");
 	}
 
+	// replace all %w with current weapon
+	replace_string(text, charsmax(text), "%w", isSenderSpec ? "" : str, false);
+
+	if (!isSenderSpec) {
+		new arGrenades;
+		if (weaponid == HLW_MP5)
+			arGrenades = hl_get_user_bpammo(sender, HLW_CHAINGUN);
+		FormatAmmo(weaponid, ammo, bpammo, arGrenades, str, charsmax(str));
+	}
+	
 	// replace all %q with ammo of current weapon
-	new ammoMsg[16], arGrenades;
-
-	if (weaponid == HLW_MP5)
-		arGrenades = hl_get_user_bpammo(sender, HLW_CHAINGUN);
-
-	FormatAmmo(weaponid, ammo, bpammo, arGrenades, ammoMsg, charsmax(ammoMsg));
-	replace_string(text, charsmax(text), "%q", ammoMsg, false); 
+	replace_string(text, charsmax(text), "%q", isSenderSpec ? "" : str, false); 
 
 	// send final message
 	set_msg_arg_string(2, text);
