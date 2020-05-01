@@ -2857,6 +2857,11 @@ public EventIntermissionMode() {
 			frags = ScoreLog_GetScore(i, name, charsmax(name));
 			add(str, charsmax(str), fmt("%s: %d ", name, frags));
 		}
+		// note: not possible to show all players/team scores in some cases
+		// client console max length per line is 127 chars
+		// server console max length per line is 383 chars
+		log_amx("%s", str);
+		client_print(0, print_console, "%s", str);
 	}
 
 	gBlockCmdKill = true;
@@ -2872,11 +2877,6 @@ public EventIntermissionMode() {
 		FreezePlayer(players[i]); // sometimes in intermission mode, player can move...
 	}
 
-	// note: not possible to show all players/team scores in some cases
-	// client console max length per line is 127 chars
-	// server console max length per line is 383 chars
-	log_amx("%s", str);
-	client_print(0, print_console, "%s", str);
 }
 
 public StartIntermissionMode() {
