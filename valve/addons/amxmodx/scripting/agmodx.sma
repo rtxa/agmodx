@@ -1284,7 +1284,7 @@ GetPluginBuildDate(output[], len) {
 public ShowSettings(id) {
 	// avoid hud overlap
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
-		return;
+		return PLUGIN_HANDLED;
 		
 	new arg[32], buildDate[32];
 	GetPluginBuildDate(buildDate, charsmax(buildDate));
@@ -1312,6 +1312,8 @@ public ShowSettings(id) {
 		get_pcvar_num(gCvarSelfGauss) ? "On" : "Off");
 
 	set_task(10.0, "ShowSettings", id + TASK_SHOWSETTINGS); // this will stop hud overlap
+	
+	return PLUGIN_HANDLED;
 }
 
 public CmdAgForceSpectator(id, level, cid) {
