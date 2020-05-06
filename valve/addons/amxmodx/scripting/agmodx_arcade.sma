@@ -68,28 +68,28 @@ ResetBpAmmo(id) {
 ResetWeaponClip(id) {
 	new weapon;
 	if (get_pcvar_num(gCvarStartWeapons[START_RPG])) {
-		weapon = hl_user_has_weapon(id, HLW_RPG);
-		hl_set_weapon_ammo(weapon, 1);
+		if ((weapon = hl_user_has_weapon(id, HLW_RPG)))
+			hl_set_weapon_ammo(weapon, 1);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_CROSSBOW])) {
-		weapon = hl_user_has_weapon(id, HLW_CROSSBOW);
-		hl_set_weapon_ammo(weapon, 5);
+		if ((weapon = hl_user_has_weapon(id, HLW_CROSSBOW)))
+			hl_set_weapon_ammo(weapon, 5);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
-		weapon = hl_user_has_weapon(id, HLW_MP5);
-		hl_set_weapon_ammo(weapon, 50);
+		if ((weapon = hl_user_has_weapon(id, HLW_MP5)))
+			hl_set_weapon_ammo(weapon, 50);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_9MMHANDGUN])) {
-		weapon = hl_user_has_weapon(id, HLW_GLOCK);
-		hl_set_weapon_ammo(weapon, 17);
+		if ((weapon = hl_user_has_weapon(id, HLW_GLOCK)))
+			hl_set_weapon_ammo(weapon, 17);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_357])) {
-		weapon = hl_user_has_weapon(id, HLW_PYTHON);
-		hl_set_weapon_ammo(weapon, 6);
+		if ((weapon = hl_user_has_weapon(id, HLW_PYTHON)))
+			hl_set_weapon_ammo(weapon, 6);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_SHOTGUN])) {
-		weapon = hl_user_has_weapon(id, HLW_SHOTGUN);
-		hl_set_weapon_ammo(weapon, 8);
+		if ((weapon = hl_user_has_weapon(id, HLW_SHOTGUN)))
+			hl_set_weapon_ammo(weapon, 8);
 	}
 }
 
