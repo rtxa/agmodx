@@ -18,12 +18,15 @@
 * - Fixed hl_set_user_team(), now it doesn't kill the player anymore on model's change.
 * - Fixed hl_set_user_frags() wrong value by converting frags to float
 * Version 1.5 (date: 15.03.2019) Author: rtxa
-* - Add hl_set_user_score(), this will send one message instead of two when you need to set both frags and deaths.
+* - Added hl_set_user_score(), this will send one message instead of two when you need to set both frags and deaths.
 * Version 1.6 (date: 03.03.2020) Author: rtxa
 * - Get back HL_MAX_TEAMNAME_LENGTH to keep backward compatibility
 * - Fixed typos in some functions.
 * Version 1.7 (date: 10.04.2020)
 * - Fixed typo in hl_set_user_score()
+* Version 1.8 (date: 06.05.2020)
+* - Added hl_user_has_weapon()
+* - Added new constant: HL_MAX_WEAPON_SLOTS
 * http://aghl.ru/forum/ - Russian Half-Life and Adrenaline Gamer Community
 *
 */
@@ -40,6 +43,7 @@
 #define HL_MAX_TEAMS			10
 #define HL_TEAMNAME_LENGTH 		16
 #define HL_MAX_TEAMNAME_LENGTH  16
+#define HL_MAX_WEAPON_SLOTS		6
 
 stock static teams[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
@@ -333,6 +337,25 @@ stock __explode_teamlist(output[][], size, input[], delimiter)
 		nLen += (1 + copyc(output[nIdx], size, input[nLen], delimiter));
 }
 
+/* Checks if user has that weapon (weapon id is from the HLW enum in hlsdk_const.inc)
+*  Returns the weapon entity index or 0 if weapon wasn't found.
+*/
+stock hl_user_has_weapon(id, weapon_id)
+{
+	new ent;
+	for (new i = 1; i < HL_MAX_WEAPON_SLOTS; i++)
+	{
+		ent = get_ent_data_entity(id, "CBasePlayer", "m_rgpPlayerItems", i);
+		while (ent != FM_NULLENT) {
+			if (hl_get_weapon_id(ent) == weapon_id)
+				return ent;
+			ent = get_ent_data_entity(ent, "CBasePlayerItem", "m_pNext");
+		}
+	}
+
+	return 0;
+}
+
 /* Returns entity index of active weapon.
 */
 stock hl_get_user_weapon_ent(client)
@@ -366,7 +389,7 @@ stock hl_get_weapon_id(entity)
 stock hl_get_wbox_weapon_ent(entity)
 {
 	static wpn_entity;
-	for (new i = 1; i < 6; i++)
+	for (new i = 1; i < HL_MAX_WEAPON_SLOTS; i++)
 	{
 		wpn_entity = get_ent_data_entity(entity, "CWeaponBox", "m_rgpPlayerItems", i);
 		if (wpn_entity > 0)
