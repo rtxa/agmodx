@@ -32,7 +32,7 @@ public plugin_precache() {
 	}
 
 	gCvarStartHealth = get_cvar_pointer("sv_ag_start_health");
-	gCvarStartArmor = get_cvar_pointer("sv_ag_start_armor");
+	gCvarStartArmor = get_cvar_pointer("sv_ag_start_armour");
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
 		gCvarStartWeapons[i] = get_cvar_pointer(gAgStartWeapons[i]);
