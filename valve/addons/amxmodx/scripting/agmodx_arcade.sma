@@ -77,8 +77,7 @@ ResetWeaponClip(id) {
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
 		weapon = GetUserWeaponEntId(id, HLW_MP5);
-		if (hl_get_weapon_ammo(weapon) < 25)
-			hl_set_weapon_ammo(weapon, 25);
+		hl_set_weapon_ammo(weapon, 50);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_9MMHANDGUN])) {
 		weapon = GetUserWeaponEntId(id, HLW_GLOCK);
