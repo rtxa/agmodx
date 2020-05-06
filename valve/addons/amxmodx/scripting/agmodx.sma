@@ -2686,7 +2686,7 @@ SetPlayerEquipment(id) {
 
 	// AG gives by default an mp5 with full clip
 	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
-		new weapon = GetUserWeaponEntId(id, HLW_MP5);
+		new weapon = hl_user_has_weapon(id, HLW_MP5);
 		hl_set_weapon_ammo(weapon, 50);
 	}
 
