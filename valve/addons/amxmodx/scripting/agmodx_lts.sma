@@ -69,6 +69,9 @@ public plugin_init() {
 
 	gHudShowMatch = CreateHudSyncObj();
 
+	// blocks player score reset from the core
+	set_cvar_num("sv_ag_core_block_spec", 1);
+
 	StartMatchLts();
 }
 

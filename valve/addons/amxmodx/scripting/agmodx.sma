@@ -209,6 +209,8 @@ new gCvarBanHealthKit;
 new gCvarBanLongJump;
 new gCvarBanChargers;
 
+new gCvarCoreBlockSpec;
+
 new const gWeaponClass[][] = {
 	"weapon_357",
 	"weapon_9mmAR",
@@ -344,6 +346,10 @@ public plugin_precache() {
 
 	// Put this before loading the gamemode .cfg to avoid any issues
 	CreateDeprecatedCvars();
+
+	// Some gamemodes need to block the spectator cmd handling of the core to avoid player score getting reset
+	gCvarCoreBlockSpec = create_cvar("sv_ag_core_block_spec", "0");
+	set_pcvar_string(gCvarCoreBlockSpec, "0");
 
 	// Load mode cvars
 	new mode[32];
@@ -1221,6 +1227,9 @@ ProcessCmdHelp(id, start_argindex, bool:do_search, const main_command[], const s
 
 
 public CmdSpectate(id) {
+	if (get_pcvar_bool(gCvarCoreBlockSpec))
+		return PLUGIN_HANDLED;
+
 	if (!hl_get_user_spectator(id)) {
 		// saves his score before go to spec in case he entered by accident
 		if (RestoreScore_FindPlayer(id)) {

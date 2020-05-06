@@ -67,6 +67,9 @@ public plugin_init() {
 	DisableVote("agpause", "OnVoteNotAllowed");
 	DisableVote("agallow", "OnVoteNotAllowed");
 
+	// blocks player score reset from the core
+	set_cvar_num("sv_ag_core_block_spec", 1);
+
 	StartMatchLms();
 }
 
