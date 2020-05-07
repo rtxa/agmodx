@@ -244,49 +244,43 @@ public plugin_precache() {
 	// AG Mod X Version
 	create_cvar("agmodx_version", VERSION, FCVAR_SERVER);
 
-	gCvarContact = get_cvar_pointer("sv_contact");
-
-	gCvarDebugVote = create_cvar("sv_ag_debug_vote", "0", FCVAR_SERVER);
-
-	// Chat cvar
-	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER | FCVAR_SPONLY);
-
-	gCvarMaxSpectators = create_cvar("sv_ag_max_spectators", "32", FCVAR_SERVER | FCVAR_SPONLY);
-	
-	// Agstart cvars
+	// General cvars
+	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER); // yellow
+	gCvarMaxSpectators = create_cvar("sv_ag_max_spectators", "32", FCVAR_SERVER);
 	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
-	
+	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER);
+	gCvarContact = get_cvar_pointer("sv_contact");
+		
 	// Allowed vote cvars
-	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteGameMode = create_cvar("sv_ag_vote_gamemode", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteAgAllow = create_cvar("sv_ag_vote_allow", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteAgStart = create_cvar("sv_ag_vote_start", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER);
+	gCvarAllowVoteGameMode = create_cvar("sv_ag_vote_gamemode", "1", FCVAR_SERVER);
+	gCvarAllowVoteAgAllow = create_cvar("sv_ag_vote_allow", "1", FCVAR_SERVER);
+	gCvarAllowVoteAgStart = create_cvar("sv_ag_vote_start", "1", FCVAR_SERVER);
+	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER);
+	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER);
+	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER);
 
 	// Limits for vote cvars
-	gCvarVoteTimeLimitMax = create_cvar("sv_ag_vote_mp_timelimit_high", "1440", FCVAR_SERVER | FCVAR_SPONLY); // one day
-	gCvarVoteTimeLimitMin = create_cvar("sv_ag_vote_mp_timelimit_low", "10", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarVoteFragLimitMax = create_cvar("sv_ag_vote_mp_fraglimit_high", "999", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarVoteFragLimitMin = create_cvar("sv_ag_vote_mp_fraglimit_low", "0", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarVoteTimeLimitMax = create_cvar("sv_ag_vote_mp_timelimit_high", "1440"); // one day
+	gCvarVoteTimeLimitMin = create_cvar("sv_ag_vote_mp_timelimit_low", "10");
+	gCvarVoteFragLimitMax = create_cvar("sv_ag_vote_mp_fraglimit_high", "999");
+	gCvarVoteFragLimitMin = create_cvar("sv_ag_vote_mp_fraglimit_low", "0");
 
 	// Vote cvars
-	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15", FCVAR_SERVER | FCVAR_SPONLY, "", true, 0.0, true, 999.0);
-	gCvarVoteDuration = create_cvar("sv_ag_vote_duration", "30", FCVAR_SERVER, "", true, 0.0, true, 999.0);
-	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0", FCVAR_SERVER);
+	gCvarDebugVote = create_cvar("sv_ag_debug_vote", "0");
+	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15");
+	gCvarVoteDuration = create_cvar("sv_ag_vote_duration", "30");
+	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0");
 
 	// Gamemode cvars
-	gCvarAllowedGameModes = create_cvar("sv_ag_allowed_gamemodes", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarBanHealthKit = create_cvar("sv_ag_ban_health", "0");
-	gCvarBanBattery = create_cvar("sv_ag_ban_armour", "0");
-	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
+	gCvarAllowedGameModes = create_cvar("sv_ag_allowed_gamemodes", "", FCVAR_SERVER);
+	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER);
+	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER);
+
+	// Start player health/armor and LJ
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
 	gCvarStartArmor = create_cvar("sv_ag_start_armour", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
-	gCvarBanChargers = create_cvar("sv_ag_ban_recharg", "0");
 
 	new value[32];
 
@@ -297,26 +291,36 @@ public plugin_precache() {
 		// get default value
 		get_pcvar_string(gCvarMpDmgWeapons[i], value, charsmax(value));
 
-		// bind sv_ag_dmg_xx cvars with the ones from bugfixed hl...
-		gCvarAgDmgWeapons[i] = create_cvar(gAgDmgWeapons[i], value, FCVAR_SERVER | FCVAR_SPONLY);
+		// bind sv_ag_dmg_xxx cvars with the ones from bugfixed hl...
+		gCvarAgDmgWeapons[i] = create_cvar(gAgDmgWeapons[i], value);
 		hook_cvar_change(gCvarAgDmgWeapons[i], "CvarMpDmgHook");
 	}
 
+	// Start weapons
 	for (new i; i < sizeof gCvarStartWeapons; i++)
-		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0", FCVAR_SERVER);
+		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0");
+	// Start ammo
 	for (new i; i < sizeof gCvarStartAmmo; i++)
-		gCvarStartAmmo[i] = create_cvar(gAgStartAmmo[i], "0", FCVAR_SERVER);
+		gCvarStartAmmo[i] = create_cvar(gAgStartAmmo[i], "0");
+	// Ban weapons
 	for (new i; i < sizeof gCvarBanWeapons; i++)
-		gCvarBanWeapons[i] = create_cvar(gAgBanWeapons[i], "0", FCVAR_SERVER);
+		gCvarBanWeapons[i] = create_cvar(gAgBanWeapons[i], "0");
+	// Ban ammo
 	for (new i; i < sizeof gCvarBanAmmo; i++)
-		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0", FCVAR_SERVER);
+		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0");
+	
+	// Ban items
+	gCvarBanHealthKit = create_cvar("sv_ag_ban_health", "0");
+	gCvarBanBattery = create_cvar("sv_ag_ban_armour", "0");
+	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
+	gCvarBanChargers = create_cvar("sv_ag_ban_recharg", "0");
 
 	// Multiplayer cvars
-	gCvarHeadShot = create_cvar("sv_ag_headshot", "3", FCVAR_SERVER);
-	gCvarBlastRadius = create_cvar("sv_ag_blastradius", "1", FCVAR_SERVER);
-	gCvarWallGauss = create_cvar("sv_ag_wallgauss", "1", FCVAR_SERVER);
-	gCvarGaussFix = create_cvar("ag_gauss_fix", "0", FCVAR_SERVER);
-	gCvarRpgFix = create_cvar("ag_rpg_fix", "0", FCVAR_SERVER);
+	gCvarHeadShot = create_cvar("sv_ag_headshot", "3");
+	gCvarBlastRadius = create_cvar("sv_ag_blastradius", "1");
+	gCvarWallGauss = create_cvar("sv_ag_wallgauss", "1");
+	gCvarGaussFix = create_cvar("ag_gauss_fix", "0");
+	gCvarRpgFix = create_cvar("ag_rpg_fix", "0");
 	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
 	gCvarFallDamage = get_cvar_pointer("mp_falldamage");
 	gCvarFlashLight = get_cvar_pointer("mp_flashlight");
@@ -328,20 +332,17 @@ public plugin_precache() {
 	gCvarTimeLimit = get_cvar_pointer("mp_timelimit");
 	gCvarWeaponStay = get_cvar_pointer("mp_weaponstay");
 
+	// bind some ag cvars with the ones from bugfixed hl...
 	hook_cvar_change(gCvarHeadShot, "CvarAgHeadShotHook");
 	hook_cvar_change(gCvarBlastRadius, "CvarBlastRadiusHook");
 	hook_cvar_change(gCvarWallGauss, "CvarWallGaussHook");
 	hook_cvar_change(gCvarRpgFix, "CvarAgRpgFixHook");
 	hook_cvar_change(gCvarGaussFix, "CvarAgGaussFixHook");
 
-	// AG Hud Color
-	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER | FCVAR_SPONLY); // yellow
-
+	// keep AG HUD color updated
 	new color[32];
 	get_pcvar_string(gCvarHudColor, color, charsmax(color));
 	GetStrColor(color, gHudRed, gHudGreen, gHudBlue);
-
-	// keep ag hud color updated
 	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
 
 	// Put this before loading the gamemode .cfg to avoid any issues
