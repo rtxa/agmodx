@@ -1,21 +1,25 @@
 /*
-	Adrenaline Gamer Mod X by rtxa
+	AG Mod X by rtxA
 
-	Acknowledgements:
-	Bullit for creating Adrenaline Gamer
-	Lev for his Bugfixed and Improved HL Release
-	KORD_27 for his hl.inc
+	# Thanks to:
+	- BulliT for his AG Mod and some useful codes.
+	- Lev for his Bugfixed HL and some useful codes.
+	- KORD_12.7 for his HL Stocks include for AMXX.
 
-	Information:
-	An improved Mini AG alternative, made as a plugin for AMX Mod X from zero, to make it easier add improvements, features, fix annoying bugs, etc.
+	# Information:
+	AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X 
+	from the ground. It's easy to add new stuff, make improvements, do changes, etc.
 	
-	Features:
-	AMX Mod X 1.9 or newer
-	Bugfixed and Improved HL Release
-	Multilingual (Spanish and English 100%)
+	# Features:
+	- Uses Bugfixed HL in the core, a HL that fixes a lot of issues and comes with some features
+	and improvements.
+	- Some fixes and improvements to the original Mini AG.
+	- Supports multilingual (English and Spanish are included).
+	- Portability, because of the nature of the mod, it allows to use other plugins in your server,
+	and in case it's interfering with other plugins, you can switch it off.
 
-	More info in: aghl.ru/forum/viewtopic.php?f=19&t=2926
-	Contact: usertxa@gmail.com or Discord rtxa#6795
+	More info: https://git.io/agmodx
+	Contact: usertxa@gmail.com or rtxa#6795 (Discord)
 */
 
 #include <agmodx>
@@ -33,7 +37,7 @@
 #define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
-#define CONTACT_INFO "More info: git.io/agmodx (Link)"
+#define CONTACT_INFO "More info: https://git.io/agmodx"
 
 #pragma semicolon 1
 
