@@ -1301,7 +1301,7 @@ public ShowSettings(id) {
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
 		return PLUGIN_HANDLED;
 		
-	new arg[32], buildDate[32];
+	new arg[64], buildDate[32];
 	GetPluginBuildDate(buildDate, charsmax(buildDate));
 
 	get_pcvar_string(gCvarContact, arg, charsmax(arg));
