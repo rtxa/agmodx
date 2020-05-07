@@ -541,6 +541,11 @@ public client_disconnected(id) {
 	remove_task(TASK_SENDVICTIMTOSPEC + id);
 	remove_task(id);
 
+	// Sometimes a player connects and disconnects before ClientPutInServer()
+	// so he will not have private data...
+	if (pev_valid(id) != 2)
+		return;
+
 	new frags = get_user_frags(id);
 	new deaths = hl_get_user_deaths(id);
 
