@@ -632,6 +632,13 @@ public client_kill() {
 }
 
 public PlayerPostKilled(victim, attacker) {
+	// AG works like this, if player dies and the killer isn't a player, penalize him substracting one point
+	// Probably we need to add a cvar to disable this in case a mod requires it
+	// or just make agmodx disable everything except the vote system
+	if (!IsPlayer(attacker)) {
+		hl_set_user_frags(victim, hl_get_user_frags(victim) - 1);
+	}
+
 	if (gSendVictimToSpec)
 		set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
 
