@@ -414,7 +414,7 @@ public plugin_init() {
 	ag_register_clcmd("vote", "CmdVote", ADMIN_ALL, "AGCMD_VOTE", _, true);
 	ag_register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "AGCMD_YES", _, true);
 	ag_register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "AGCMD_NO", _, true);
-	ag_register_clcmd("settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
+	ag_register_clcmd("settings", "CmdSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
 	ag_register_clcmd("say settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
 	ag_register_clcmd("say_close", "CmdSayClose", ADMIN_ALL, "AGCMD_SAYCLOSE", _, true);
 	ag_register_clcmd("play_close", "CmdPlayClose", ADMIN_ALL, "AGCMD_PLAYCLOSE", _, true);
@@ -1305,17 +1305,22 @@ GetPluginBuildDate(output[], len) {
 	format_time(output, len, "%d %b %Y", parse_time(__DATE__, "%m:%d:%Y")); // 15 Nov 2018
 }
 
+public CmdSettings(id) {
+	ShowSettings(id);
+	return PLUGIN_HANDLED;
+}
+
 // We need to use director hud msg because there aren't enough hud channels, unless we make a better gui that use less channels
 // We are limited to 128 characters, so that is bad for multilingual or to show more settings ...
 public ShowSettings(id) {
 	// avoid hud overlap
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
-		return PLUGIN_HANDLED;
+		return;
 		
 	new arg[64], buildDate[32];
 	GetPluginBuildDate(buildDate, charsmax(buildDate));
-
 	get_pcvar_string(gCvarContact, arg, charsmax(arg));
+	
 	if (!arg[0]) 
 		formatex(arg, charsmax(arg), CONTACT_INFO);
 
@@ -1338,8 +1343,6 @@ public ShowSettings(id) {
 		get_pcvar_num(gCvarSelfGauss) ? "On" : "Off");
 
 	set_task(10.0, "ShowSettings", id + TASK_SHOWSETTINGS); // this will stop hud overlap
-	
-	return PLUGIN_HANDLED;
 }
 
 public CmdAgForceSpectator(id, level, cid) {
