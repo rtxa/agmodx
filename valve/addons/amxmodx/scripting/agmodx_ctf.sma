@@ -186,17 +186,17 @@ ParseEntFromFile(const input[], ent_name[], len, Float:ent_origin[3], Float:ent_
 
 public plugin_init() {
 	register_dictionary("agmodxctf.txt");
-
-	// i should add a check to avoid loading the ctf map file when map is actually CTF
-	// but i prefer not to add it in case we need to add more stuff to the map
-	gIsMapCtf = LoadCtfMapFile();
+	
+	// is not a native ctf map? try loading the config file
+	if (!gIsMapCtf) {
+		gIsMapCtf = LoadCtfMapFile();
+	}
 	
 	if (!gIsMapCtf) {
 		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
 		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
 		return;
 	}
-
 
 	register_clcmd("dropitems", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
@@ -234,7 +234,6 @@ UpdateTeamScore(id = 0) {
 	hl_set_teamscore(gTeamListModels[BLUE_TEAM - 1], gBlueScore, id);	
 	hl_set_teamscore(gTeamListModels[RED_TEAM - 1], gRedScore, id);	
 }
-
 
 public client_disconnected(id) {
 	if (!gIsCtfMode)
@@ -393,7 +392,6 @@ public DropFlagSpec(id) {
 	if (hl_get_user_spectator(id))
 		DropFlag(id);
 }
-
 
 public FwCapturePointTouch(touched, toucher) {
 	switch (IsPlayerCarryingFlag(toucher)) {
