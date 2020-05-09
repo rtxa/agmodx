@@ -196,6 +196,7 @@ new gCvarGaussFix;
 new gCvarWallGauss;
 new gCvarBlastRadius;
 new gCvarRpgFix;
+new gCvarMaxSpeed;
 
 new gCvarStartHealth;
 new gCvarStartArmor;
@@ -335,6 +336,7 @@ public plugin_precache() {
 	gCvarSelfGauss = get_cvar_pointer("mp_selfgauss");
 	gCvarTimeLimit = get_cvar_pointer("mp_timelimit");
 	gCvarWeaponStay = get_cvar_pointer("mp_weaponstay");
+	gCvarMaxSpeed = get_cvar_pointer("sv_maxspeed");
 
 	// bind some ag cvars with the ones from bugfixed hl...
 	hook_cvar_change(gCvarHeadShot, "CvarAgHeadShotHook");
@@ -1676,7 +1678,66 @@ CreateVoteSystem() {
 	ag_vote_add("mp_weaponstay", "OnVoteWeaponStay");
 	ag_vote_add("ag_gauss_fix", "OnVoteSelfGauss");
 	ag_vote_add("ag_rpg_fix", "OnVoteRpgFix");
+	ag_vote_add("ag_spectalk", "OnVoteSpecTalk");
+	ag_vote_add("sv_maxspeed", "OnVoteMaxSpeed");
 }
+
+public OnVoteSpecTalk(id, check, argc, arg1[], arg2[]) {
+	if (argc != 2) {
+		console_print(id, "%l", "VOTE_INVALID");
+		return false;
+	}
+	
+	if (!check) {
+		set_pcvar_string(gCvarSpecTalk, arg2);
+	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
+		if (!is_str_num(arg2)) {
+			console_print(id, "%l", "INVALID_NUMBER");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+public OnVoteMaxSpeed(id, check, argc, arg1[], arg2[]) {
+	if (argc != 2) {
+		console_print(id, "%l", "VOTE_INVALID");
+		return false;
+	}
+	
+	if (!check) {
+		set_pcvar_string(gCvarMaxSpeed, arg2);
+	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
+		if (!is_str_num(arg2)) {
+			console_print(id, "%l", "INVALID_NUMBER");
+			return false;
+		}
+
+		new num = str_to_num(arg2);
+		if (num > 350) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MAX", 350);
+			return false;
+		} else if (num < 270) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MIN", 270);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 public OnVoteAgKick(id, check, argc, arg1[], arg2[]) {
 	if (argc > 2) {
