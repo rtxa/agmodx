@@ -57,6 +57,7 @@ new Array:gAgCmdList;
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
 new gNumLocations;
+new Float:gDeathLocation[MAX_PLAYERS + 1][3];
 
 // Game player equip
 new bool:gGamePlayerEquipExists;
@@ -634,6 +635,9 @@ public client_kill() {
 }
 
 public PlayerPostKilled(victim, attacker) {
+	// Save player death location
+	pev(victim, pev_origin, gDeathLocation[victim]);
+
 	// AG works like this, if player dies and the killer isn't a player, penalize him substracting one point
 	// Probably we need to add a cvar to disable this in case a mod requires it
 	// or just make agmodx disable everything except the vote system
@@ -1008,7 +1012,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	
 	get_msg_arg_string(2, text, charsmax(text)); // get user message
 	
-	if (text[0] == '*') // ignore server messages
+	if (text[0] != 2) // only modify player messages
 		return PLUGIN_CONTINUE;
 
 	new sender = get_msg_arg_int(1);
@@ -1056,9 +1060,13 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	formatex(str, charsmax(str), "%s", hl_get_user_longjump(sender) ? "Yes" : "No");
 	replace_string(text, charsmax(text), "%p", isSenderSpec ? "" : str, false);
 
-	// replace all %l with location
+	// replace all %l with current location
 	GetPlayerLocation(sender, str, charsmax(str));
 	replace_string(text, charsmax(text), "%l", str, false);
+
+	// replace all %d with death location
+	GetDeathLocation(sender, str, charsmax(str));
+	replace_string(text, charsmax(text), "%d", str, false);
 
 	new ammo, bpammo, weaponid;
 	if (!isSenderSpec && (weaponid = get_user_weapon(sender, ammo, bpammo))) {
@@ -1068,6 +1076,10 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 
 	// replace all %w with current weapon
 	replace_string(text, charsmax(text), "%w", isSenderSpec ? "" : str, false);
+
+	// replace all %s with current score
+	formatex(str, charsmax(str), "%d/%d", hl_get_user_frags(sender), hl_get_user_deaths(sender));
+	replace_string(text, charsmax(text), "%s", isSenderSpec ? "" : str, false);
 
 	if (!isSenderSpec) {
 		new arGrenades;
@@ -1160,16 +1172,14 @@ public GetLocations(name[][], size, Float:origin[][], &numLocs) {
 }
 
 // return the index of the nearest location for the player from an array
-public FindNearestLocation(id, Float:locOrigin[][3], numLocs) {
-	new Float:userOrigin[3], Float:nearestOrigin[3], idxNearestLoc;
+public FindNearestLocation(Float:origin[3], Float:locOrigin[][3], numLocs) {
+	new Float:nearestOrigin[3], idxNearestLoc;
 	
-	pev(id, pev_origin, userOrigin);
-
 	// initialize nearest origin with the first location
 	nearestOrigin = locOrigin[0];
 	
 	for (new i; i < numLocs; i++) {
-		if (vector_distance(userOrigin, locOrigin[i]) <= vector_distance(userOrigin, nearestOrigin)) {
+		if (vector_distance(origin, locOrigin[i]) <= vector_distance(origin, nearestOrigin)) {
 			nearestOrigin = locOrigin[i];
 			idxNearestLoc = i;
 		}
@@ -1179,7 +1189,14 @@ public FindNearestLocation(id, Float:locOrigin[][3], numLocs) {
 }
 
 public GetPlayerLocation(id, locName[], len) {
-	new idx = FindNearestLocation(id, gLocationOrigin, gNumLocations);
+	new Float:origin[3];
+	pev(id, pev_origin, origin);
+	new idx = FindNearestLocation(origin, gLocationOrigin, gNumLocations);
+	copy(locName, len, gLocationName[idx]);
+}
+
+public GetDeathLocation(id, locName[], len) {
+	new idx = FindNearestLocation(gDeathLocation[id], gLocationOrigin, gNumLocations);
 	copy(locName, len, gLocationName[idx]);
 }
 

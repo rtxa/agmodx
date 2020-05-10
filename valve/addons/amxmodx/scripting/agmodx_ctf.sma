@@ -214,6 +214,7 @@ public plugin_init() {
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(INFO_CAPTURE_POINT, "player", "FwCapturePointTouch");
 
+	register_message(get_user_msgid("SayText"), "MsgSayText");
 	register_message(get_user_msgid("ScoreInfo"), "MsgScoreInfo");
 
 	CreateGameTeamMaster("blue", BLUE_TEAM);
@@ -221,6 +222,29 @@ public plugin_init() {
 
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
+}
+
+public MsgSayText(msg_id, msg_dest, receiver) {
+	new text[191]; // 192 will crash the sv by overflow if someone send a large message with a lot of %l, %w, etc...
+	get_msg_arg_string(2, text, charsmax(text)); // get user message
+
+	// Only modify player messages
+	if (text[0] != 2)
+		return PLUGIN_CONTINUE;
+
+	new sender = get_msg_arg_int(1);
+
+	new str[32];
+
+	// replace all %f with flag status
+	new team = IsPlayerCarryingFlag(sender);
+	formatex(str, charsmax(str), "%s", team > 0 ? gTeamListModels[team - 1] : "");
+	replace_string(text, charsmax(text), "%f", hl_get_user_spectator(sender) ? "" : str, false);
+	
+	// send modified message
+	set_msg_arg_string(2, text);
+	
+	return PLUGIN_CONTINUE;
 }
 
 // i want to show only flag capture points in scoreboard, but
