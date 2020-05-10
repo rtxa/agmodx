@@ -10,7 +10,7 @@
 #include <agmodx_const>
 
 #define PLUGIN  "AG Mod X Arcade"
-#define VERSION "Beta 2.1"
+#define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -32,7 +32,7 @@ public plugin_precache() {
 	}
 
 	gCvarStartHealth = get_cvar_pointer("sv_ag_start_health");
-	gCvarStartArmor = get_cvar_pointer("sv_ag_start_armor");
+	gCvarStartArmor = get_cvar_pointer("sv_ag_start_armour");
 
 	for (new i; i < sizeof gCvarStartWeapons; i++)
 		gCvarStartWeapons[i] = get_cvar_pointer(gAgStartWeapons[i]);
@@ -68,29 +68,28 @@ ResetBpAmmo(id) {
 ResetWeaponClip(id) {
 	new weapon;
 	if (get_pcvar_num(gCvarStartWeapons[START_RPG])) {
-		weapon = GetUserWeaponEntId(id, HLW_RPG);
-		hl_set_weapon_ammo(weapon, 1);
+		if ((weapon = hl_user_has_weapon(id, HLW_RPG)))
+			hl_set_weapon_ammo(weapon, 1);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_CROSSBOW])) {
-		weapon = GetUserWeaponEntId(id, HLW_CROSSBOW);
-		hl_set_weapon_ammo(weapon, 5);
+		if ((weapon = hl_user_has_weapon(id, HLW_CROSSBOW)))
+			hl_set_weapon_ammo(weapon, 5);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
-		weapon = GetUserWeaponEntId(id, HLW_MP5);
-		if (hl_get_weapon_ammo(weapon) < 25)
-			hl_set_weapon_ammo(weapon, 25);
+		if ((weapon = hl_user_has_weapon(id, HLW_MP5)))
+			hl_set_weapon_ammo(weapon, 50);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_9MMHANDGUN])) {
-		weapon = GetUserWeaponEntId(id, HLW_GLOCK);
-		hl_set_weapon_ammo(weapon, 17);
+		if ((weapon = hl_user_has_weapon(id, HLW_GLOCK)))
+			hl_set_weapon_ammo(weapon, 17);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_357])) {
-		weapon = GetUserWeaponEntId(id, HLW_PYTHON);
-		hl_set_weapon_ammo(weapon, 6);
+		if ((weapon = hl_user_has_weapon(id, HLW_PYTHON)))
+			hl_set_weapon_ammo(weapon, 6);
 	}
 	if (get_pcvar_num(gCvarStartWeapons[START_SHOTGUN])) {
-		weapon = GetUserWeaponEntId(id, HLW_SHOTGUN);
-		hl_set_weapon_ammo(weapon, 8);
+		if ((weapon = hl_user_has_weapon(id, HLW_SHOTGUN)))
+			hl_set_weapon_ammo(weapon, 8);
 	}
 }
 

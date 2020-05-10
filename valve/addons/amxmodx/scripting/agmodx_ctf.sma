@@ -9,7 +9,7 @@
 #include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X CTF"
-#define VERSION "Beta 2.1"
+#define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -108,21 +108,102 @@ public OnPlayerSpawn(id) {
 	client_print(id, print_center, "%l", "CTF_NOTCTFMAP");
 }
 
+bool:LoadCtfMapFile() {
+	new mapname[32];
+	get_mapname(mapname, charsmax(mapname));
+
+	new handle = fopen(fmt("ctf/%s.ctf", mapname), "r");
+
+	if (!handle)
+		return false;
+
+	new buffer[128], line = 1;
+	while (fgets(handle, buffer, charsmax(buffer))) {
+		new ent_name[32], Float:ent_origin[3], Float:ent_angles[3];
+
+		if (!ParseEntFromFile(buffer, ent_name, charsmax(ent_name), ent_origin, ent_angles))
+			log_amx("Warning: Bad parsing on line %d from file ^"%s.ctf^". Check if everything is correct.", line, mapname);
+		
+		// Debug
+		//log_amx("[Entity] Name: %s Origin: %f %f %f Angles: %f %f %f", ent_name, ent_origin[0], ent_origin[1], ent_origin[2], ent_angles[0], ent_angles[1], ent_angles[2]);
+		
+		if (equal(ent_name, INFO_FLAG_BLUE)) {
+			gFlagBlue = CreateCustomEnt(ent_name);	
+			SetFlagStartOrigin(gFlagBlue, ent_origin);
+			SetFlagStartAngles(gFlagBlue, ent_angles);
+		} else if (equal(ent_name, INFO_FLAG_RED)) {
+			gFlagRed = CreateCustomEnt(ent_name);	
+			SetFlagStartOrigin(gFlagRed, ent_origin);
+			SetFlagStartAngles(gFlagRed, ent_angles);
+		} else if (equal(ent_name, INFO_PLAYER_BLUE) || equal(ent_name, INFO_PLAYER_RED)) {
+			new ent = create_entity(INFO_PLAYER_DEATHMATCH);
+			set_pev(ent, pev_netname, equal(ent_name, INFO_PLAYER_BLUE) ? "blue" : "red");
+			set_pev(ent, pev_origin, ent_origin);
+			set_pev(ent, pev_angles, ent_angles);
+		} else {
+			new ent = create_entity(ent_name);
+			if (pev_valid(ent) == 0) {
+				log_amx("Warning: Classname ^"%s^" doesn't exists. Check if everything is correct on line %d from file ^"%s.ctf^"", ent_name, line, mapname);
+				continue;
+			}
+			set_pev(ent, pev_origin, ent_origin);
+			set_pev(ent, pev_angles, ent_angles);
+			DispatchSpawn(ent);
+		}
+
+		line++;
+	}
+
+	fclose(handle);
+
+	return true;
+}
+
+ParseEntFromFile(const input[], ent_name[], len, Float:ent_origin[3], Float:ent_angles[3]) {
+	// We read in the next order: 1. Entity name (1 arg) 2. Entity origin (3 args) 3. Entity angles (3 args)
+	// Input example: "item_flag_team1 973.734131 535.433899 36.031250 -4.268188 86.742554 0.000000"
+	new arg[32], pos, argc;
+	while (argc <= 6) {
+		pos = argparse(input, pos, arg, charsmax(arg));
+		if (pos == -1)
+			break;
+		if (argc == 0) { // READING ENT NAME
+			copy(ent_name, len, arg);
+		} else if (argc >= 1 && argc <= 3) { // READING ENT ORIGIN
+			ent_origin[argc - 1] = str_to_float(arg);
+		} else if (argc >= 4 && argc <= 6) { // READING ENT ANGLES
+			ent_angles[argc - 4] = str_to_float(arg);
+		}
+		++argc;
+	}
+
+	// we didn't get to read all the arguments, bad parsing
+	if (argc < 7)
+		return false;
+	else
+		return true;
+}
+
 public plugin_init() {
 	register_dictionary("agmodxctf.txt");
-
+	
+	// is not a native ctf map? try loading the config file
+	if (!gIsMapCtf) {
+		gIsMapCtf = LoadCtfMapFile();
+	}
+	
 	if (!gIsMapCtf) {
 		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
 		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
 		return;
 	}
 
-	RemoveUselessSpawns();
-
 	register_clcmd("dropitems", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
 
 	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
+
+	RemoveUselessSpawns();
 
 	SpawnFlag(gFlagBlue);
 	SpawnFlag(gFlagRed);
@@ -133,6 +214,7 @@ public plugin_init() {
 	register_touch(INFO_FLAG_RED, "player", "FwFlagTouch");
 	register_touch(INFO_CAPTURE_POINT, "player", "FwCapturePointTouch");
 
+	register_message(get_user_msgid("SayText"), "MsgSayText");
 	register_message(get_user_msgid("ScoreInfo"), "MsgScoreInfo");
 
 	CreateGameTeamMaster("blue", BLUE_TEAM);
@@ -140,6 +222,29 @@ public plugin_init() {
 
 	gHudCtfMessage = CreateHudSyncObj();
 	GetTeamListModels(gTeamListModels, HL_MAX_TEAMS);
+}
+
+public MsgSayText(msg_id, msg_dest, receiver) {
+	new text[191]; // 192 will crash the sv by overflow if someone send a large message with a lot of %l, %w, etc...
+	get_msg_arg_string(2, text, charsmax(text)); // get user message
+
+	// Only modify player messages
+	if (text[0] != 2)
+		return PLUGIN_CONTINUE;
+
+	new sender = get_msg_arg_int(1);
+
+	new str[32];
+
+	// replace all %f with flag status
+	new team = IsPlayerCarryingFlag(sender);
+	formatex(str, charsmax(str), "%s", team > 0 ? gTeamListModels[team - 1] : "");
+	replace_string(text, charsmax(text), "%f", hl_get_user_spectator(sender) ? "" : str, false);
+	
+	// send modified message
+	set_msg_arg_string(2, text);
+	
+	return PLUGIN_CONTINUE;
 }
 
 // i want to show only flag capture points in scoreboard, but
@@ -153,7 +258,6 @@ UpdateTeamScore(id = 0) {
 	hl_set_teamscore(gTeamListModels[BLUE_TEAM - 1], gBlueScore, id);	
 	hl_set_teamscore(gTeamListModels[RED_TEAM - 1], gRedScore, id);	
 }
-
 
 public client_disconnected(id) {
 	if (!gIsCtfMode)
@@ -312,7 +416,6 @@ public DropFlagSpec(id) {
 	if (hl_get_user_spectator(id))
 		DropFlag(id);
 }
-
 
 public FwCapturePointTouch(touched, toucher) {
 	switch (IsPlayerCarryingFlag(toucher)) {

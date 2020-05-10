@@ -117,13 +117,6 @@ stock StopPlugin() {
 	return;
 }
 
-// If user has the weapon (HLW enum from hlsdk_const.inc), return the weapon entity index.
-stock GetUserWeaponEntId(id, weapon) {
-	new classname[32];
-	get_weaponname(weapon, classname, charsmax(classname));
-	return find_ent_by_owner(0, classname, id);
-}
-
 stock PlayNumSound(id, second) {
 	if (second >= 0 && second <= sizeof(gCountSnd))
 		PlaySound(id, gCountSnd[second]);

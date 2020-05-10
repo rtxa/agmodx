@@ -11,7 +11,7 @@
 #include <agmodx_const>
 
 #define PLUGIN  "AG Mod X Arena"
-#define VERSION "Beta 2.1"
+#define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -89,6 +89,9 @@ public plugin_init() {
 	DisableVote("agstart", "OnVoteNotAllowed");
 	DisableVote("agpause", "OnVoteNotAllowed");
 	DisableVote("agallow", "OnVoteNotAllowed");
+
+	// blocks player score reset from the core
+	set_cvar_num("sv_ag_core_block_spec", 1);
 
 	StartArena();
 }

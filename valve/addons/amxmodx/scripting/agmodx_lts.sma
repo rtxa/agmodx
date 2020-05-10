@@ -10,7 +10,7 @@
 #include <agmodx_const>
 
 #define PLUGIN  "AG Mod X LTS"
-#define VERSION "Beta 2.1"
+#define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -68,6 +68,9 @@ public plugin_init() {
 	register_clcmd("spectate", "CmdSpectate");
 
 	gHudShowMatch = CreateHudSyncObj();
+
+	// blocks player score reset from the core
+	set_cvar_num("sv_ag_core_block_spec", 1);
 
 	StartMatchLts();
 }

@@ -1,21 +1,25 @@
 /*
-	Adrenaline Gamer Mod X by rtxa
+	AG Mod X by rtxA
 
-	Acknowledgements:
-	Bullit for creating Adrenaline Gamer
-	Lev for his Bugfixed and Improved HL Release
-	KORD_27 for his hl.inc
+	# Thanks to:
+	- BulliT for his AG Mod and some useful codes.
+	- Lev for his Bugfixed HL and some useful codes.
+	- KORD_12.7 for his HL Stocks include for AMXX.
 
-	Information:
-	An improved Mini AG alternative, made as a plugin for AMX Mod X from zero, to make it easier add improvements, features, fix annoying bugs, etc.
+	# Information:
+	AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X 
+	from the ground. It's easy to add new stuff, make improvements, do changes, etc.
 	
-	Features:
-	AMX Mod X 1.9 or newer
-	Bugfixed and Improved HL Release
-	Multilingual (Spanish and English 100%)
+	# Features:
+	- Uses Bugfixed HL in the core, a HL that fixes a lot of issues and comes with some features
+	and improvements.
+	- Some fixes and improvements to the original Mini AG.
+	- Supports multilingual (English and Spanish are included).
+	- Portability, because of the nature of the mod, it allows to use other plugins in your server,
+	and in case it's interfering with other plugins, you can switch it off.
 
-	More info in: aghl.ru/forum/viewtopic.php?f=19&t=2926
-	Contact: usertxa@gmail.com or Discord rtxa#6795
+	More info: https://git.io/agmodx
+	Contact: usertxa@gmail.com or rtxa#6795 (Discord)
 */
 
 #include <agmodx>
@@ -30,10 +34,10 @@
 #include <hlstocks>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 2.1"
+#define VERSION "Beta 2.2"
 #define AUTHOR  "rtxA"
 
-#define CONTACT_INFO "More info: rtxa#6795 (Discord)"
+#define CONTACT_INFO "More info: https://git.io/agmodx"
 
 #pragma semicolon 1
 
@@ -53,6 +57,7 @@ new Array:gAgCmdList;
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
 new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
 new gNumLocations;
+new Float:gDeathLocation[MAX_PLAYERS + 1][3];
 
 // Game player equip
 new bool:gGamePlayerEquipExists;
@@ -192,6 +197,7 @@ new gCvarGaussFix;
 new gCvarWallGauss;
 new gCvarBlastRadius;
 new gCvarRpgFix;
+new gCvarMaxSpeed;
 
 new gCvarStartHealth;
 new gCvarStartArmor;
@@ -208,6 +214,8 @@ new gCvarBanBattery;
 new gCvarBanHealthKit;
 new gCvarBanLongJump;
 new gCvarBanChargers;
+
+new gCvarCoreBlockSpec;
 
 new const gWeaponClass[][] = {
 	"weapon_357",
@@ -242,49 +250,43 @@ public plugin_precache() {
 	// AG Mod X Version
 	create_cvar("agmodx_version", VERSION, FCVAR_SERVER);
 
-	gCvarContact = get_cvar_pointer("sv_contact");
-
-	gCvarDebugVote = create_cvar("sv_ag_debug_vote", "0", FCVAR_SERVER);
-
-	// Chat cvar
-	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER | FCVAR_SPONLY);
-
-	gCvarMaxSpectators = create_cvar("sv_ag_max_spectators", "10", FCVAR_SERVER | FCVAR_SPONLY);
-	
-	// Agstart cvars
+	// General cvars
+	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER); // yellow
+	gCvarMaxSpectators = create_cvar("sv_ag_max_spectators", "32", FCVAR_SERVER);
 	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
-	
+	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER);
+	gCvarContact = get_cvar_pointer("sv_contact");
+		
 	// Allowed vote cvars
-	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteGameMode = create_cvar("sv_ag_vote_gamemode", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteAgAllow = create_cvar("sv_ag_vote_allow", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteAgStart = create_cvar("sv_ag_vote_start", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER);
+	gCvarAllowVoteGameMode = create_cvar("sv_ag_vote_gamemode", "1", FCVAR_SERVER);
+	gCvarAllowVoteAgAllow = create_cvar("sv_ag_vote_allow", "1", FCVAR_SERVER);
+	gCvarAllowVoteAgStart = create_cvar("sv_ag_vote_start", "1", FCVAR_SERVER);
+	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER);
+	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER);
+	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER);
 
 	// Limits for vote cvars
-	gCvarVoteTimeLimitMax = create_cvar("sv_ag_vote_mp_timelimit_high", "1440", FCVAR_SERVER | FCVAR_SPONLY); // one day
-	gCvarVoteTimeLimitMin = create_cvar("sv_ag_vote_mp_timelimit_low", "10", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarVoteFragLimitMax = create_cvar("sv_ag_vote_mp_fraglimit_high", "999", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarVoteFragLimitMin = create_cvar("sv_ag_vote_mp_fraglimit_low", "0", FCVAR_SERVER | FCVAR_SPONLY);
+	gCvarVoteTimeLimitMax = create_cvar("sv_ag_vote_mp_timelimit_high", "1440"); // one day
+	gCvarVoteTimeLimitMin = create_cvar("sv_ag_vote_mp_timelimit_low", "10");
+	gCvarVoteFragLimitMax = create_cvar("sv_ag_vote_mp_fraglimit_high", "999");
+	gCvarVoteFragLimitMin = create_cvar("sv_ag_vote_mp_fraglimit_low", "0");
 
 	// Vote cvars
-	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15", FCVAR_SERVER | FCVAR_SPONLY, "", true, 0.0, true, 999.0);
-	gCvarVoteDuration = create_cvar("sv_ag_vote_duration", "30", FCVAR_SERVER, "", true, 0.0, true, 999.0);
-	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0", FCVAR_SERVER);
+	gCvarDebugVote = create_cvar("sv_ag_debug_vote", "0");
+	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15");
+	gCvarVoteDuration = create_cvar("sv_ag_vote_duration", "30");
+	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0");
 
 	// Gamemode cvars
-	gCvarAllowedGameModes = create_cvar("sv_ag_allowed_gamemodes", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER | FCVAR_SPONLY);
-	gCvarBanHealthKit = create_cvar("sv_ag_ban_health", "0");
-	gCvarBanBattery = create_cvar("sv_ag_ban_armour", "0");
-	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
+	gCvarAllowedGameModes = create_cvar("sv_ag_allowed_gamemodes", "", FCVAR_SERVER);
+	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER);
+	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER);
+
+	// Start player health/armor and LJ
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
 	gCvarStartArmor = create_cvar("sv_ag_start_armour", "0");
 	gCvarStartLongJump = create_cvar("sv_ag_start_longjump", "0");
-	gCvarBanChargers = create_cvar("sv_ag_ban_recharg", "0");
 
 	new value[32];
 
@@ -295,26 +297,36 @@ public plugin_precache() {
 		// get default value
 		get_pcvar_string(gCvarMpDmgWeapons[i], value, charsmax(value));
 
-		// bind sv_ag_dmg_xx cvars with the ones from bugfixed hl...
-		gCvarAgDmgWeapons[i] = create_cvar(gAgDmgWeapons[i], value, FCVAR_SERVER | FCVAR_SPONLY);
+		// bind sv_ag_dmg_xxx cvars with the ones from bugfixed hl...
+		gCvarAgDmgWeapons[i] = create_cvar(gAgDmgWeapons[i], value);
 		hook_cvar_change(gCvarAgDmgWeapons[i], "CvarMpDmgHook");
 	}
 
+	// Start weapons
 	for (new i; i < sizeof gCvarStartWeapons; i++)
-		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0", FCVAR_SERVER);
+		gCvarStartWeapons[i] = create_cvar(gAgStartWeapons[i], "0");
+	// Start ammo
 	for (new i; i < sizeof gCvarStartAmmo; i++)
-		gCvarStartAmmo[i] = create_cvar(gAgStartAmmo[i], "0", FCVAR_SERVER);
+		gCvarStartAmmo[i] = create_cvar(gAgStartAmmo[i], "0");
+	// Ban weapons
 	for (new i; i < sizeof gCvarBanWeapons; i++)
-		gCvarBanWeapons[i] = create_cvar(gAgBanWeapons[i], "0", FCVAR_SERVER);
+		gCvarBanWeapons[i] = create_cvar(gAgBanWeapons[i], "0");
+	// Ban ammo
 	for (new i; i < sizeof gCvarBanAmmo; i++)
-		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0", FCVAR_SERVER);
+		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0");
+	
+	// Ban items
+	gCvarBanHealthKit = create_cvar("sv_ag_ban_health", "0");
+	gCvarBanBattery = create_cvar("sv_ag_ban_armour", "0");
+	gCvarBanLongJump = create_cvar("sv_ag_ban_longjump", "0");
+	gCvarBanChargers = create_cvar("sv_ag_ban_recharg", "0");
 
 	// Multiplayer cvars
-	gCvarHeadShot = create_cvar("sv_ag_headshot", "3", FCVAR_SERVER);
-	gCvarBlastRadius = create_cvar("sv_ag_blastradius", "1", FCVAR_SERVER);
-	gCvarWallGauss = create_cvar("sv_ag_wallgauss", "1", FCVAR_SERVER);
-	gCvarGaussFix = create_cvar("ag_gauss_fix", "0", FCVAR_SERVER);
-	gCvarRpgFix = create_cvar("ag_rpg_fix", "0", FCVAR_SERVER);
+	gCvarHeadShot = create_cvar("sv_ag_headshot", "3");
+	gCvarBlastRadius = create_cvar("sv_ag_blastradius", "1");
+	gCvarWallGauss = create_cvar("sv_ag_wallgauss", "1");
+	gCvarGaussFix = create_cvar("ag_gauss_fix", "0");
+	gCvarRpgFix = create_cvar("ag_rpg_fix", "0");
 	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
 	gCvarFallDamage = get_cvar_pointer("mp_falldamage");
 	gCvarFlashLight = get_cvar_pointer("mp_flashlight");
@@ -325,22 +337,27 @@ public plugin_precache() {
 	gCvarSelfGauss = get_cvar_pointer("mp_selfgauss");
 	gCvarTimeLimit = get_cvar_pointer("mp_timelimit");
 	gCvarWeaponStay = get_cvar_pointer("mp_weaponstay");
+	gCvarMaxSpeed = get_cvar_pointer("sv_maxspeed");
 
+	// bind some ag cvars with the ones from bugfixed hl...
 	hook_cvar_change(gCvarHeadShot, "CvarAgHeadShotHook");
 	hook_cvar_change(gCvarBlastRadius, "CvarBlastRadiusHook");
 	hook_cvar_change(gCvarWallGauss, "CvarWallGaussHook");
 	hook_cvar_change(gCvarRpgFix, "CvarAgRpgFixHook");
 	hook_cvar_change(gCvarGaussFix, "CvarAgGaussFixHook");
 
-	// AG Hud Color
-	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER | FCVAR_SPONLY); // yellow
-
+	// keep AG HUD color updated
 	new color[32];
 	get_pcvar_string(gCvarHudColor, color, charsmax(color));
 	GetStrColor(color, gHudRed, gHudGreen, gHudBlue);
-
-	// keep ag hud color updated
 	hook_cvar_change(gCvarHudColor, "CvarHudColorHook");
+
+	// Put this before loading the gamemode .cfg to avoid any issues
+	CreateDeprecatedCvars();
+
+	// Some gamemodes need to block the spectator cmd handling of the core to avoid player score getting reset
+	gCvarCoreBlockSpec = create_cvar("sv_ag_core_block_spec", "0");
+	set_pcvar_string(gCvarCoreBlockSpec, "0");
 
 	// Load mode cvars
 	new mode[32];
@@ -400,7 +417,7 @@ public plugin_init() {
 	ag_register_clcmd("vote", "CmdVote", ADMIN_ALL, "AGCMD_VOTE", _, true);
 	ag_register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "AGCMD_YES", _, true);
 	ag_register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "AGCMD_NO", _, true);
-	ag_register_clcmd("settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
+	ag_register_clcmd("settings", "CmdSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
 	ag_register_clcmd("say settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
 	ag_register_clcmd("say_close", "CmdSayClose", ADMIN_ALL, "AGCMD_SAYCLOSE", _, true);
 	ag_register_clcmd("play_close", "CmdPlayClose", ADMIN_ALL, "AGCMD_PLAYCLOSE", _, true);
@@ -510,7 +527,8 @@ public client_putinserver(id) {
 		new numSpecs = CountSpecs();
 		if (numSpecs >= get_pcvar_num(gCvarMaxSpectators)) {
 			if (!is_user_admin(id) || !RestoreScore_FindPlayer(id)) {
-				server_cmd("kick #%d ^"%s^"", get_user_userid(id), "%l", "KICK_MAXSPECTATORS", get_pcvar_num(gCvarMaxSpectators));		
+				SetGlobalTransTarget(id);
+				server_cmd("kick #%d ^"%l^"", get_user_userid(id), "KICK_MAXSPECTATORS", get_pcvar_num(gCvarMaxSpectators));		
 			}
 		}
 	}
@@ -531,18 +549,23 @@ public client_disconnected(id) {
 	remove_task(TASK_SENDVICTIMTOSPEC + id);
 	remove_task(id);
 
+	// Sometimes a player connects and disconnects before ClientPutInServer()
+	// so he will not have private data...
+	if (pev_valid(id) != 2)
+		return;
+
+	new frags = get_user_frags(id);
+	new deaths = hl_get_user_deaths(id);
+
+	// log
+	client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
+	log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
+
 	// save player score
 	if (gVersusStarted) {
 		if (!RestoreScore_FindPlayer(id))
 			return;
-
-		new frags = get_user_frags(id);
-		new deaths = hl_get_user_deaths(id);
-		
-		// log
-		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
-		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
-
+	
 		// give a chance to the player to recover his score
 		if (hl_get_user_spectator(id)) { 
 			return;
@@ -612,6 +635,16 @@ public client_kill() {
 }
 
 public PlayerPostKilled(victim, attacker) {
+	// Save player death location
+	pev(victim, pev_origin, gDeathLocation[victim]);
+
+	// AG works like this, if player dies and the killer isn't a player, penalize him substracting one point
+	// Probably we need to add a cvar to disable this in case a mod requires it
+	// or just make agmodx disable everything except the vote system
+	if (!IsPlayer(attacker)) {
+		hl_set_user_frags(victim, hl_get_user_frags(victim) - 1);
+	}
+
 	if (gSendVictimToSpec)
 		set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
 
@@ -979,14 +1012,15 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	
 	get_msg_arg_string(2, text, charsmax(text)); // get user message
 	
-	if (text[0] == '*') // ignore server messages
+	if (text[0] != 2) // only modify player messages
 		return PLUGIN_CONTINUE;
 
 	new sender = get_msg_arg_int(1);
+	new isSenderSpec = hl_get_user_spectator(sender);
 	new isReceiverSpec = hl_get_user_spectator(receiver);
 
 	// note: if it's a player message, then it will start with escape character '2' (sets color with no sound)
-	if (hl_get_user_spectator(sender)) {
+	if (isSenderSpec) {
 		if (contain(text, "^x02(TEAM)") == 0) {
 			if (!isReceiverSpec) // only show messages to spectator
 				return PLUGIN_HANDLED;
@@ -1012,36 +1046,50 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 			
 	}
 
+	new str[32];
+
 	// replace all %h with health
-	replace_string(text, charsmax(text), "%h", fmt("%i", get_user_health(sender)), false);
+	formatex(str, charsmax(str), "%d", get_user_health(sender));
+	replace_string(text, charsmax(text), "%h", isSenderSpec ? "" : str, false);
 
 	// replace all %a with armor
-	replace_string(text, charsmax(text), "%a", fmt("%i", get_user_armor(sender)), false);
+	formatex(str, charsmax(str), "%d", get_user_armor(sender));
+	replace_string(text, charsmax(text), "%a", isSenderSpec ? "" : str, false);
 
 	// replace all %p with longjump
-	replace_string(text, charsmax(text), "%p", hl_get_user_longjump(sender) ? "Yes" : "No", false);
+	formatex(str, charsmax(str), "%s", hl_get_user_longjump(sender) ? "Yes" : "No");
+	replace_string(text, charsmax(text), "%p", isSenderSpec ? "" : str, false);
 
-	// replace all %l with location
-	replace_string(text, charsmax(text), "%l", gLocationName[FindNearestLocation(sender, gLocationOrigin, gNumLocations)], false);
+	// replace all %l with current location
+	GetPlayerLocation(sender, str, charsmax(str));
+	replace_string(text, charsmax(text), "%l", str, false);
 
-	// replace all %w with name of current weapon
-	new ammo, bpammo, weaponid = get_user_weapon(sender, ammo, bpammo);
+	// replace all %d with death location
+	GetDeathLocation(sender, str, charsmax(str));
+	replace_string(text, charsmax(text), "%d", str, false);
 
-	if (weaponid) {
-		new weaponName[32];
-		get_weaponname(weaponid, weaponName, charsmax(weaponName));
-		replace_string(weaponName, charsmax(weaponName), "weapon_", "");
-		replace_string(text, charsmax(text), "%w", weaponName, false);
+	new ammo, bpammo, weaponid;
+	if (!isSenderSpec && (weaponid = get_user_weapon(sender, ammo, bpammo))) {
+		get_weaponname(weaponid, str, charsmax(str));
+		replace_string(str, charsmax(str), "weapon_", "");
 	}
 
+	// replace all %w with current weapon
+	replace_string(text, charsmax(text), "%w", isSenderSpec ? "" : str, false);
+
+	// replace all %s with current score
+	formatex(str, charsmax(str), "%d/%d", hl_get_user_frags(sender), hl_get_user_deaths(sender));
+	replace_string(text, charsmax(text), "%s", isSenderSpec ? "" : str, false);
+
+	if (!isSenderSpec) {
+		new arGrenades;
+		if (weaponid == HLW_MP5)
+			arGrenades = hl_get_user_bpammo(sender, HLW_CHAINGUN);
+		FormatAmmo(weaponid, ammo, bpammo, arGrenades, str, charsmax(str));
+	}
+	
 	// replace all %q with ammo of current weapon
-	new ammoMsg[16], arGrenades;
-
-	if (weaponid == HLW_MP5)
-		arGrenades = hl_get_user_bpammo(sender, HLW_CHAINGUN);
-
-	FormatAmmo(weaponid, ammo, bpammo, arGrenades, ammoMsg, charsmax(ammoMsg));
-	replace_string(text, charsmax(text), "%q", ammoMsg, false); 
+	replace_string(text, charsmax(text), "%q", isSenderSpec ? "" : str, false); 
 
 	// send final message
 	set_msg_arg_string(2, text);
@@ -1124,22 +1172,32 @@ public GetLocations(name[][], size, Float:origin[][], &numLocs) {
 }
 
 // return the index of the nearest location for the player from an array
-public FindNearestLocation(id, Float:locOrigin[][3], numLocs) {
-	new Float:userOrigin[3], Float:nearestOrigin[3], idxNearestLoc;
+public FindNearestLocation(Float:origin[3], Float:locOrigin[][3], numLocs) {
+	new Float:nearestOrigin[3], idxNearestLoc;
 	
-	pev(id, pev_origin, userOrigin);
-
 	// initialize nearest origin with the first location
 	nearestOrigin = locOrigin[0];
 	
 	for (new i; i < numLocs; i++) {
-		if (vector_distance(userOrigin, locOrigin[i]) <= vector_distance(userOrigin, nearestOrigin)) {
+		if (vector_distance(origin, locOrigin[i]) <= vector_distance(origin, nearestOrigin)) {
 			nearestOrigin = locOrigin[i];
 			idxNearestLoc = i;
 		}
 	}
 
 	return idxNearestLoc;
+}
+
+public GetPlayerLocation(id, locName[], len) {
+	new Float:origin[3];
+	pev(id, pev_origin, origin);
+	new idx = FindNearestLocation(origin, gLocationOrigin, gNumLocations);
+	copy(locName, len, gLocationName[idx]);
+}
+
+public GetDeathLocation(id, locName[], len) {
+	new idx = FindNearestLocation(gDeathLocation[id], gLocationOrigin, gNumLocations);
+	copy(locName, len, gLocationName[idx]);
 }
 
 public CmdHelp(id, level, cid) {
@@ -1205,6 +1263,9 @@ ProcessCmdHelp(id, start_argindex, bool:do_search, const main_command[], const s
 
 
 public CmdSpectate(id) {
+	if (get_pcvar_bool(gCvarCoreBlockSpec))
+		return PLUGIN_HANDLED;
+
 	if (!hl_get_user_spectator(id)) {
 		// saves his score before go to spec in case he entered by accident
 		if (RestoreScore_FindPlayer(id)) {
@@ -1263,6 +1324,11 @@ GetPluginBuildDate(output[], len) {
 	format_time(output, len, "%d %b %Y", parse_time(__DATE__, "%m:%d:%Y")); // 15 Nov 2018
 }
 
+public CmdSettings(id) {
+	ShowSettings(id);
+	return PLUGIN_HANDLED;
+}
+
 // We need to use director hud msg because there aren't enough hud channels, unless we make a better gui that use less channels
 // We are limited to 128 characters, so that is bad for multilingual or to show more settings ...
 public ShowSettings(id) {
@@ -1270,10 +1336,10 @@ public ShowSettings(id) {
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
 		return;
 		
-	new arg[32], buildDate[32];
+	new arg[64], buildDate[32];
 	GetPluginBuildDate(buildDate, charsmax(buildDate));
-
 	get_pcvar_string(gCvarContact, arg, charsmax(arg));
+	
 	if (!arg[0]) 
 		formatex(arg, charsmax(arg), CONTACT_INFO);
 
@@ -1629,7 +1695,66 @@ CreateVoteSystem() {
 	ag_vote_add("mp_weaponstay", "OnVoteWeaponStay");
 	ag_vote_add("ag_gauss_fix", "OnVoteSelfGauss");
 	ag_vote_add("ag_rpg_fix", "OnVoteRpgFix");
+	ag_vote_add("ag_spectalk", "OnVoteSpecTalk");
+	ag_vote_add("sv_maxspeed", "OnVoteMaxSpeed");
 }
+
+public OnVoteSpecTalk(id, check, argc, arg1[], arg2[]) {
+	if (argc != 2) {
+		console_print(id, "%l", "VOTE_INVALID");
+		return false;
+	}
+	
+	if (!check) {
+		set_pcvar_string(gCvarSpecTalk, arg2);
+	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
+		if (!is_str_num(arg2)) {
+			console_print(id, "%l", "INVALID_NUMBER");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+public OnVoteMaxSpeed(id, check, argc, arg1[], arg2[]) {
+	if (argc != 2) {
+		console_print(id, "%l", "VOTE_INVALID");
+		return false;
+	}
+	
+	if (!check) {
+		set_pcvar_string(gCvarMaxSpeed, arg2);
+	} else {
+		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
+		if (!is_str_num(arg2)) {
+			console_print(id, "%l", "INVALID_NUMBER");
+			return false;
+		}
+
+		new num = str_to_num(arg2);
+		if (num > 350) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MAX", 350);
+			return false;
+		} else if (num < 270) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MIN", 270);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 
 public OnVoteAgKick(id, check, argc, arg1[], arg2[]) {
 	if (argc > 2) {
@@ -2657,6 +2782,13 @@ SetPlayerEquipment(id) {
 			give_item(id, gWeaponClass[i]);
 	}
 
+	// AG gives by default an mp5 with full clip
+	if (get_pcvar_num(gCvarStartWeapons[START_9MMAR])) {
+		new weapon = hl_user_has_weapon(id, HLW_MP5);
+		if (weapon)
+			hl_set_weapon_ammo(weapon, 50);
+	}
+
 	if (get_pcvar_bool(gCvarStartLongJump)) {
 			give_item(id, "item_longjump");
 	}
@@ -2716,30 +2848,32 @@ public CmdPauseAg(id) {
 bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
 	new authid[MAX_AUTHID_LENGTH], ip[MAX_IP_LENGTH];
 	
-	if (!get_user_authid(id, authid, charsmax(authid)))
-		log_amx("Warning: Trying to get authid from a player not authorized yet. Id: %d", id);
-
+	if (!is_user_authorized(id))
+		log_amx("Warning: Trying to get authid from a player not authorized. Id: %d", id);
+	
+	get_user_authid(id, authid, charsmax(authid));
 	get_user_ip(id, ip, charsmax(ip), .without_port = true);
 
-	new buffer[64], DataPack:handle;
+	new DataPack:handle;
+	new storedAuth[MAX_AUTHID_LENGTH];
+	new storedIp[MAX_IP_LENGTH];
+
 	for (new i; i < ArraySize(gRestoreScorePlayers); i++) {
 		handle = ArrayGetCell(gRestoreScorePlayers, i);
 
 		ResetPack(handle);
 
-		// read authid
-		ReadPackString(handle, buffer, charsmax(buffer));
+		ReadPackString(handle, storedAuth, charsmax(storedAuth));
+		ReadPackString(handle, storedIp, charsmax(storedIp));
 
-		// if authid is STEAM_ID_LAN, it's not safe to check, use ip instead
-		if (equal(buffer, authid) && (!contain(buffer, "STEAM_") || !contain(buffer, "VALVE_")) && isdigit(buffer[7])) {
+		// if authid isn't like this "STEAM_X:X:XXX", it's not safe to check, use ip instead
+		if (equal(storedAuth, authid) && (!contain(storedAuth, "STEAM_") || !contain(storedAuth, "VALVE_")) && isdigit(storedAuth[7])) {
 			handle_player = handle;
 			return true;
 		}
 
-		// read ip
-		ReadPackString(handle, buffer, charsmax(buffer));
-
-		if (equal(buffer, ip)) {
+		// check ip
+		if (equal(storedIp, ip)) {
 			handle_player = handle;
 			return true;
 		}
@@ -2807,11 +2941,47 @@ ResetScore(id) {
 	hl_set_user_deaths(id, 0);
 }
 
+CreateDeprecatedCvars() {
+	// List
+	new cvarXbow = create_cvar("sv_ag_dmg_crossbow", "");
+	new cvarBolts = create_cvar("sv_ag_dmg_bolts", "");
+	// Always reset their values to be able to track changes
+	set_pcvar_string(cvarXbow, "");
+	set_pcvar_string(cvarBolts, "");
+	// Hook contains the warning message
+	hook_cvar_change(cvarXbow, "CvarDeprecatedXbowHook");
+	hook_cvar_change(cvarBolts, "CvarDeprecatedBoltsHook");
+}
+
+public CvarDeprecatedXbowHook(pcvar, const old_value[], const new_value[]) {
+	log_amx("Warning: CVar ^"sv_ag_dmg_crossbow^" is deprecated. Use instead ^"sv_ag_dmg_bolts_normal^". More info on the wiki.");
+}
+
+public CvarDeprecatedBoltsHook(pcvar, const old_value[], const new_value[]) {
+	log_amx("Warning: CVar ^"sv_ag_dmg_bolts^" is deprecated. Use instead ^"sv_ag_dmg_bolts_explosion^". More info on the wiki.");
+}
+
 public CvarHudColorHook(pcvar, const old_value[], const new_value[]) {
 	GetStrColor(new_value, gHudRed, gHudGreen, gHudBlue);
 }
 
 public EventIntermissionMode() {
+	new str[256], name[MAX_NAME_LENGTH], frags;
+
+	// print final match result
+	if (gVersusStarted) {
+		ScoreLog_UpdateScores();
+		for (new i; i < ArraySize(gScoreLog); i++) {
+			frags = ScoreLog_GetScore(i, name, charsmax(name));
+			add(str, charsmax(str), fmt("%s: %d ", name, frags));
+		}
+		// note: not possible to show all players/team scores in some cases
+		// client console max length per line is 127 chars
+		// server console max length per line is 383 chars
+		log_amx("%s", str);
+		client_print(0, print_console, "%s", str);
+	}
+
 	gBlockCmdKill = true;
 	gBlockCmdSpec = true;
 	gBlockCmdDrop = true;
@@ -2825,19 +2995,6 @@ public EventIntermissionMode() {
 		FreezePlayer(players[i]); // sometimes in intermission mode, player can move...
 	}
 
-	// print final match result
-	new str[256], name[MAX_NAME_LENGTH], frags;
-	ScoreLog_UpdateScores();
-	for (new i; i < ArraySize(gScoreLog); i++) {
-		frags = ScoreLog_GetScore(i, name, charsmax(name));
-		add(str, charsmax(str), fmt("%s: %d ", name, frags));
-	}
-
-	// note: not possible to show all players/team scores in some cases
-	// client console max length per line is 127 chars
-	// server console max length per line is 383 chars
-	log_amx("%s", str);
-	client_print(0, print_console, "%s", str);
 }
 
 public StartIntermissionMode() {
