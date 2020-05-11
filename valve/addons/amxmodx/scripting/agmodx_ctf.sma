@@ -199,6 +199,7 @@ public plugin_init() {
 	}
 
 	register_clcmd("dropitems", "CmdDropFlag");
+	register_clcmd("drop flag", "CmdDropFlag");
 	register_clcmd("spectate", "CmdSpectate");
 
 	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
