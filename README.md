@@ -22,6 +22,11 @@ AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X from 
 - Now you can type player's name in cmds like `agallow`, `agkick` or `agforcespectator` partially and without adding color codes.
 - New votes have been added and some `sv_ag_dmg_xxx` cvars have been fixed (Check the wiki).
 
+## 👁 More Info
+The [wiki](https://github.com/rtxa/agmodx/wiki) contains info about the new commands and features added or whatever you wanna know about this MiniAG.
+
+Check [Projects](https://github.com/rtxa/agmodx/projects) page to see the progress of the *To Do* list.
+
 ## ☉ Installation
 
 ### ⤓ Download
@@ -41,8 +46,6 @@ You can download AG Mod X on the [Releases](https://github.com/rtxa/agmodx/relea
 - Mod is still in beta stage (*90% done*). Some commands maybe are missing, please let me know about it.
 - Custom nextmap.amxx and antiflood.amxx plugins have been included. They have fixed a bug with mp_chattime getting increased on map change and the antiflood not working when game is paused.
 
-## 👁 Check the Wiki
-The [wiki](https://github.com/rtxa/agmodx/wiki) contains info about the new commands and features added or whatever you wanna know about this MiniAG. Check [Projects](https://github.com/rtxa/agmodx/projects) page to see the progress of the *To Do* list.
 
 ## ☆ Thanks to:
 - BulliT for his AG Mod and some useful codes.
