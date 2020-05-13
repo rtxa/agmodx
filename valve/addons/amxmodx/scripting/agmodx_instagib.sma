@@ -39,8 +39,9 @@ public plugin_init() {
 	RegisterHamPlayer(Ham_TakeDamage, "OnPlayerTakeDamage_Pre");
 
 	RegisterHam(Ham_Weapon_PrimaryAttack, "weapon_gauss", "OnGaussPrimaryAttack_Pre", true);
-
 	register_clcmd("drop", "CmdDrop");
+
+	RemoveGamePlayerEquip();
 }
 
 public CmdDrop() {
@@ -70,3 +71,18 @@ ResetBpAmmo(id) {
 			set_ent_data(id, "CBasePlayer", "m_rgAmmo", get_pcvar_num(gCvarStartAmmo[i]), i + 1);
 	}
 }
+/*
+* Removes game player equipment of the map
+*/
+bool:RemoveGamePlayerEquip() {
+	new ent;
+	while ((ent = find_ent_by_class(ent, "game_player_equip"))) {
+		// ignore the ones with use flag, they don't give weapons to all players
+		if (!(pev(ent, pev_spawnflags) & SF_PLAYEREQUIP_USEONLY)) {
+			remove_entity(ent);
+			return true;
+		}
+	}
+	return false;
+}
+

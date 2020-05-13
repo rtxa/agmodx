@@ -483,6 +483,8 @@ public FwAllowLagCompensation() {
 public plugin_cfg() {
 	// this should fix bad cvar pointer
 	gCvarAmxNextMap = get_cvar_pointer("amx_nextmap");
+
+	gGamePlayerEquipExists = FindGamePlayerEquip() ? true : false;
 }
 
 public plugin_end() {
@@ -2756,8 +2758,6 @@ StartMode() {
 	get_pcvar_string(gCvarGameType, arg, charsmax(arg));
 		
 	BanGamemodeEnts();
-
-	FindGamePlayerEquip();
 }
 
 /*
@@ -2767,13 +2767,10 @@ FindGamePlayerEquip() {
 	new ent, i;
 	while ((ent = find_ent_by_class(i, "game_player_equip"))) {
 		// ignore the ones with use flag, they don't give weapons to all players
-		if (pev(ent, pev_spawnflags) & SF_PLAYEREQUIP_USEONLY) {
-			i++;
-		} else {
-			gGamePlayerEquipExists = true;
-			return;
-		}
+		if (!(pev(ent, pev_spawnflags) & SF_PLAYEREQUIP_USEONLY))
+			return ent;
 	}
+	return 0;
 }
 
 SetPlayerEquipment(id) {
