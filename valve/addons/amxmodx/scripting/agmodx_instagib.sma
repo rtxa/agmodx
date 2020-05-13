@@ -10,7 +10,7 @@
 #include <agmodx_const>
 
 #define PLUGIN  "AG Mod X Instagib"
-#define VERSION "Beta 2.2"
+#define VERSION "Beta 2.3"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
