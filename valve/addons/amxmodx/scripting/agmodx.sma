@@ -616,6 +616,9 @@ public PlayerPostSpawn(id) {
 		// this avoid problems in maps like 357_box or bootbox
 		// todo: add cvar to disable this behaviour
 		if (!gGamePlayerEquipExists) {
+			// remove default weapons given in spawn (only happens when game_player_equip doesn't exists)
+			hl_strip_user_weapon(id, HLW_GLOCK);
+			hl_strip_user_weapon(id, HLW_CROWBAR);
 			SetPlayerEquipment(id);
 		}
 	}
