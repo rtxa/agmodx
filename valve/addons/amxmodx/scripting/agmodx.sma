@@ -461,7 +461,7 @@ public plugin_init() {
 	InitAgTimer();
 	StartAgTimer();
 	LoadGameMode();
-	StartMode();
+	BanGamemodeEnts();
 }
 
 public FwChargersUse() {
@@ -2751,13 +2751,6 @@ public CmdPlayClose(caller) {
 
 	gPlaySoundDelayTime[caller] = get_gametime() + 0.75;
 	return PLUGIN_HANDLED;
-}
-
-StartMode() {
-	new arg[32];
-	get_pcvar_string(gCvarGameType, arg, charsmax(arg));
-		
-	BanGamemodeEnts();
 }
 
 /*
