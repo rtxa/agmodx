@@ -27,6 +27,9 @@
 * Version 1.8 (date: 06.05.2020)
 * - Added hl_user_has_weapon()
 * - Added new constant: HL_MAX_WEAPON_SLOTS
+* Version 1.9 (date: 12.05.2020)
+* - Added hl_strip_user_weapon() (Thanks XxAvalanchexX)
+*
 * http://aghl.ru/forum/ - Russian Half-Life and Adrenaline Gamer Community
 *
 */
@@ -38,6 +41,7 @@
 
 #include <amxmodx>
 #include <fakemeta>
+#include <hamsandwich>
 
 // Server supports up to 32 teams, but client's scoreboard is hardcoded up to 10.
 #define HL_MAX_TEAMS			10
@@ -424,6 +428,29 @@ stock hl_user_spawn(client)
 
 	set_pev(client, pev_deadflag, DEAD_RESPAWNABLE);
 	dllfunc(DLLFunc_Spawn, client);
+}
+
+// Strip a weapon from player
+// To do: add support for custom weapons (HL Weapon Mod)
+stock hl_strip_user_weapon(id, weapon_id)
+{    
+	new weapon_ent = hl_user_has_weapon(id, weapon_id);
+
+	if (!weapon_ent) 
+		return 0;
+
+	// make sure to retire the weapon before removing it
+	if (get_user_weapon(id) == weapon_id)
+		ExecuteHamB(Ham_Weapon_RetireWeapon, weapon_ent);
+
+	if (!ExecuteHamB(Ham_RemovePlayerItem, id, weapon_ent))
+		return 0;
+
+	ExecuteHamB(Ham_Item_Kill, weapon_ent);
+
+	set_pev(id, pev_weapons, pev(id, pev_weapons) & ~(1 << weapon_id));
+
+	return 1;
 }
 
 /* Strips all weapons from player.
