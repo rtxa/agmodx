@@ -1021,7 +1021,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 
 	// note: if it's a player message, then it will start with escape character '2' (sets color with no sound)
 	if (isSenderSpec) {
-		if (contain(text, "^x02(TEAM)") == 0) {
+		if (contain(text, "^x02(TEAM)") == 0 || contain(text, "^x02(C)") == 0) {
 			if (!isReceiverSpec) // only show messages to spectator
 				return PLUGIN_HANDLED;
 			else
@@ -1036,7 +1036,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 			}
 		}
 	} else {
-		if (contain(text, "^x02(TEAM)") == 0) { // Team
+		if (contain(text, "^x02(TEAM)") == 0 || contain(text, "^x02(C)") == 0) { // Team
 			if (isReceiverSpec)
 				return PLUGIN_HANDLED;
 			else
@@ -2628,7 +2628,7 @@ public CmdSayClose(caller) {
 	get_user_name(caller, name, charsmax(name));
 
 	// avoid repeating code by formating message like a real one so MsgSayText can handle it
-	format(text, charsmax(text), "%c(TEAM) %s: %s^n", 2, name, text);
+	format(text, charsmax(text), "%c(C) %s: %s^n", 2, name, text);
 	new Float:callerPos[3], Float:targetPos[3];
 
 	pev(caller, pev_origin, callerPos);
