@@ -152,11 +152,9 @@ new Float:gVoteDisplayNextThink = -1.0;
 // ============= END vote system ===============
 
 // cvar pointers
-new gCvarDebugVote;
 new gCvarContact;
 new gCvarAllowedGameModes;
 new gCvarGameMode;
-new gCvarGameType;
 new gCvarHudColor;
 new gCvarSpecTalk;
 new gCvarMaxSpectators;
@@ -273,7 +271,6 @@ public plugin_precache() {
 	gCvarVoteFragLimitMin = create_cvar("sv_ag_vote_mp_fraglimit_low", "0");
 
 	// Vote cvars
-	gCvarDebugVote = create_cvar("sv_ag_debug_vote", "0");
 	gCvarVoteFailedTime = create_cvar("sv_ag_vote_failed_time", "15");
 	gCvarVoteDuration = create_cvar("sv_ag_vote_duration", "30");
 	gCvarVoteOldStyle = create_cvar("sv_ag_vote_oldstyle", "0");
@@ -281,7 +278,7 @@ public plugin_precache() {
 	// Gamemode cvars
 	gCvarAllowedGameModes = create_cvar("sv_ag_allowed_gamemodes", "", FCVAR_SERVER);
 	gCvarGameMode = create_cvar("sv_ag_gamemode", "tdm", FCVAR_SERVER);
-	gCvarGameType = create_cvar("sv_ag_gametype", "", FCVAR_SERVER);
+	create_cvar("sv_ag_gametype", "", FCVAR_SERVER);
 
 	// Start player health/armor and LJ
 	gCvarStartHealth = create_cvar("sv_ag_start_health", "100");
@@ -433,9 +430,7 @@ public plugin_init() {
 	// i create this cmds to set pausable to 0
 	register_clcmd("pauseAg", "CmdPauseAg");
 	
-	// debug for arena, lts and lms
-	register_clcmd("userinfo", "CmdUserInfo");
-
+	// hook intermission mode
 	register_event_ex("30", "EventIntermissionMode", RegisterEvent_Global);
 
 	// Chat and voice 
@@ -1637,43 +1632,6 @@ public CmdAgMap(id, level, cid) {
 	return PLUGIN_HANDLED;
 }
 
-public CmdUserInfo(id, level, cid) {
-	if (!cmd_access(id, level, cid, 1))
-		return PLUGIN_HANDLED;
-
-	new target[32];
-	read_argv(1, target, charsmax(target));
-
-	if (equal(target, "")) {
-		PrintUserInfo(id, id);
-		return PLUGIN_HANDLED;
-	}
-
-	new player = cmd_target(id, target);
-
-	if (!player)
-		return PLUGIN_HANDLED;
-
-	PrintUserInfo(id, player);
-
-	return PLUGIN_HANDLED;
-}
-
-stock PrintUserInfo(caller, target) {
-	new model[16];
-	new team = hl_get_user_team(target);
-
-	new iuser1 = pev(target, pev_iuser1);
-	new iuser2 = pev(target, pev_iuser2);
-
-	new alive = is_user_alive(target);
-	new dead = pev(target, pev_deadflag);
-
-	hl_get_user_model(target, model, charsmax(model));
-
-	client_print(caller, print_chat, "Team: %i; Model: %s; iuser1: %i; iuser2: %i Alive: %i; Deadflag: %i IsInWelcomeCam: %i", team, model, iuser1, iuser2, alive, dead, IsInWelcomeCam(caller));
-}
-
 /* 
 * Vote system
 */
@@ -2319,9 +2277,6 @@ public CmdVoteNo(id) {
 }
 
 public CmdVote(id) {
-	if (get_pcvar_num(gCvarDebugVote))
-		server_print("CmdVote");
-
 	if (!get_pcvar_num(gCvarAllowVote))
 		return PLUGIN_HANDLED;
 
@@ -2405,9 +2360,6 @@ public VoteDisplayThink() {
 }
 
 public VoteThink() {
-	if (get_pcvar_num(gCvarDebugVote))
-		server_print("VoteThink");
-
 	new Float:time = GetServerUpTime();
 
 	if (time > gVoteEndTime) {
@@ -2487,9 +2439,6 @@ DisplayVoteOldStyle(option) {
 }
 
 public DoVote() {
-	if (get_pcvar_num(gCvarDebugVote))
-		server_print("DoVote");
-
 	new caller = find_player_ex(FindPlayer_MatchUserId, gVoteCallerUserId);
 	
 	// if vote caller is not connected, cancel it...
@@ -2513,9 +2462,6 @@ public DoVote() {
 }
 
 public DenyVote() {
-	if (get_pcvar_num(gCvarDebugVote))
-		server_print("DenyVote");
-
 	new caller = find_player_ex(FindPlayer_MatchUserId, gVoteCallerUserId);
 
 	// Vote Log
@@ -2535,9 +2481,6 @@ public DenyVote() {
 }
 
 public ResetVote() {
-	if (get_pcvar_num(gCvarDebugVote))
-		server_print("ResetVote");
-
 	gVoteIsRunning = false;
 
 	gVoteArg1[0] = gVoteArg2[0] = '^0';
