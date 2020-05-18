@@ -1019,14 +1019,27 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	new isSenderSpec = hl_get_user_spectator(sender);
 	new isReceiverSpec = hl_get_user_spectator(receiver);
 
-	// note: if it's a player message, then it will start with escape character '2' (sets color with no sound)
-	if (isSenderSpec) {
-		if (contain(text, "^x02(TEAM)") == 0 || contain(text, "^x02(C)") == 0) {
-			if (!isReceiverSpec) // only show messages to spectator
+	// using say_close
+	if (contain(text, "(C)") == 1) {
+		if (isSenderSpec)
+			return PLUGIN_HANDLED;
+	// using say_team
+	} else if (contain(text, "(TEAM)") == 1) {
+		if (isSenderSpec) { 
+			if (!isReceiverSpec) // only show messages to spectators
 				return PLUGIN_HANDLED;
 			else
 				replace(text, charsmax(text), "(TEAM)", "(ST)"); // Spectator Team
 		} else {
+			if (isReceiverSpec)
+				return PLUGIN_HANDLED;
+			else
+				replace(text, charsmax(text), "(TEAM)", "(T)"); 
+		}
+	// using say
+	} else {
+		if (isSenderSpec) {
+			// specs can't talk in a match
 			if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk)) {
 				if (sender == receiver)
 					client_print(sender, print_chat, "%l", "SPEC_CANTTALK");
@@ -1034,16 +1047,9 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 			} else {
 				replace(text, charsmax(text), "^x02", "^x02(S) ");
 			}
-		}
-	} else {
-		if (contain(text, "^x02(TEAM)") == 0 || contain(text, "^x02(C)") == 0) { // Team
-			if (isReceiverSpec)
-				return PLUGIN_HANDLED;
-			else
-				replace(text, charsmax(text), "(TEAM)", "(T)"); 
-		} else
+		} else {
 			replace(text, charsmax(text), "^x02", "^x02(A) ");
-			
+		}
 	}
 
 	new str[32];
