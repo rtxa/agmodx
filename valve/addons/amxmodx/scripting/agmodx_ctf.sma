@@ -422,6 +422,7 @@ public FwCapturePointTouch(touched, toucher) {
 	switch (IsPlayerCarryingFlag(toucher)) {
 		case BLUE_TEAM: { // Captured Blue Team flag
 			if (touched == gBaseRed) {
+				DrawFlagIcon(toucher, false, BLUE_TEAM);
 				SetFlagCarriedByPlayer(toucher, 0);
 				ReturnFlagToBase(gFlagBlue);
 
@@ -435,6 +436,7 @@ public FwCapturePointTouch(touched, toucher) {
 			}
 		} case RED_TEAM: { // Captured Red Team flag
 			if (touched == gBaseBlue) {
+				DrawFlagIcon(toucher, false, RED_TEAM);
 				SetFlagCarriedByPlayer(toucher, 0);
 				ReturnFlagToBase(gFlagRed);
 
@@ -588,10 +590,35 @@ IsPlayerCarryingFlag(id) {
 		return 0;
 }
 
+stock DrawFlagIcon(id, bool:status, team) {
+	static StatusIcon;
+
+	if (!StatusIcon)
+		StatusIcon = get_user_msgid("StatusIcon");
+
+	new r, g, b, sprite[32];
+	
+	if (team == RED_TEAM) {
+		r = 230;
+		copy(sprite, charsmax(sprite), "dmg_rad");
+	} else if (team == BLUE_TEAM) {
+		b = 230;
+		copy(sprite, charsmax(sprite), "dmg_shock");
+	}
+	message_begin(MSG_ONE, StatusIcon, .player = id);
+	write_byte(status);
+	write_string(sprite);
+	write_byte(r);
+	write_byte(g);
+	write_byte(b);
+	message_end();
+}
+
 public TakeFlag(id, ent) {
 	remove_task(ent + TASK_RETURNFLAGTOBASE);
 	AttachFlagToPlayer(id, ent);
 	SetFlagCarriedByPlayer(id, ent);
+	DrawFlagIcon(id, true, GetFlagTeam(ent));
 	CtfHudMessage(id, "CTF_YOUGOTFLAG", "CTF_GOTFLAG", "CTF_EGOTFLAG");
 	CtfSpeak(id, "!CTF_YOUGOTFLAG", "!CTF_GOTFLAG", "!CTF_EGOTFLAG");
 }
@@ -604,6 +631,7 @@ public TaskReturnFlagToBase(taskid) {
 public DropFlag(id) {
 	new ent = GetFlagCarriedByPlayer(id);
 	SetFlagCarriedByPlayer(id, 0);
+	DrawFlagIcon(id, false, GetFlagTeam(ent));
 
 	if (!ent)
 		return;
