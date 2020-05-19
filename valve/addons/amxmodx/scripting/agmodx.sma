@@ -52,6 +52,7 @@ enum (+=100) {
 };
 
 new Array:gAgCmdList;
+new Array:gAgVoteList;
 
 // Location system
 new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
@@ -397,6 +398,7 @@ public plugin_init() {
 	RegisterHam(Ham_Spawn, "player", "PlayerPreSpawn");
 
 	gAgCmdList = ArrayCreate();
+	gAgVoteList = ArrayCreate(32);
 	gScoreLog = ArrayCreate();
 
 	ag_register_concmd("agabort", "CmdAgAbort", ADMIN_BAN, "AGCMD_AGABORT", _, true);
@@ -511,6 +513,7 @@ public plugin_end() {
 	ArrayDestroy(gScoreLog); // finally destroy gScoreLog
 
 	ArrayDestroy(gAgCmdList);
+	ArrayDestroy(gAgVoteList);
 	ArrayDestroy(gRestoreScorePlayers);
 	
 }
@@ -2506,36 +2509,22 @@ public ResetVote() {
 }
 
 public CmdVoteHelp(id) {
-	ProcessVoteHelp(id, .start_argindex = 1, .main_command = "aglistvotes");
+	ProcessVoteHelp(id, .start_argindex = 1, .do_search = false, .main_command = "aglistvotes");
 	return PLUGIN_HANDLED;
 }
 
-ProcessVoteHelp(id, start_argindex, const main_command[])
+ProcessVoteHelp(id, start_argindex, bool:do_search, const main_command[], const search[] = "")
 {
+	new clcmdsnum = ArraySize(gAgVoteList);
+
+	if (clcmdsnum == -1)
+		clcmdsnum = 0;
+
 	const MaxDefaultEntries    = 10;
 	const MaxCommandLength     = 32;
-	const HelpAmount = MaxDefaultEntries;
+	const MaxCommandInfoLength = 128;
 
-	new clcmdsnum;
-
-	new Array:cmdNameList = ArrayCreate(MaxCommandLength);
-	{
-		new TrieIter:handle = TrieIterCreate(gTrieVoteList);
-		
-		new cmd[32];
-
-		while (!TrieIterEnded(handle)) {
-			TrieIterGetKey(handle, cmd, sizeof(cmd));
-
-			ArrayPushString(cmdNameList, cmd);
-
-			TrieIterNext(handle);
-
-			clcmdsnum++;
-		}
-
-		TrieIterDestroy(handle);
-	}
+	new HelpAmount = MaxDefaultEntries; // default entries
 
 	new start  = clamp(read_argv_int(start_argindex), .min = 1, .max = clcmdsnum) - 1; // Zero-based list;
 	new amount = !id ? read_argv_int(start_argindex + 1) : HelpAmount;
@@ -2543,29 +2532,25 @@ ProcessVoteHelp(id, start_argindex, const main_command[])
 
 	console_print(id, "^n----- %l -----", "TITLE_VOTEHELP");
 
+	new info[MaxCommandInfoLength];
 	new command[MaxCommandLength];
 	new index;
 
-	for (index = start; index < end; ++index) {
-		ArrayGetString(cmdNameList, index, command, sizeof(command));
+	for (index = start; index < end; ++index)
+	{	
+		ArrayGetString(gAgVoteList, index, command, charsmax(command));
 
-		new key[32];
-		copy(key, sizeof(key), command);
+		formatex(info, charsmax(info), "%s%s", "AGVOTE_", command);
+		strtoupper(info);
+		if (!LookupLangKey(info, charsmax(info), info, id))
+			formatex(info, charsmax(info), "%l", "CMD_NOINFO");
 
-		strtoupper(key);
-
-		new langKey[32];
-		formatex(langKey, charsmax(langKey), "%s%s", "AGVOTE_", key);
-
-		if (GetLangTransKey(langKey) != TransKey_Bad)
-			console_print(id, "%3d: %s %l", index + 1, command, langKey);
-		else
-			console_print(id, "%3d: %s %l", index + 1, command, "CMD_NOINFO");
+		console_print(id, "%3d: %s %s", index + 1, command, info);
 	}
 
 	console_print(id, "----- %l -----", "HELP_ENTRIES", start + 1, end, clcmdsnum);
 
-	formatex(command, charsmax(command), "%s", main_command);
+	formatex(command, charsmax(command), "%s%c%s", main_command, do_search ? " " : "", search);
 
 	if (end < clcmdsnum)
 	{
@@ -2575,10 +2560,6 @@ ProcessVoteHelp(id, start_argindex, const main_command[])
 	{
 		console_print(id, "----- %l -----", "HELP_USE_BEGIN", command);
 	}
-
-	ArrayDestroy(cmdNameList);
-
-	return PLUGIN_HANDLED;
 }
 
 public ChangeMode(const mode[]) {
@@ -3118,6 +3099,7 @@ public native_ag_vote_add(plugin_id, argc) {
 		return false;
 
 	TrieSetCell(gTrieVoteList, voteName, fwHandle);
+	ArrayPushString(gAgVoteList, voteName);
 
 	// i hate this behaviour from miniag, it's much better to use all votes only with "vote <votename>"
 	// because this way leads to a possibly overlap of commands from other plugins, whatever...
@@ -3139,6 +3121,11 @@ public native_ag_vote_remove(plugin_id, argc) {
 		DestroyForward(handle);
 		return true;
 	}
+	
+	new idx = ArrayFindString(gAgVoteList, voteName);
+	if (idx != -1)
+		ArrayDeleteItem(gAgVoteList, idx);
+
 
 	return false;
 }
