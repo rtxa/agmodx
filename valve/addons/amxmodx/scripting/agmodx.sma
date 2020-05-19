@@ -2819,7 +2819,7 @@ bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
 		ReadPackString(handle, storedIp, charsmax(storedIp));
 
 		// if authid isn't like this "STEAM_X:X:XXX", it's not safe to check, use ip instead
-		if (equal(storedAuth, authid) && (!contain(storedAuth, "STEAM_") || !contain(storedAuth, "VALVE_")) && isdigit(storedAuth[7])) {
+		if (equal(storedAuth, authid) && (!contain(storedAuth, "STEAM_") || !contain(storedAuth, "VALVE_")) && isdigit(storedAuth[6])) {
 			handle_player = handle;
 			return true;
 		}
