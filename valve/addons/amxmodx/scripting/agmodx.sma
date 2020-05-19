@@ -414,6 +414,8 @@ public plugin_init() {
 	ag_register_clcmd("vote", "CmdVote", ADMIN_ALL, "AGCMD_VOTE", _, true);
 	ag_register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "AGCMD_YES", _, true);
 	ag_register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "AGCMD_NO", _, true);
+	ag_register_clcmd("say !yes", "CmdVoteYes_Say", ADMIN_ALL, "AGCMD_YES", _, true);
+	ag_register_clcmd("say !no", "CmdVoteNo_Say", ADMIN_ALL, "AGCMD_NO", _, true);
 	ag_register_clcmd("settings", "CmdSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
 	ag_register_clcmd("say settings", "ShowSettings", ADMIN_ALL, "AGCMD_SETTINGS", _, true);
 	ag_register_clcmd("say_close", "CmdSayClose", ADMIN_ALL, "AGCMD_SAYCLOSE", _, true);
@@ -2270,6 +2272,14 @@ public CmdGenericVote(id) {
 	read_args(args, charsmax(args));
 	client_cmd(id, "vote %s %s", cmdName, args);
 	return PLUGIN_HANDLED;
+}
+
+public CmdVoteYes_Say(id) {
+	gVotePlayers[id] = VOTE_YES;
+}
+
+public CmdVoteNo_Say(id) {
+	gVotePlayers[id] = VOTE_NO;
 }
 
 public CmdVoteYes(id) {
