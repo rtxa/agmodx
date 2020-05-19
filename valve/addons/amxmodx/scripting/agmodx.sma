@@ -1228,6 +1228,9 @@ ProcessCmdHelp(id, start_argindex, bool:do_search, const main_command[], const s
 
 	new clcmdsnum = ArraySize(gAgCmdList);
 
+	if (clcmdsnum == -1)
+		clcmdsnum = 0; // avoid error on clamp native
+
 	const MaxDefaultEntries    = 10;
 	const MaxCommandLength     = 32;
 	const MaxCommandInfoLength = 128;
@@ -1248,7 +1251,7 @@ ProcessCmdHelp(id, start_argindex, bool:do_search, const main_command[], const s
 
 	for (index = start; index < end; ++index)
 	{
-		get_concmd(ArrayGetCell(gAgCmdList, index), command, charsmax(command), command_flags, info, charsmax(info), user_flags, id, is_info_ml);
+		get_concmd(ArrayGetCell(gAgCmdList, index), command, charsmax(command), command_flags, info, charsmax(info), user_flags, -1, is_info_ml);
 
 		if (is_info_ml)
 		{
