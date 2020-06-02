@@ -55,9 +55,7 @@ new Array:gAgCmdList;
 new Array:gAgVoteList;
 
 // Location system
-new gLocationName[128][32]; 		// Max locations (128) and max location name length (32);
-new Float:gLocationOrigin[128][3]; 	// Max locations and origin (x, y, z)
-new gNumLocations;
+new Array:gLocations;
 new Float:gDeathLocation[MAX_PLAYERS + 1][3];
 
 // Game player equip
@@ -379,7 +377,8 @@ public plugin_init() {
 	CacheTeamListModels(gTeamsName, HL_MAX_TEAMS);
 
 	// Get locations from locs/<mapname>.loc file
-	GetLocations(gLocationName, 32, gLocationOrigin, gNumLocations);
+	gLocations = ArrayCreate(32);
+	LoadLocations();
 
 	// Multilingual
 	register_dictionary("agmodx.txt");
@@ -515,7 +514,7 @@ public plugin_end() {
 	ArrayDestroy(gAgCmdList);
 	ArrayDestroy(gAgVoteList);
 	ArrayDestroy(gRestoreScorePlayers);
-	
+	ArrayDestroy(gLocations);
 }
 
 // Gamemode name that should be displayed in server browser and in splash with server settings data
@@ -1148,67 +1147,84 @@ public FwVoiceSetClientListening(receiver, sender, bool:listen) {
 /*
 * Location System
 */
-public GetLocations(name[][], size, Float:origin[][], &numLocs) {
-	new file[128], map[32], text[2048];
-
+public LoadLocations() {
+	new map[32];
 	get_mapname(map, charsmax(map));
-	formatex(file, charsmax(file), "locs/%s.loc", map);
 	
-	if (file_exists(file))
-		read_file(file, 0, text, charsmax(text));
+	new handle = fopen(fmt("locs/%s.loc", map), "r");
 
-	new i, j, nLen;
-	j = -1;
+	if (!handle)
+		return false;
 
-	while (nLen < strlen(text)) {
-		if (j == -1) {
-			nLen += 1 + copyc(name[i], size, text[nLen], '#'); // you must plus one to skip #
-			j++;
-			numLocs++;
-		} else {
-			new number[16];
-			
-			nLen += 1 + copyc(number, sizeof number, text[nLen], '#'); // you must plus one to skip #
-			origin[i][j] = str_to_float(number);
-			
-			j++;
+	new name[32], Float:origin[3];
 
-			// if we finish to copy origin, then let's start with next location
-			if (j > 2) {
-				i++;
-				j = -1;
+	new buffer[32], numHash, c, i;
+	while ((c = fgetc(handle)) != -1) {
+		// hash signs marks the end of the string
+		if (c == '#') {
+			// put null character in the buffer to make it safe to read
+			if (i < charsmax(buffer))
+				buffer[i] = '^0';	
+
+			// reset position for buffer
+			i = 0;
+
+			if (numHash == 0) {
+				copy(name, charsmax(name), buffer);
+			} else if (numHash > 0 && numHash <= 3) {
+				origin[numHash - 1] = str_to_float(buffer);
 			}
+			
+			// finish to read this loc and put it into the array
+			if (numHash == 3) {
+				ArrayPushArray(gLocations, origin, sizeof(origin));
+				ArrayPushString(gLocations, name);
+				
+				// reset everything so we can read a new location
+				arrayset(origin, 0.0, sizeof(origin));
+				numHash = 0;
+				continue;
+			}
+			numHash++;
+		} else if (i < charsmax(buffer)) { // copy until the buffer is full
+			buffer[i++] = c;
 		}
 	}
+
+	return true;
 }
 
-// return the index of the nearest location for the player from an array
-public FindNearestLocation(Float:origin[3], Float:locOrigin[][3], numLocs) {
+// get location name from the inputed origin
+public FindNearestLocation(Float:origin[3], output[], len) {
 	new Float:nearestOrigin[3], idxNearestLoc;
-	
+	new Float:locOrigin[3];
+
+	if (!ArraySize(gLocations))
+		return;
+
 	// initialize nearest origin with the first location
-	nearestOrigin = locOrigin[0];
+	ArrayGetArray(gLocations, 0, nearestOrigin, sizeof(nearestOrigin));
 	
-	for (new i; i < numLocs; i++) {
-		if (vector_distance(origin, locOrigin[i]) <= vector_distance(origin, nearestOrigin)) {
-			nearestOrigin = locOrigin[i];
+	for (new i; i < ArraySize(gLocations); i += 2) {
+		ArrayGetArray(gLocations, i, locOrigin, sizeof(locOrigin));
+		if (vector_distance(origin, locOrigin) <= vector_distance(origin, nearestOrigin)) {
+			nearestOrigin = locOrigin;
 			idxNearestLoc = i;
 		}
 	}
 
-	return idxNearestLoc;
+	// save location name in the output
+	ArrayGetString(gLocations, idxNearestLoc + 1, output, len);
 }
 
 public GetPlayerLocation(id, locName[], len) {
 	new Float:origin[3];
 	pev(id, pev_origin, origin);
-	new idx = FindNearestLocation(origin, gLocationOrigin, gNumLocations);
-	copy(locName, len, gLocationName[idx]);
+	FindNearestLocation(origin, locName, len);
 }
 
 public GetDeathLocation(id, locName[], len) {
-	new idx = FindNearestLocation(gDeathLocation[id], gLocationOrigin, gNumLocations);
-	copy(locName, len, gLocationName[idx]);
+	FindNearestLocation(gDeathLocation[id], locName, len);
 }
 
 public CmdHelp(id, level, cid) {
