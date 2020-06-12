@@ -1200,7 +1200,7 @@ public FindNearestLocation(Float:origin[3], output[], len) {
 	new Float:locOrigin[3];
 
 	if (!ArraySize(gLocations))
-		return;
+		return false;
 
 	// initialize nearest origin with the first location
 	ArrayGetArray(gLocations, 0, nearestOrigin, sizeof(nearestOrigin));
@@ -1214,17 +1214,21 @@ public FindNearestLocation(Float:origin[3], output[], len) {
 	}
 
 	// save location name in the output
-	ArrayGetString(gLocations, idxNearestLoc + 1, output, len);
+	return ArrayGetString(gLocations, idxNearestLoc + 1, output, len) > 0 ? true : false;
 }
 
 public GetPlayerLocation(id, locName[], len) {
 	new Float:origin[3];
 	pev(id, pev_origin, origin);
-	FindNearestLocation(origin, locName, len);
+	if (!FindNearestLocation(origin, locName, len)) {
+		locName[0] = '^0';
+	}
 }
 
 public GetDeathLocation(id, locName[], len) {
-	FindNearestLocation(gDeathLocation[id], locName, len);
+	if (!FindNearestLocation(gDeathLocation[id], locName, len)) {
+		locName[0] = '^0';
+	}
 }
 
 public CmdHelp(id, level, cid) {
