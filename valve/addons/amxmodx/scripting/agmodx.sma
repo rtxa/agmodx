@@ -1043,8 +1043,8 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 	// using say
 	} else {
 		if (isSenderSpec) {
-			// specs can't talk in a match
-			if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk)) {
+			// specs can't talk in a match, unless the spec is one of the player of the match
+			if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk) && !RestoreScore_FindPlayer(sender)) {
 				if (sender == receiver)
 					client_print(sender, print_chat, "%l", "SPEC_CANTTALK");
 				return PLUGIN_HANDLED;
