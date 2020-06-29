@@ -46,7 +46,7 @@ stock ClearField() {
 stock ClearCorpses() {
 	new ent;
 	while ((ent = find_ent_by_class(ent, "bodyque")))
-		entity_set_origin(ent, Float:{4096.0, 4096.0, 4096.0});
+		set_pev(ent, pev_effects, EF_NODRAW);
 }
 
 // This will respawn all weapons, ammo and items of the map to prepare for a new match (agstart)
