@@ -213,6 +213,7 @@ new gCvarBanLongJump;
 new gCvarBanChargers;
 
 new gCvarCoreBlockSpec;
+new gCvarMatchRunning;
 
 new const gWeaponClass[][] = {
 	"weapon_357",
@@ -354,6 +355,10 @@ public plugin_precache() {
 	// Some gamemodes need to block the spectator cmd handling of the core to avoid player score getting reset
 	gCvarCoreBlockSpec = create_cvar("sv_ag_core_block_spec", "0");
 	set_pcvar_string(gCvarCoreBlockSpec, "0");
+
+	// reset this always
+	gCvarMatchRunning = create_cvar("sv_ag_match_running", "0");
+	set_pcvar_string(gCvarMatchRunning, "0");
 
 	// Load mode cvars
 	new mode[32];
@@ -866,6 +871,8 @@ public StartVersus() {
 	gSendConnectingToSpec = true;
 	gBlockPlayerSpawn = true; // if player is dead on agstart countdown, he will be able to spawn...
 	gIsSuddenDeath = false;
+	
+	set_pcvar_num(gCvarMatchRunning, 1);
 
 	// reset score and freeze players who are going to play versus
 	new players[MAX_PLAYERS], numPlayers;
@@ -970,6 +977,7 @@ public AbortVersus() {
 	gBlockPlayerSpawn = false;
 	gIsSuddenDeath = false;
 
+	set_pcvar_num(gCvarMatchRunning, 0);
 
 	new players[32], numPlayers, player;
 	get_players(players, numPlayers);
@@ -2943,6 +2951,8 @@ public EventIntermissionMode() {
 	gBlockCmdDrop = true;
 	gVersusStarted = false; // allow specs at the end to talk
 	gIsSuddenDeath = false;
+
+	set_pcvar_num(gCvarMatchRunning, 0);
 
 	new players[MAX_PLAYERS], numPlayers;
 	get_players(players, numPlayers);
