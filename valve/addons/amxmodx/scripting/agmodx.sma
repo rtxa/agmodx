@@ -195,6 +195,7 @@ new gCvarWallGauss;
 new gCvarBlastRadius;
 new gCvarRpgFix;
 new gCvarMaxSpeed;
+new gCvarOldPhysics;
 
 new gCvarStartHealth;
 new gCvarStartArmor;
@@ -324,6 +325,7 @@ public plugin_precache() {
 	gCvarWallGauss = create_cvar("sv_ag_wallgauss", "1");
 	gCvarGaussFix = create_cvar("ag_gauss_fix", "0");
 	gCvarRpgFix = create_cvar("ag_rpg_fix", "0");
+	gCvarOldPhysics = create_cvar("sv_ag_oldphysics", "1");
 	gCvarBunnyHop = get_cvar_pointer("mp_bunnyhop");
 	gCvarFallDamage = get_cvar_pointer("mp_falldamage");
 	gCvarFlashLight = get_cvar_pointer("mp_flashlight");
@@ -342,6 +344,7 @@ public plugin_precache() {
 	hook_cvar_change(gCvarWallGauss, "CvarWallGaussHook");
 	hook_cvar_change(gCvarRpgFix, "CvarAgRpgFixHook");
 	hook_cvar_change(gCvarGaussFix, "CvarAgGaussFixHook");
+	hook_cvar_change(gCvarOldPhysics, "CvarOldPhysicsHook");
 
 	// keep AG HUD color updated
 	new color[32];
@@ -816,6 +819,11 @@ public CvarAgRpgFixHook(pcvar, const old_value[], const new_value[]) {
 public CvarAgGaussFixHook(pcvar, const old_value[], const new_value[]) {
 	new num = clamp(str_to_num(new_value), 0, 1);
 	set_pcvar_num(gCvarSelfGauss, num ? 0 : 1);
+}
+
+
+public CvarOldPhysicsHook(pcvar, const old_value[], const new_value[]) {
+	set_pcvar_string(gCvarBunnyHop, new_value);
 }
 
 public CvarMpDmgHook(pcvar, const old_value[], const new_value[]) {
