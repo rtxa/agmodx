@@ -39,7 +39,7 @@ stock ClearField() {
 	
 	ent = 0;
 	while ((ent = find_ent_by_class(ent, "weaponbox"))) {
-		WeaponBox_Kill(ent);
+		hl_remove_wbox(ent);
 	}
 }
 
@@ -277,20 +277,4 @@ stock CountSpecs() {
 			numSpecs++;
 	}
 	return numSpecs;
-}
-
-stock WeaponBox_Kill(const pWeaponBox) {
-	new pWeapon;
-	
-	// destroy the weapons inside the box
-	for (new i = 0 ; i < HL_MAX_WEAPON_SLOTS; i++) {
-		pWeapon = get_ent_data_entity(pWeaponBox, "CWeaponBox", "m_rgpPlayerItems", i);
-		while (pWeapon != FM_NULLENT) {
-			set_pev(pWeapon, pev_flags, FL_KILLME);
-			pWeapon = get_ent_data_entity(pWeaponBox, "CBasePlayerItem", "m_pNext");
-		}
-	}
-	
-	// remove the box
-	set_pev(pWeaponBox, pev_flags, FL_KILLME);
 }
