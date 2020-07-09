@@ -29,7 +29,19 @@
 * - Added new constant: HL_MAX_WEAPON_SLOTS
 * Version 1.9 (date: 12.05.2020)
 * - Added hl_strip_user_weapon() (Thanks XxAvalanchexX)
-*
+* Version 2.0 (date: 23.06.2020)
+* - Fixed hl_set_user_score(), hl_set_user_frags() and hl_set_user_deaths() glitch in scoreboard when player is in spectator.
+* Version 2.1 (date: 26.06.2020)
+* - Added hl_set_user_teamnames() and hl_set_user_teamscore().
+* Version 2.2 (date: 04/07/2020)
+* - Added hl_remove_wbox().
+* - Code clean up has been done.
+* Version 2.3 (date: 06/07/2020)
+* - Improved code for processing team list. Now is more safe and works the same as the GameDLL.
+* - Fixed hl_set_user_team() not returning 0 when team is invalid.
+* - Added new constant HL_MAX_TEAMLIST_LENGTH
+* Version 2.4 (date: 08/07/2020)
+* - Fixed typos in hl_remove_wbox()
 * http://aghl.ru/forum/ - Russian Half-Life and Adrenaline Gamer Community
 *
 */
@@ -48,6 +60,7 @@
 #define HL_TEAMNAME_LENGTH 		16
 #define HL_MAX_TEAMNAME_LENGTH  16
 #define HL_MAX_WEAPON_SLOTS		6
+#define HL_MAX_TEAMLIST_LENGTH  512
 
 stock static teams[HL_MAX_TEAMS][HL_MAX_TEAMNAME_LENGTH];
 
@@ -94,7 +107,7 @@ stock hl_set_user_frags(id, frags)
 	write_short(frags);
 	write_short(hl_get_user_deaths(id));
 	write_short(0);
-	write_short(hl_get_user_team(id));
+	write_short(__get_user_team(id));
 	message_end();
 }
 
@@ -119,7 +132,7 @@ stock hl_set_user_deaths(client, deaths)
 		write_short(get_user_frags(client));
 		write_short(deaths);
 		write_short(0);
-		write_short(hl_get_user_team(client));
+		write_short(__get_user_team(client));
 		message_end();
 	}
 }
@@ -139,7 +152,7 @@ stock hl_set_user_score(client, frags, deaths)
 		write_short(frags);
 		write_short(deaths);
 		write_short(0);
-		write_short(hl_get_user_team(client));
+		write_short(__get_user_team(client));
 		message_end();
 	}
 }
@@ -236,7 +249,7 @@ stock hl_get_user_team(client, team[] = "", len = 0)
 	if (tdm < 1.0) return 0;
 
 	if (!len) len = HL_MAX_TEAMNAME_LENGTH;
-	get_user_info(client, "model", team, len);
+	hl_get_user_model(client, team, len);
 
 	return __get_team_index(team);
 }
@@ -251,7 +264,7 @@ stock hl_set_user_team(client, const team[])
 
 	static teamid;
 	teamid = __get_team_index(team);
-	if (teamid == -1) return 0;
+	if (!teamid) return 0;
 
 	set_ent_data_string(client, "CBasePlayer", "m_szTeamName", team);
 	engfunc(EngFunc_SetClientKeyValue, client, engfunc(EngFunc_GetInfoKeyBuffer, client), "model", team);
@@ -279,6 +292,18 @@ stock hl_set_user_team(client, const team[])
 	}
 
 	return 1;
+}
+
+// ignores if player is in spec or not
+stock __get_user_team(client, team[] = "", len = 0) {
+	static Float:tdm;
+	global_get(glb_teamplay, tdm);
+	if (tdm < 1.0) return 0;
+
+	if (!len) len = HL_MAX_TEAMNAME_LENGTH;
+	hl_get_user_model(client, team, len);
+
+	return __get_team_index(team);
 }
 
 stock __get_team_index(const team[])
@@ -312,9 +337,8 @@ stock __count_teams()
 {
 	if (!teams[0][0])
 	{
-		new teamlist[50];
-		get_pcvar_string(get_cvar_pointer("mp_teamlist"), teamlist, charsmax(teamlist));
-		trim(teamlist);
+		new teamlist[HL_MAX_TEAMLIST_LENGTH];
+		get_cvar_string("mp_teamlist", teamlist, charsmax(teamlist));
 		__explode_teamlist(teams, charsmax(teams[]), teamlist, ';');
 	}
 
@@ -334,11 +358,25 @@ stock __count_teams()
 
 stock __explode_teamlist(output[][], size, input[], delimiter)
 {
-	new nIdx = 0, l = strlen(input);
-	new nLen = (1 + copyc(output[nIdx], size, input, delimiter));
+	new nLen, teamname[HL_MAX_TEAMLIST_LENGTH], numTeams;
+	while (nLen < strlen(input) && numTeams < HL_MAX_TEAMS)
+	{
+		strtok(input[nLen], teamname, charsmax(teamname), "", 0, delimiter);
+		nLen += strlen(teamname) + 1;
+		if (__get_team_index__(teamname, output, numTeams) < 0)
+		{
+			copy(output[numTeams], size, teamname);
+			numTeams++;
+		}
+	}
+}
 
-	while ((nLen < l) && (++nIdx < HL_MAX_TEAMS))
-		nLen += (1 + copyc(output[nIdx], size, input[nLen], delimiter));
+stock __get_team_index__(const teamname[], team_names[][], numTeams)
+{
+	for (new i = 0; i < numTeams; i++)
+		if (equali(team_names[i], teamname))
+			return i;
+	return -1;
 }
 
 /* Checks if user has that weapon (weapon id is from the HLW enum in hlsdk_const.inc)
@@ -350,7 +388,8 @@ stock hl_user_has_weapon(id, weapon_id)
 	for (new i = 1; i < HL_MAX_WEAPON_SLOTS; i++)
 	{
 		ent = get_ent_data_entity(id, "CBasePlayer", "m_rgpPlayerItems", i);
-		while (ent != FM_NULLENT) {
+		while (ent != FM_NULLENT) 
+		{
 			if (hl_get_weapon_id(ent) == weapon_id)
 				return ent;
 			ent = get_ent_data_entity(ent, "CBasePlayerItem", "m_pNext");
@@ -419,6 +458,25 @@ stock hl_set_wbox_ammo(entity, ammo)
 	set_ent_data(entity, "CWeaponBox", "m_rgAmmo", ammo, 1);
 }
 
+/* Removes weapon box with proper handling of all entities inside.
+*/
+stock hl_remove_wbox(entity)
+{
+	new pWeapon;
+	
+	// destroy the weapons inside the box
+	for (new i = 0 ; i < HL_MAX_WEAPON_SLOTS; i++) {
+		pWeapon = get_ent_data_entity(entity, "CWeaponBox", "m_rgpPlayerItems", i);
+		while (pWeapon != FM_NULLENT) {
+			set_pev(pWeapon, pev_flags, FL_KILLME);
+			pWeapon = get_ent_data_entity(pWeapon, "CBasePlayerItem", "m_pNext");
+		}
+	}
+	
+	// remove the box
+	set_pev(entity, pev_flags, FL_KILLME);
+}
+
 /* Spawns a Half-Life player.
 */
 stock hl_user_spawn(client)
@@ -430,8 +488,8 @@ stock hl_user_spawn(client)
 	dllfunc(DLLFunc_Spawn, client);
 }
 
-// Strip a weapon from player
-// To do: add support for custom weapons (HL Weapon Mod)
+/* Strip a weapon from player
+*/
 stock hl_strip_user_weapon(id, weapon_id)
 {    
 	new weapon_ent = hl_user_has_weapon(id, weapon_id);
@@ -533,13 +591,8 @@ stock hl_set_user_spectator(client, bool:spectator = true)
 stock bool:hl_get_user_longjump(client)
 {
 	new value[2];
-	engfunc(EngFunc_GetPhysicsKeyValue, client, "slj", value, 1);
-	switch (value[0])
-	{
-	case '1': return true;
-	}
-
-	return false;
+	engfunc(EngFunc_GetPhysicsKeyValue, client, "slj", value, charsmax(value));
+	return value[0] == '1' ? true : false;
 }
 
 /* Set longjump module to player.
@@ -568,4 +621,43 @@ stock hl_set_user_longjump(client, bool:longjump = true, bool:tempicon = true)
 		engfunc(EngFunc_SetPhysicsKeyValue, client, "slj", "0");
 
 	set_ent_data(client, "CBasePlayer", "m_fLongJump", longjump);
+}
+
+/* Set team names in player scoreboard. Use 0 for all clients.
+*  Example: hl_set_user_teamnames(id, "Blue", "Red");
+*/
+stock hl_set_user_teamnames(id, any:...) {
+	new teamnames[HL_MAX_TEAMS][HL_TEAMNAME_LENGTH];
+	new numTeams = clamp(numargs() - 1, 0, HL_MAX_TEAMS);
+
+	for (new i; i < numTeams; i++)
+		format_args(teamnames[i], charsmax(teamnames[]), i + 1);
+
+	static MSG_TeamNames;
+
+	if (!MSG_TeamNames)
+		MSG_TeamNames = get_user_msgid("TeamNames");
+
+	message_begin(id ? MSG_ONE : MSG_ALL, MSG_TeamNames, .player = id);
+	write_byte(numTeams);
+	for (new i; i < numTeams; i++)
+		write_string(teamnames[i]);
+	message_end();
+}
+
+/* Set team score in player scoreboard. This will override the combined player scores.
+*  Use 0 for all clients.
+*  Warning: Team score gets switched when player changes his team. Send another message to keep this updated.
+*/
+stock hl_set_user_teamscore(id, const teamname[], frags, deaths = 0) {
+	static MSG_TeamScore;
+
+	if (!MSG_TeamScore)
+		MSG_TeamScore = get_user_msgid("TeamScore");
+
+	message_begin(id ? MSG_ONE : MSG_ALL, MSG_TeamScore, .player = id);
+	write_string(teamname);
+	write_short(frags);
+	write_short(deaths);
+	message_end();
 }
