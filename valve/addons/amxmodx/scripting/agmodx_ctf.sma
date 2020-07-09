@@ -9,7 +9,7 @@
 #include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X CTF"
-#define VERSION "Beta 2.3"
+#define VERSION "Beta 2.4"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1

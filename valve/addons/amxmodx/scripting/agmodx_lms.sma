@@ -11,7 +11,7 @@
 #include <agmodx_const>
 
 #define PLUGIN  "AG Mod X LMS"
-#define VERSION "Beta 2.3"
+#define VERSION "Beta 2.4"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1

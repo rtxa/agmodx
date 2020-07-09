@@ -34,7 +34,7 @@
 #include <hlstocks>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 2.3"
+#define VERSION "Beta 2.4"
 #define AUTHOR  "rtxA"
 
 #define CONTACT_INFO "More info: https://git.io/agmodx"
