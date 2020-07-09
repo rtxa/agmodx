@@ -2730,8 +2730,8 @@ public CmdPlayClose(caller) {
 * Finds game player equipment of the map
 */
 FindGamePlayerEquip() {
-	new ent, i;
-	while ((ent = find_ent_by_class(i, "game_player_equip"))) {
+	new ent;
+	while ((ent = find_ent_by_class(ent, "game_player_equip"))) {
 		// ignore the ones with use flag, they don't give weapons to all players
 		if (!(pev(ent, pev_spawnflags) & SF_PLAYEREQUIP_USEONLY))
 			return ent;
