@@ -567,14 +567,20 @@ public client_disconnected(id) {
 	new deaths = hl_get_user_deaths(id);
 
 	// log
-	client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
-	log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
+	if (!gVersusStarted) {
+		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
+		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
+	}
 
 	// save player score
 	if (gVersusStarted) {
 		if (!RestoreScore_FindPlayer(id))
 			return;
 	
+		// log
+		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
+		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
+
 		// give a chance to the player to recover his score
 		if (hl_get_user_spectator(id)) { 
 			return;
