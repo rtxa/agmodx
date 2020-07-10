@@ -888,6 +888,7 @@ public StartVersus() {
 	gBlockPlayerSpawn = true; // if player is dead on agstart countdown, he will be able to spawn...
 	gIsSuddenDeath = false;
 	
+	set_pcvar_num(gCvarMatchRunning, 0); // reset to 0 so plugins hooking this cvar can be triggered
 	set_pcvar_num(gCvarMatchRunning, 1);
 
 	// reset score and freeze players who are going to play versus
