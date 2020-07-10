@@ -94,7 +94,7 @@ stock CreateGameTeamMaster(name[], teamid) {
 }
 
 // this removes spawns that are not from ctf
-RemoveUselessSpawns() {
+RemoveNoTeamSpawns() {
 	new ent, master[32];
 	while ((ent = find_ent_by_class(ent, INFO_PLAYER_DEATHMATCH))) {
 		pev(ent, pev_netname, master, charsmax(master));
@@ -187,11 +187,13 @@ ParseEntFromFile(const input[], ent_name[], len, Float:ent_origin[3], Float:ent_
 public plugin_init() {
 	register_dictionary("agmodxctf.txt");
 	
-	// is not a native ctf map? try loading the config file
-	if (!gIsMapCtf) {
-		gIsMapCtf = LoadCtfMapFile();
-	}
-	
+	// load always ctf map config file
+	new bool:result = LoadCtfMapFile();
+
+	// in case map isn't ctf, let's see if the ctf map config file has loaded
+	if (!gIsMapCtf)
+		gIsMapCtf = result; 
+
 	if (!gIsMapCtf) {
 		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
 		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
@@ -204,7 +206,7 @@ public plugin_init() {
 
 	RegisterHam(Ham_Killed, "player", "FwPlayerKilled");
 
-	RemoveUselessSpawns();
+	RemoveNoTeamSpawns();
 
 	SpawnFlag(gFlagBlue);
 	SpawnFlag(gFlagRed);
