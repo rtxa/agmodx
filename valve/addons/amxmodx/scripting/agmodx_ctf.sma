@@ -86,6 +86,20 @@ public plugin_precache() {
 	gCvarFlagDelayTime = create_cvar("sv_ag_ctf_flag_delaytime", "3");
 }
 
+public plugin_cfg() {
+	hook_cvar_change(get_cvar_pointer("sv_ag_match_running"), "CvarMatchRunningHook");
+}
+
+public CvarMatchRunningHook(pcvar, const old_value[], const new_value[]) {
+	new num = str_to_num(new_value);
+
+	// reset team score when match starts
+	if (num == 1) {
+		gBlueScore = gRedScore = 0;
+		UpdateTeamScore();
+	}
+}
+
 stock CreateGameTeamMaster(name[], teamid) {
 	new ent = create_entity("game_team_master");
 	set_pev(ent, pev_targetname, name);
