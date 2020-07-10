@@ -93,10 +93,25 @@ public plugin_cfg() {
 public CvarMatchRunningHook(pcvar, const old_value[], const new_value[]) {
 	new num = str_to_num(new_value);
 
-	// reset team score when match starts
 	if (num == 1) {
+		// reset team score when match starts
 		gBlueScore = gRedScore = 0;
 		UpdateTeamScore();
+
+		new team;
+		for (new id = 1; id <= MaxClients; id++) {
+			if (!is_user_connected(id))
+				continue;
+			team = IsPlayerCarryingFlag(id);
+			if (team) {
+				SetFlagCarriedByPlayer(id, 0);
+				DrawFlagIcon(id, false, team);
+			}
+		}
+
+		// return flag to base
+		ReturnFlagToBase(gFlagBlue);
+		ReturnFlagToBase(gFlagRed);
 	}
 }
 
