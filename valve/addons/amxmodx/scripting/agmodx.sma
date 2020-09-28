@@ -7,9 +7,9 @@
 	- KORD_12.7 for his HL Stocks include for AMXX.
 
 	# Information:
-	AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X 
+	AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X
 	from the ground. It's easy to add new stuff, make improvements, do changes, etc.
-	
+
 	# Features:
 	- Uses Bugfixed HL in the core, a HL that fixes a lot of issues and comes with some features
 	and improvements.
@@ -72,7 +72,7 @@ new gHudRed, gHudGreen, gHudBlue;
 
 // play_team cmd
 new Float:gPlaySoundDelayTime[33];
-	
+
 // gamerules flags
 new bool:gBlockCmdKill;
 new bool:gBlockCmdSpec;
@@ -255,7 +255,7 @@ public plugin_precache() {
 	gCvarAgStartMinPlayers = create_cvar("sv_ag_start_minplayers", "2", FCVAR_SERVER);
 	gCvarSpecTalk = create_cvar("ag_spectalk", "0", FCVAR_SERVER);
 	gCvarContact = get_cvar_pointer("sv_contact");
-		
+
 	// Allowed vote cvars
 	gCvarAllowVote = create_cvar("sv_ag_allow_vote", "1", FCVAR_SERVER);
 	gCvarAllowVoteGameMode = create_cvar("sv_ag_vote_gamemode", "1", FCVAR_SERVER);
@@ -312,7 +312,7 @@ public plugin_precache() {
 	// Ban ammo
 	for (new i; i < sizeof gCvarBanAmmo; i++)
 		gCvarBanAmmo[i] = create_cvar(gAgBanAmmo[i], "0");
-	
+
 	// Ban items
 	gCvarBanHealthKit = create_cvar("sv_ag_ban_health", "0");
 	gCvarBanBattery = create_cvar("sv_ag_ban_armour", "0");
@@ -363,12 +363,22 @@ public plugin_precache() {
 	gCvarMatchRunning = create_cvar("sv_ag_match_running", "0");
 	set_pcvar_string(gCvarMatchRunning, "0");
 
+	new fwPreConfig, fwPostConfig, fwReturnTemp;
+
+	fwPreConfig = CreateMultiForward("agmodx_pre_config", ET_IGNORE);
+	if (fwPreConfig < 0) log_amx("Error creating forward");
+
+	fwPostConfig = CreateMultiForward("agmodx_post_config", ET_IGNORE);
+	if (fwPostConfig < 0) log_amx("Error creating forward");
+
 	// Load mode cvars
 	new mode[32];
 	get_pcvar_string(gCvarGameMode, mode, charsmax(mode));
 
+	ExecuteForward(fwPreConfig, fwReturnTemp);
 	server_cmd("exec gamemodes/%s.cfg", mode);
 	server_exec();
+	ExecuteForward(fwPostConfig, fwReturnTemp);
 }
 
 public plugin_natives() {
@@ -417,7 +427,7 @@ public plugin_init() {
 	ag_register_concmd("agmap", "CmdAgMap", ADMIN_BAN, "AGCMD_AGMAP", _, true);
 	ag_register_concmd("agforcespectator", "CmdAgForceSpectator", ADMIN_BAN, "AGCMD_FORCESPECTATOR", _, true);
 	ag_register_concmd("agforceteamup", "CmdAgForceTeamUp", ADMIN_BAN, "AGCMD_FORCETEAMUP", _, true);
-	
+
 	ag_register_concmd("aglistvotes", "CmdVoteHelp", ADMIN_ALL, "AGCMD_LISTVOTES", _, true);
 	ag_register_concmd("timeleft", "CmdTimeLeft", ADMIN_ALL, "AGCMD_TIMELEFT", _, true);
 	ag_register_clcmd("vote", "CmdVote", ADMIN_ALL, "AGCMD_VOTE", _, true);
@@ -440,11 +450,11 @@ public plugin_init() {
 
 	// i create this cmds to set pausable to 0
 	register_clcmd("pauseAg", "CmdPauseAg");
-	
+
 	// hook intermission mode
 	register_event_ex("30", "EventIntermissionMode", RegisterEvent_Global);
 
-	// Chat and voice 
+	// Chat and voice
 	register_message(get_user_msgid("SayText"), "MsgSayText");
 	register_forward(FM_Voice_SetClientListening, "FwVoiceSetClientListening");
 
@@ -537,7 +547,7 @@ public client_putinserver(id) {
 		if (numSpecs >= get_pcvar_num(gCvarMaxSpectators)) {
 			if (!is_user_admin(id) || !RestoreScore_FindPlayer(id)) {
 				SetGlobalTransTarget(id);
-				server_cmd("kick #%d ^"%l^"", get_user_userid(id), "KICK_MAXSPECTATORS", get_pcvar_num(gCvarMaxSpectators));		
+				server_cmd("kick #%d ^"%l^"", get_user_userid(id), "KICK_MAXSPECTATORS", get_pcvar_num(gCvarMaxSpectators));
 			}
 		}
 	}
@@ -576,13 +586,13 @@ public client_disconnected(id) {
 	if (gVersusStarted) {
 		if (!RestoreScore_FindPlayer(id))
 			return;
-	
+
 		// log
 		client_print(0, print_console, "%l", "MATCH_LEAVE", id, frags, deaths);
 		log_amx("%L", LANG_SERVER, "MATCH_LEAVE", id, frags, deaths);
 
 		// give a chance to the player to recover his score
-		if (hl_get_user_spectator(id)) { 
+		if (hl_get_user_spectator(id)) {
 			return;
 		} else {
 			RestoreScore_SavePlayer(id, frags, deaths);
@@ -595,7 +605,7 @@ public client_remove(id) {
 	if (gIsSuddenDeath) {
 		if (!IsSuddenDeathNeeded())
 			StartIntermissionMode();
-	}		
+	}
 }
 
 public PlayerPreSpawn(id) {
@@ -606,7 +616,7 @@ public PlayerPreSpawn(id) {
  	if (gBlockPlayerSpawn)
 	 	return HAM_SUPERCEDE;
 
-	if (task_exists(TASK_SENDVICTIMTOSPEC + id)) 
+	if (task_exists(TASK_SENDVICTIMTOSPEC + id))
 		return HAM_SUPERCEDE;
 
 	return HAM_IGNORED;
@@ -699,11 +709,11 @@ public CmdTimeLeft(id) {
 */
 public InitAgTimer() {
 	gTimeLimit = get_pcvar_num(gCvarTimeLimit);
-	
+
 	// from now, i'm gonna use my own timer
 	// by-pass timelimit from gamerules by setting it to unlimited time
 	// add an unprintable character to keep the unlimited time
-	set_pcvar_string(gCvarTimeLimit, fmt("%c%d", 2, gTimeLimit)); 
+	set_pcvar_string(gCvarTimeLimit, fmt("%c%d", 2, gTimeLimit));
 	gHookCvarTimeLimit = hook_cvar_change(gCvarTimeLimit, "CvarTimeLimitHook");
 }
 
@@ -753,13 +763,13 @@ public ShowAgTimer() {
 		set_hudmessage(r, g, b, -1.0, 0.02, 0, 0.01, 600.0, 0.01, 0.01); // flicks the hud with out this, maybe is a bug
 		ShowSyncHudMsg(0, gHudShowAgTimer, "%l", "TIMER_UNLIMITED");
 		return;
-	} 
+	}
 
 	// set color red for sudden death or when time is almost out
-	if (gTimeLeft < 60) { 
-		r = 255; 
+	if (gTimeLeft < 60) {
+		r = 255;
 		g = 50;
-		b = 50; 
+		b = 50;
 	}
 
 	// sudden death
@@ -796,7 +806,7 @@ FormatTimeLeft(timeleft, output[], length) {
 	seconds = seconds_total;
 
 	if (days > 0) {
-		formatex(output, length, "%id %ih %im %is", days, hours, minutes, seconds);	
+		formatex(output, length, "%id %ih %im %is", days, hours, minutes, seconds);
 	} else if (hours > 0)
 		formatex(output, length, "%ih %02im %02is", hours, minutes, seconds);
 	else if (minutes > 0)
@@ -844,7 +854,7 @@ public CvarMpDmgHook(pcvar, const old_value[], const new_value[]) {
 public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 	// disable hook to avoid recursion
 	disable_cvar_hook(gHookCvarTimeLimit);
-	
+
 	new timeLimit = clamp(str_to_num(new_value), 0);
 
 	// a match with unlimited time doesn't makes sense, we'll never get a winner
@@ -856,13 +866,13 @@ public CvarTimeLimitHook(pcvar, const old_value[], const new_value[]) {
 		StartAgTimer();
 
 		// add an unprintable character to keep the unlimited time and to able to track cvar changes
-		set_pcvar_string(pcvar, fmt("%c%d", 2, gTimeLimit)); 
+		set_pcvar_string(pcvar, fmt("%c%d", 2, gTimeLimit));
 	}
 
 	enable_cvar_hook(gHookCvarTimeLimit);
 }
 
-/* 
+/*
 * AgStart
 */
 public StartVersus() {
@@ -887,9 +897,8 @@ public StartVersus() {
 	gSendConnectingToSpec = true;
 	gBlockPlayerSpawn = true; // if player is dead on agstart countdown, he will be able to spawn...
 	gIsSuddenDeath = false;
-	
+
 	set_pcvar_num(gCvarMatchRunning, 0); // reset to 0 so plugins hooking this cvar can be triggered
-	set_pcvar_num(gCvarMatchRunning, 1);
 
 	// reset score and freeze players who are going to play versus
 	new players[MAX_PLAYERS], numPlayers;
@@ -904,6 +913,7 @@ public StartVersus() {
 	}
 
 	gStartVersusTime = 9;
+	set_pcvar_num(gCvarMatchRunning, 1);
 	StartVersusCountdown();
 }
 
@@ -931,7 +941,7 @@ public StartVersusCountdown() {
 			// unfreeze all players
 			FreezePlayer(player, false);
 
-			if (hl_get_user_spectator(player))			
+			if (hl_get_user_spectator(player))
 				continue;
 
 			ResetScore(player);
@@ -970,7 +980,7 @@ public StartVersusCountdown() {
 	gStartVersusTime--;
 }
 
-/* 
+/*
 * AgAbort
 */
 public AbortVersus() {
@@ -1038,9 +1048,9 @@ public SendVictimToSpec(taskid) {
 */
 public MsgSayText(msg_id, msg_dest, receiver) {
 	new text[191]; // 192 will crash the sv by overflow if someone send a large message with a lot of %l, %w, etc...
-	
+
 	get_msg_arg_string(2, text, charsmax(text)); // get user message
-	
+
 	if (text[0] != 2) // only modify player messages
 		return PLUGIN_CONTINUE;
 
@@ -1054,7 +1064,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 			return PLUGIN_HANDLED;
 	// using say_team
 	} else if (contain(text, "(TEAM)") == 1) {
-		if (isSenderSpec) { 
+		if (isSenderSpec) {
 			if (!isReceiverSpec) // only show messages to spectators
 				return PLUGIN_HANDLED;
 			else
@@ -1063,7 +1073,7 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 			if (isReceiverSpec)
 				return PLUGIN_HANDLED;
 			else
-				replace(text, charsmax(text), "(TEAM)", "(T)"); 
+				replace(text, charsmax(text), "(TEAM)", "(T)");
 		}
 	// using say
 	} else {
@@ -1122,9 +1132,9 @@ public MsgSayText(msg_id, msg_dest, receiver) {
 			arGrenades = hl_get_user_bpammo(sender, HLW_CHAINGUN);
 		FormatAmmo(weaponid, ammo, bpammo, arGrenades, str, charsmax(str));
 	}
-	
+
 	// replace all %q with ammo of current weapon
-	replace_string(text, charsmax(text), "%q", isSenderSpec ? "" : str, false); 
+	replace_string(text, charsmax(text), "%q", isSenderSpec ? "" : str, false);
 
 	// send final message
 	set_msg_arg_string(2, text);
@@ -1147,7 +1157,7 @@ stock FormatAmmo(weaponid, ammo, bpammo, arGrenades, output[], len) {
 	}
 
 	switch (formatOption) {
-		case 0: copy(output, len, ""); 
+		case 0: copy(output, len, "");
 		case 1: copy(output, len, fmt("%i", ammo < 0 ? bpammo : ammo + bpammo));
 		case 2: copy(output, len, fmt("%i/%i", ammo, bpammo));
 		case 3: copy(output, len, fmt("%i/%i/%i", ammo, bpammo, arGrenades));
@@ -1175,7 +1185,7 @@ public FwVoiceSetClientListening(receiver, sender, bool:listen) {
 public LoadLocations() {
 	new map[32];
 	get_mapname(map, charsmax(map));
-	
+
 	new handle = fopen(fmt("locs/%s.loc", map), "r");
 
 	if (!handle)
@@ -1189,7 +1199,7 @@ public LoadLocations() {
 		if (c == '#') {
 			// put null character in the buffer to make it safe to read
 			if (i < charsmax(buffer))
-				buffer[i] = '^0';	
+				buffer[i] = '^0';
 
 			// reset position for buffer
 			i = 0;
@@ -1199,12 +1209,12 @@ public LoadLocations() {
 			} else if (numHash > 0 && numHash <= 3) {
 				origin[numHash - 1] = str_to_float(buffer);
 			}
-			
+
 			// finish to read this loc and put it into the array
 			if (numHash == 3) {
 				ArrayPushArray(gLocations, origin, sizeof(origin));
 				ArrayPushString(gLocations, name);
-				
+
 				// reset everything so we can read a new location
 				arrayset(origin, 0.0, sizeof(origin));
 				numHash = 0;
@@ -1229,7 +1239,7 @@ public FindNearestLocation(Float:origin[3], output[], len) {
 
 	// initialize nearest origin with the first location
 	ArrayGetArray(gLocations, 0, nearestOrigin, sizeof(nearestOrigin));
-	
+
 	for (new i; i < ArraySize(gLocations); i += 2) {
 		ArrayGetArray(gLocations, i, locOrigin, sizeof(locOrigin));
 		if (vector_distance(origin, locOrigin) <= vector_distance(origin, nearestOrigin)) {
@@ -1331,7 +1341,7 @@ public CmdSpectate(id) {
 			RestoreScore_SavePlayer(id, get_user_frags(id), hl_get_user_deaths(id));
 		}
 		ResetScore(id);
-	} 
+	}
 
 	if (gBlockCmdSpec) {
 		if (!RestoreScore_FindPlayer(id)) // only players playing a match can spectate
@@ -1359,7 +1369,7 @@ public ShowVGUITeamMenu(id) {
 }
 
 public CmdJoinTeam(id) {
-	new option = read_argv_int(1); 
+	new option = read_argv_int(1);
 	switch (option) {
 		case 1, 2, 3, 4: { // in vgui viewport there are only four buttons where you choose the first 4 teams, maybe is better to show a menu to show all team (max 10 teams)
 			if (!equal(gTeamsName[option - 1], "")) {
@@ -1394,12 +1404,12 @@ public ShowSettings(id) {
 	// avoid hud overlap
 	if (task_exists(id + TASK_SHOWSETTINGS) || !is_user_connected(id))
 		return;
-		
+
 	new arg[64], buildDate[32];
 	GetPluginBuildDate(buildDate, charsmax(buildDate));
 	get_pcvar_string(gCvarContact, arg, charsmax(arg));
-	
-	if (!arg[0]) 
+
+	if (!arg[0])
 		formatex(arg, charsmax(arg), CONTACT_INFO);
 
 	// left - top
@@ -1414,9 +1424,9 @@ public ShowSettings(id) {
 
 	// right - top
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, -0.05, 0.02, 0, 0.0, 10.0, 0.2);
-	show_dhudmessage(id, "%l", "SETTINGS_VARS", gGameModeName, gTimeLimit, 
-		get_pcvar_num(gCvarFragLimit), 
-		get_pcvar_num(gCvarFriendlyFire) ? "On" : "Off", 
+	show_dhudmessage(id, "%l", "SETTINGS_VARS", gGameModeName, gTimeLimit,
+		get_pcvar_num(gCvarFragLimit),
+		get_pcvar_num(gCvarFriendlyFire) ? "On" : "Off",
 		get_pcvar_num(gCvarForceRespawn) ? "On" : "Off",
 		get_pcvar_num(gCvarSelfGauss) ? "On" : "Off");
 
@@ -1472,7 +1482,7 @@ public CmdAgForceTeamUp(id, level, cid) {
 	}
 
 	hl_set_user_model(target, arg2);
-	
+
 	return PLUGIN_HANDLED;
 }
 
@@ -1488,7 +1498,7 @@ public CmdAgPause(id, level, cid) {
 
 	PauseGame();
 
-	return PLUGIN_HANDLED;	
+	return PLUGIN_HANDLED;
 }
 
 public CmdAgStart(id, level, cid) {
@@ -1502,7 +1512,7 @@ public CmdAgStart(id, level, cid) {
 	new arg[32];
 	read_argv(1, arg, charsmax(arg));
 
-	if (equal(arg, "")) { 
+	if (equal(arg, "")) {
 		StartVersus();
 		return PLUGIN_HANDLED;
 	}
@@ -1517,7 +1527,7 @@ public CmdAgStart(id, level, cid) {
 
 		if (!player)
 			return PLUGIN_HANDLED;
-			
+
 		target[player] = player;
 	}
 
@@ -1572,7 +1582,7 @@ public CmdAgAllow(id, level, cid) {
 
 	if (equal(arg, ""))
 		player = id;
-	else 
+	else
 		player = ag_cmd_target(id, arg);
 
 	if (!player)
@@ -1599,8 +1609,8 @@ public AllowPlayer(id) {
 		RestoreScore_SavePlayer(id);
 
 		client_print(0, print_console, "%l", "MATCH_ALLOW", id);
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, -1.0, 0, 0.0, 5.0); 
-		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_ALLOW", id);	
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, -1.0, 0, 0.0, 5.0);
+		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_ALLOW", id);
 	}
 
 	return PLUGIN_HANDLED;
@@ -1637,7 +1647,7 @@ public CmdAgNextMap(id, level, cid) {
 		read_argv(0, cmd, charsmax(cmd));
 		client_cmd(id, "vote %s %s", cmd, arg);
 		return PLUGIN_HANDLED;
-	}    
+	}
 
 	if (is_map_valid(arg)) {
 		log_amx("AgNextMap: ^"%s^" ^"%N^"", arg, id);
@@ -1659,7 +1669,7 @@ public CmdGameMode(id, level, cid) {
 		read_argv(0, cmd, charsmax(cmd));
 		client_cmd(id, "vote %s", cmd);
 		return PLUGIN_HANDLED;
-	}   
+	}
 
 	if (TrieKeyExists(gTrieVoteList, arg)) {
 		log_amx("Change gamemode: ^"%s^" ^"%N^"", arg, id);
@@ -1678,7 +1688,7 @@ public CmdAgMap(id, level, cid) {
 		read_argv(0, cmd, charsmax(cmd));
 		client_cmd(id, "vote %s %s", cmd, arg);
 		return PLUGIN_HANDLED;
-	} 
+	}
 
 	if (is_map_valid(arg)) {
 		log_amx("AgMap: ^"%s^" ^"%N^"", arg, id);
@@ -1691,7 +1701,7 @@ public CmdAgMap(id, level, cid) {
 	return PLUGIN_HANDLED;
 }
 
-/* 
+/*
 * Vote system
 */
 CreateVoteSystem() {
@@ -1726,7 +1736,7 @@ public OnVoteSpecTalk(id, check, argc, arg1[], arg2[]) {
 		console_print(id, "%l", "VOTE_INVALID");
 		return false;
 	}
-	
+
 	if (!check) {
 		set_pcvar_string(gCvarSpecTalk, arg2);
 	} else {
@@ -1750,7 +1760,7 @@ public OnVoteMaxSpeed(id, check, argc, arg1[], arg2[]) {
 		console_print(id, "%l", "VOTE_INVALID");
 		return false;
 	}
-	
+
 	if (!check) {
 		set_pcvar_string(gCvarMaxSpeed, arg2);
 	} else {
@@ -1794,7 +1804,7 @@ public OnVoteAgKick(id, check, argc, arg1[], arg2[]) {
 		}
 
 		new player;
-		if (!strlen(arg2)) { 
+		if (!strlen(arg2)) {
 			return false;
 		} else if ((player = ag_cmd_target(id, arg2))) {
 			get_user_name(player, arg2, 31);
@@ -1812,7 +1822,7 @@ public OnVoteTimeLimit(id, check, argc, arg1[], arg2[]) {
 		console_print(id, "%l", "VOTE_INVALID");
 		return false;
 	}
-	
+
 	if (!check) {
 		set_pcvar_string(gCvarTimeLimit, arg2);
 	} else {
@@ -1844,7 +1854,7 @@ public OnVoteFriendlyFire(id, check, argc, arg1[], arg2[]) {
 		console_print(id, "%l", "VOTE_INVALID");
 		return false;
 	}
-	
+
 	if (!check) {
 		set_pcvar_string(gCvarFriendlyFire, arg2);
 	} else {
@@ -1867,7 +1877,7 @@ public OnVoteBunnyHop(id, check, argc, arg1[], arg2[]) {
 		console_print(id, "%l", "VOTE_INVALID");
 		return false;
 	}
-	
+
 	if (!check) {
 		set_pcvar_string(gCvarBunnyHop, arg2);
 	} else {
@@ -2095,7 +2105,7 @@ public OnVoteAgAbort(id, check, argc) {
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -2118,7 +2128,7 @@ public OnVoteAgStart(id, check, argc) {
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -2137,7 +2147,7 @@ public OnVoteAgPause(id, check, argc) {
 		}
 
 	}
-	
+
 	return true;
 }
 
@@ -2249,7 +2259,7 @@ public OnVoteGameMode(id, check, argc, arg1[]) {
 
 		new listModes[512];
 		get_pcvar_string(gCvarAllowedGameModes, listModes, charsmax(listModes));
-		
+
 		// all gamemodes are allowed if cvar is empty
 		if (!strlen(listModes)) {
 			return true;
@@ -2266,7 +2276,7 @@ public OnVoteGameMode(id, check, argc, arg1[]) {
 		console_print(id, "%l", "GAMEMODE_NOTALLOWED");
 		return false;
 	}
-	
+
 }
 
 LoadGameMode() {
@@ -2289,10 +2299,10 @@ LoadGameMode() {
 
 		if (equali(fileName[len], ".cfg")) {
 			new name[32], info[64];
-			
+
 			read_file(fmt("gamemodes/%s", fileName), 0, name, charsmax(name)); // first line specifies what game name that should be displayed in server browser and in splash with server settings data
 			read_file(fmt("gamemodes/%s", fileName), 1, info, charsmax(info)); // second line is help text displayed when someone types help in console
-			
+
 			replace(info, charsmax(info), "//", ""); // remove comments
 			replace(name, charsmax(name), "//", ""); // remove comments
 
@@ -2305,7 +2315,7 @@ LoadGameMode() {
 
 			// create cmd and vote for gamemode
 			ag_register_concmd(fileName, "CmdGameMode", ADMIN_BAN, fmt("- %s", info));
-			ag_vote_add(fileName, "OnVoteGameMode"); 
+			ag_vote_add(fileName, "OnVoteGameMode");
 
 			strtoupper(fileName);
 			AddTranslation("en", CreateLangKey(fmt("%s%s", "AGVOTE_", fileName)), fmt("- %s", info));
@@ -2357,7 +2367,7 @@ public CmdVote(id) {
 	// get timeleft to call a new vote
 	new Float:timeleft = gVoteFailedTime - GetServerUpTime();
 
-	if (timeleft > 0) {	
+	if (timeleft > 0) {
 		client_print(id, print_console, "%l", "VOTE_DELAY", floatround(timeleft, floatround_floor));
 		return PLUGIN_HANDLED;
 	} else if (gVoteIsRunning) {
@@ -2372,13 +2382,13 @@ public CmdVote(id) {
 
 	gVoteCallerUserId = get_user_userid(id);
 	gNumVoteArgs = argc - 1;
-	
+
 	// If vote doesn't exist
 	if (!TrieGetCell(gTrieVoteList, gVoteArg1, gVoteOptionFwHandle)) {
 		client_print(id, print_console, "%l", "VOTE_NOTFOUND");
 		return PLUGIN_HANDLED;
 	}
-	
+
 	// execute vote callback, this checks that the required arguments are correct and gives a result
 	new voteResult;
 	ExecuteForward(gVoteOptionFwHandle, voteResult, id, true, gNumVoteArgs, PrepareArray(gVoteArg1, sizeof(gVoteArg1), true), PrepareArray(gVoteArg2, sizeof(gVoteArg2), true));
@@ -2408,7 +2418,7 @@ public CmdVote(id) {
 
 	gVoteNextThink = gVoteDisplayNextThink = time;
 	gVoteEndTime = gVoteDisplayEndTime = time + get_pcvar_num(gCvarVoteDuration);
-	
+
 	return PLUGIN_HANDLED;
 }
 
@@ -2422,7 +2432,7 @@ public VoteDisplayThink() {
 		DisplayVote(gVoteOption);
 	else
 		DisplayVoteOldStyle(gVoteOption);
-	
+
 	gVoteDisplayNextThink = GetServerUpTime() + 1.0;
 }
 
@@ -2431,7 +2441,7 @@ public VoteThink() {
 
 	if (time > gVoteEndTime) {
 		gVoteIsRunning = false;
-		
+
 		gVoteDisplayEndTime = time + 3.0; // add 3 more seconds to show vote was denied or accepted
 		gVoteOption = VOTE_DENIED;
 		DenyVote();
@@ -2470,7 +2480,7 @@ CalculateVote(&numFor, &numAgainst, &numUndecided) {
 			case VOTE_NO: numAgainst++;
 		}
 	}
-	
+
 	numUndecided = get_playersnum() - (numFor + numAgainst);
 
 	// show vote hud
@@ -2489,7 +2499,7 @@ DisplayVote(option) {
 	} else {
 		set_hudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.125, 0, 0.0, 5.0, 0.0, 0.0);
 	}
-	
+
 	switch (option) {
 		case VOTE_ACCEPTED:	ShowSyncHudMsg(0, gHudDisplayVote, "%l", "VOTE_ACCEPTED", gVoteArg1, gVoteArg2, gVoteCallerName);
 		case VOTE_DENIED: 	ShowSyncHudMsg(0, gHudDisplayVote, "%l", "VOTE_DENIED", gVoteArg1, gVoteArg2, gVoteCallerName);
@@ -2507,7 +2517,7 @@ DisplayVoteOldStyle(option) {
 
 public DoVote() {
 	new caller = find_player_ex(FindPlayer_MatchUserId, gVoteCallerUserId);
-	
+
 	// if vote caller is not connected, cancel it...
 	if (!caller)
 		return;
@@ -2553,7 +2563,7 @@ public ResetVote() {
 	gVoteArg1[0] = gVoteArg2[0] = '^0';
 
 	// reset user votes
-	arrayset(gVotePlayers, 0, sizeof gVotePlayers);	
+	arrayset(gVotePlayers, 0, sizeof gVotePlayers);
 }
 
 public CmdVoteHelp(id) {
@@ -2585,7 +2595,7 @@ ProcessVoteHelp(id, start_argindex, bool:do_search, const main_command[], const 
 	new index;
 
 	for (index = start; index < end; ++index)
-	{	
+	{
 		ArrayGetString(gAgVoteList, index, command, charsmax(command));
 
 		formatex(info, charsmax(info), "%s%s", "AGVOTE_", command);
@@ -2625,7 +2635,7 @@ public ChangeMode(const mode[]) {
 public ChangeMap(const map[]) {
 	set_pcvar_string(gCvarAmxNextMap, map);
 	StartIntermissionMode();
-} 
+}
 
 public CmdPlayTeam(caller) {
 	if (get_gametime() < gPlaySoundDelayTime[caller])
@@ -2715,10 +2725,10 @@ public CmdPlayClose(caller) {
 
 	new sound[256];
 	read_args(sound, charsmax(sound));
-		
+
 	// return the index of the nearest location for the player from an array
 	new Float:callerPos[3], Float:targetPos[3];
-	
+
 	pev(caller, pev_origin, callerPos);
 
 	new players[MAX_PLAYERS], numPlayers;
@@ -2812,14 +2822,14 @@ PauseGame() {
 
 	if (numPlayers < 1)
 		return;
-	
+
 	// use random players to reduce the chance of the command not getting executed when player isn't sending packets
 	set_cvar_num("pausable", 1);
-	client_cmd(players[random(numPlayers)], "pause; pauseAg"); 
+	client_cmd(players[random(numPlayers)], "pause; pauseAg");
 }
 
 public CmdPauseAg(id) {
-	set_cvar_num("pausable", 0);	
+	set_cvar_num("pausable", 0);
 	return PLUGIN_HANDLED;
 }
 
@@ -2828,10 +2838,10 @@ public CmdPauseAg(id) {
 */
 bool:RestoreScore_FindPlayer(id, &DataPack:handle_player = Invalid_DataPack) {
 	new authid[MAX_AUTHID_LENGTH], ip[MAX_IP_LENGTH];
-	
+
 	if (!is_user_authorized(id))
 		log_amx("Warning: Trying to get authid from a player not authorized. Id: %d", id);
-	
+
 	get_user_authid(id, authid, charsmax(authid));
 	get_user_ip(id, ip, charsmax(ip), .without_port = true);
 
@@ -2907,7 +2917,7 @@ RestoreScore_GetSavedScore(id, &frags, &deaths) {
 	return 1;
 }
 
-RestoreScore_RestorePlayer(id) {	
+RestoreScore_RestorePlayer(id) {
 	new frags, deaths;
 	RestoreScore_GetSavedScore(id, frags, deaths);
 	hl_set_user_score(id, frags, deaths);
@@ -2989,7 +2999,7 @@ public StartIntermissionMode() {
 ScoreLog_UpdateScores() {
 	new Float:isTeamPlay;
 	global_get(glb_teamplay, isTeamPlay);
-	
+
 	// i use this handle in general
 	new DataPack:handle;
 
@@ -3036,7 +3046,7 @@ ScoreLog_UpdateScores() {
 				WritePackCell(handle, hl_get_user_frags(plr));
 				ArrayPushCell(gScoreLog, handle);
 			}
-		}		
+		}
 	}
 }
 
@@ -3044,7 +3054,7 @@ ScoreLog_UpdateScores() {
 ScoreLog_GetScore(idx, name[] = "", len = 0) {
 	new DataPack:handle = ArrayGetCell(gScoreLog, idx);
 	ResetPack(handle);
-	ReadPackString(handle, name, len);	
+	ReadPackString(handle, name, len);
 	return ReadPackCell(handle); // frags
 }
 
@@ -3109,7 +3119,7 @@ IsUserServer(id) {
 		if (equal(ip, "loopback")) {
 			return true;
 		}
-	} 
+	}
 	return false;
 }
 
@@ -3171,7 +3181,7 @@ public native_ag_vote_remove(plugin_id, argc) {
 		DestroyForward(handle);
 		return true;
 	}
-	
+
 	new idx = ArrayFindString(gAgVoteList, voteName);
 	if (idx != -1)
 		ArrayDeleteItem(gAgVoteList, idx);
