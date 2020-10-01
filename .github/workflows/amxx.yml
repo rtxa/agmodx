@@ -1,0 +1,40 @@
+name: AMXX Plugin Workflow
+
+on:
+  push:
+    branches: master
+  pull_request:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download amxmodx
+      run: |
+        wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx.tar.gz
+        tar -xzf amxx.tar.gz
+    - name: Give amxxpc the required permissions
+      run: chmod +x addons/amxmodx/scripting/amxxpc
+    - name: Compile all plugins
+      run: |
+        previousDir=$(pwd)
+        mkdir compiled
+        if [ -d valve/addons/amxmodx/scripting/include ]; then
+          echo "Copying non-standard dependencies..."
+          cp -a valve/addons/amxmodx/scripting/include/*.inc addons/amxmodx/scripting/include
+        fi
+        cd addons/amxmodx/scripting
+        for file in $previousDir/valve/addons/amxmodx/scripting/*.sma
+        do
+          smafile="`echo $file | sed -e 's/\.sma$/\.amxx/'`"
+          echo -e "\nCompiling $file..." 
+          ./amxxpc $file -o$previousDir/compiled/$(basename "$smafile")
+        done
+    - name: Upload plugins artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: agmodx-dev-plugins
+        path: compiled
