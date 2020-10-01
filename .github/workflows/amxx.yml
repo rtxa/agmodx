@@ -2,7 +2,10 @@ name: AMXX Plugin Workflow
 
 on:
   push:
-    branches: master
+    branches: 
+      - master
+      # Add test-ci branch to test the changes before merging to master
+      - test-ci
   pull_request:
 
 jobs:
