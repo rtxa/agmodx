@@ -4,8 +4,8 @@ on:
   push:
     branches: 
       - master
-      # Add test-ci branch to test the changes before merging to master
-      - test-ci
+      # Add agmodx-ci branch to test the changes before merging to master
+      - agmodx-ci
   pull_request:
 
 jobs:
