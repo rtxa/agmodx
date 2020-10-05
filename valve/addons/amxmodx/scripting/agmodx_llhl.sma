@@ -26,7 +26,11 @@
 
 #define MODE_TYPE_NAME "llhl"
 
+#define GetPlayerHullSize(%1)  ((pev(%1, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN)
+
 new gCvarAllowVoteSetting;
+new gCvarUnstuckStartDistance;
+new gCvarUnstuckMaxSearchAttempts;
 new gCvarUnstuckCooldown;
 new gCvarCheckSoundFiles;
 new gCvarDestroyableSatchel;
@@ -55,14 +59,6 @@ new const gConsistencySoundFiles[][] = {
     "weapons/egon_windup2.wav"
 };
 
-new const Float:gSize[][3] = {
-	{0.0, 0.0, 1.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, {0.0, -1.0, 0.0}, {1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}, {-1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, {1.0, -1.0, 1.0}, {1.0, 1.0, -1.0}, {-1.0, -1.0, 1.0}, {1.0, -1.0, -1.0}, {-1.0, 1.0, -1.0}, {-1.0, -1.0, -1.0},
-	{0.0, 0.0, 2.0}, {0.0, 0.0, -2.0}, {0.0, 2.0, 0.0}, {0.0, -2.0, 0.0}, {2.0, 0.0, 0.0}, {-2.0, 0.0, 0.0}, {-2.0, 2.0, 2.0}, {2.0, 2.0, 2.0}, {2.0, -2.0, 2.0}, {2.0, 2.0, -2.0}, {-2.0, -2.0, 2.0}, {2.0, -2.0, -2.0}, {-2.0, 2.0, -2.0}, {-2.0, -2.0, -2.0},
-	{0.0, 0.0, 3.0}, {0.0, 0.0, -3.0}, {0.0, 3.0, 0.0}, {0.0, -3.0, 0.0}, {3.0, 0.0, 0.0}, {-3.0, 0.0, 0.0}, {-3.0, 3.0, 3.0}, {3.0, 3.0, 3.0}, {3.0, -3.0, 3.0}, {3.0, 3.0, -3.0}, {-3.0, -3.0, 3.0}, {3.0, -3.0, -3.0}, {-3.0, 3.0, -3.0}, {-3.0, -3.0, -3.0},
-	{0.0, 0.0, 4.0}, {0.0, 0.0, -4.0}, {0.0, 4.0, 0.0}, {0.0, -4.0, 0.0}, {4.0, 0.0, 0.0}, {-4.0, 0.0, 0.0}, {-4.0, 4.0, 4.0}, {4.0, 4.0, 4.0}, {4.0, -4.0, 4.0}, {4.0, 4.0, -4.0}, {-4.0, -4.0, 4.0}, {4.0, -4.0, -4.0}, {-4.0, 4.0, -4.0}, {-4.0, -4.0, -4.0},
-	{0.0, 0.0, 5.0}, {0.0, 0.0, -5.0}, {0.0, 5.0, 0.0}, {0.0, -5.0, 0.0}, {5.0, 0.0, 0.0}, {-5.0, 0.0, 0.0}, {-5.0, 5.0, 5.0}, {5.0, 5.0, 5.0}, {5.0, -5.0, 5.0}, {5.0, 5.0, -5.0}, {-5.0, -5.0, 5.0}, {5.0, -5.0, -5.0}, {-5.0, 5.0, -5.0}, {-5.0, -5.0, -5.0}
-};
-
 public plugin_precache() {
     if (!IsSelectedMode(MODE_TYPE_NAME)) {
         StopPlugin();
@@ -75,6 +71,8 @@ public agmodx_pre_config() {
     gCvarAllowVoteSetting = get_cvar_pointer("sv_ag_vote_setting");
     // Unstuck command
     gCvarUnstuckCooldown = create_cvar("sv_ag_unstuck_cooldown", "10.0");
+    gCvarUnstuckStartDistance = create_cvar("sv_ag_unstuck_start_distance", "32");
+    gCvarUnstuckMaxSearchAttempts = create_cvar("sv_ag_unstuck_max_attempts", "64");
     // Sound file checker
     gCvarCheckSoundFiles = create_cvar("sv_ag_check_soundfiles", "0");
     // Destroyable Satchel
@@ -102,7 +100,7 @@ public plugin_init() {
 
     register_dictionary("agmodxllhl.txt");
 
-    register_clcmd("say /unstuck", "CheckIfStuck");
+    register_clcmd("say /unstuck", "CmdUnstuck");
     register_forward(FM_SetModel, "FwSetModel");
     register_forward(FM_ClientUserInfoChanged, "FwClientUserInfoChanged");
 
@@ -168,7 +166,7 @@ public OnVoteRespawnFix(id, check, argc, arg1[], arg2[]) {
 	return true;
 }
 
-public CheckIfStuck(id) {
+public CmdUnstuck(id) {
     new Float:cooldownTime = get_pcvar_float(gCvarUnstuckCooldown);
     new Float:elapsedTime = get_gametime() - gUnstuckLastUsed[id];
 
@@ -177,35 +175,43 @@ public CheckIfStuck(id) {
         return PLUGIN_HANDLED;
     }
     gUnstuckLastUsed[id] = get_gametime();
-    new hull, Float:origin[3], Float:mins[3], Float:vec[3];
-    if (is_user_connected(id) && is_user_alive(id)) {
-        pev(id, pev_origin, origin);
-        hull = pev(id, pev_flags) & FL_DUCKING ? HULL_HEAD : HULL_HUMAN;
-        if (!is_hull_vacant(origin, hull, id) && !get_user_noclip(id) && !(pev(id, pev_solid) & SOLID_NOT)) {
-            pev(id, pev_mins, mins);
-            vec[2] = origin[2];
-            for (new i = 0; i < sizeof gSize; ++i) {
-                vec[0] = origin[0] - mins[0] * gSize[i][0];
-                vec[1] = origin[1] - mins[1] * gSize[i][1];
-                vec[2] = origin[2] - mins[2] * gSize[i][2];
-                if (is_hull_vacant(vec, hull, id)) {
-                    engfunc(EngFunc_SetOrigin, id, vec);
-                    set_pev(id, pev_velocity, {0.0,0.0,0.0});
-                    i = sizeof gSize;
-                }
-            }
+    new value;
+    if ((value = UnStuckPlayer(id)) != 1) {
+        switch (value) {
+            case 0: client_print(id, print_chat, "%L", LANG_PLAYER, "LLHL_UNSTUCK_FREESPOT_NOTFOUND");
+            case -1: client_print(id, print_chat, "%L", LANG_PLAYER, "LLHL_UNSTUCK_PLAYER_DEAD");
         }
     }
     return PLUGIN_CONTINUE;
 }
 
-stock bool:is_hull_vacant(const Float:origin[3], hull, id) {
-	static tr;
-	engfunc(EngFunc_TraceHull, origin, origin, 0, hull, id, tr);
-	if (!get_tr2(tr, TR_StartSolid) || !get_tr2(tr, TR_AllSolid))
-		return true;
+UnStuckPlayer(const id) {
+    if (!is_user_alive(id)) return -1;
 
-	return false;
+    static Float:originalOrigin[3], Float:newOrigin[3];
+    static attempts, distance;
+
+    pev(id, pev_origin, originalOrigin);
+
+    distance = get_pcvar_num(gCvarUnstuckStartDistance);
+
+    while (distance < 1000) {
+        attempts = get_pcvar_num(gCvarUnstuckMaxSearchAttempts);
+        while (attempts--) {
+            newOrigin[0] = random_float(originalOrigin[0] - distance, originalOrigin[0] + distance);
+            newOrigin[1] = random_float(originalOrigin[1] - distance, originalOrigin[1] + distance);
+            newOrigin[2] = random_float(originalOrigin[2] - distance, originalOrigin[2] + distance);
+
+            engfunc(EngFunc_TraceHull, newOrigin, newOrigin, DONT_IGNORE_MONSTERS, GetPlayerHullSize(id), id, 0);
+
+            if (get_tr2(0, TR_InOpen) && !get_tr2(0, TR_AllSolid) && !get_tr2(0, TR_StartSolid)) {
+                engfunc(EngFunc_SetOrigin, id, newOrigin);
+                return 1;
+            }
+        }
+        distance += get_pcvar_num(gCvarUnstuckStartDistance);
+    }
+    return 0;
 }
 
 public CvarMatchRunningHook(pcvar, const old_value[], const new_value[]) {
