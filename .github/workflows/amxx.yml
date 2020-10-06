@@ -19,25 +19,97 @@ jobs:
       run: |
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx.tar.gz
         tar -xzf amxx.tar.gz
+    - name: Download Metamod v1.21p39 (Solokiller)
+      run: |
+        wget "https://github.com/Solokiller/Metamod-P-CMake/releases/download/v1.21p39/Metamod-P-opt-fast-Linux.zip" -O metamod.zip
+        unzip metamod.zip
     - name: Give amxxpc the required permissions
       run: chmod +x addons/amxmodx/scripting/amxxpc
-    - name: Compile all plugins
+    - name: Compile all plugins (Linux)
       run: |
+        # Saving the current location to cd later
         previousDir=$(pwd)
-        mkdir compiled
+
+        # Creating agmodx release folder structure
+        mkdir agmodx-dev-linux && cd agmodx-dev-linux && mkdir valve && cd valve
+        mkdir addons ctf dlls gamemodes locs models sound
+
+        # Returning to the location where we were before
+        cd $previousDir
+
+        # Copy amxmodx addons folder
+        cp -a addons/* agmodx-dev-linux/valve/addons
+
+        # In case the repository has an include folder, we copy the dependencies
         if [ -d valve/addons/amxmodx/scripting/include ]; then
           echo "Copying non-standard dependencies..."
           cp -a valve/addons/amxmodx/scripting/include/*.inc addons/amxmodx/scripting/include
         fi
+
+        # Add missing native is_user_authorized (amxmodx.inc)
+        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' addons/amxmodx/scripting/include/amxmodx.inc -i
+
+        # Move to the folder where the compiler is located
         cd addons/amxmodx/scripting
+
+        # Compile all plugins inside scripting folder
         for file in $previousDir/valve/addons/amxmodx/scripting/*.sma
         do
           smafile="`echo $file | sed -e 's/\.sma$/\.amxx/'`"
-          echo -e "\nCompiling $file..." 
-          ./amxxpc $file -o$previousDir/compiled/$(basename "$smafile")
+          echo -e "\nCompiling $(basename $file)..." 
+          ./amxxpc $file -o$previousDir/agmodx-dev-linux/valve/addons/amxmodx/plugins/$(basename "$smafile")
         done
-    - name: Upload plugins artifacts
+
+        # Returning again to the location where we were before
+        cd $previousDir
+
+        # Remove scripting folder
+        rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
+
+        # Copy agmodx plugins list and multilanguage files
+        cp valve/addons/amxmodx/data/lang/*.txt agmodx-dev-linux/valve/addons/amxmodx/data/lang
+        cp valve/addons/amxmodx/configs/plugins-agmodx.ini agmodx-dev-linux/valve/addons/amxmodx/configs
+
+        # Copy the rest of the directories and files from agmodx repo
+        toCopy=("ctf" "dlls" "gamemodes" "locs" "models" "sound" "delta.lst" "server.cfg" "startup_server.cfg")
+        for tc in "${toCopy[@]}"
+        do
+          # Directory
+          if [[ -d valve/$tc ]]; then
+            if [[ $tc == "dlls" ]]; then
+              cp -a valve/$tc/*.so agmodx-dev-linux/valve/$tc
+            else
+              cp -a valve/$tc/* agmodx-dev-linux/valve/$tc
+            fi
+          # File
+          elif [[ -f valve/$tc ]]; then
+            cp -a valve/$tc agmodx-dev-linux/valve
+          fi
+        done
+
+        # Create metamod folder and copy metamod plugin
+        mkdir agmodx-dev-linux/valve/addons/metamod agmodx-dev-linux/valve/addons/metamod/dlls
+        cp metamod/*.so agmodx-dev-linux/valve/addons/metamod/dlls
+
+        # Add amxmodx to metamod plugins
+        echo 'linux addons/amxmodx/dlls/amxmodx_mm_i386.so' > agmodx-dev-linux/valve/addons/metamod/plugins.ini
+
+        liblist='// Valve Game Info file'
+        liblist+='\n// These are key/value pairs.  Certain mods will use different settings.'
+        liblist+='\ngame "Half-Life"'
+        liblist+='\nstartmap "c0a0"'
+        liblist+='\ntrainmap "t0a0"'
+        liblist+='\nmpentity "info_player_deathmatch"'
+        liblist+='\ngamedll "addons\metamod\dlls\metamod.dll"'
+        liblist+='\ngamedll_linux "addons/metamod/dlls/metamod.so"'
+        liblist+='\ngamedll_osx "dlls/hl.dylib"'
+        liblist+='\nsecure "1"'
+        liblist+='\ntype "singleplayer_only"'
+
+        # Create liblist.gam file
+        echo -e $liblist > agmodx-dev-linux/valve/liblist.gam
+    - name: Upload agmodx-dev artifacts
       uses: actions/upload-artifact@master
       with:
-        name: agmodx-dev-plugins
-        path: compiled
+        name: agmodx-dev-linux
+        path: agmodx-dev-linux
