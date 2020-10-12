@@ -889,7 +889,6 @@ public StartVersus() {
 	gIsSuddenDeath = false;
 	
 	set_pcvar_num(gCvarMatchRunning, 0); // reset to 0 so plugins hooking this cvar can be triggered
-	set_pcvar_num(gCvarMatchRunning, 1);
 
 	// reset score and freeze players who are going to play versus
 	new players[MAX_PLAYERS], numPlayers;
@@ -904,6 +903,7 @@ public StartVersus() {
 	}
 
 	gStartVersusTime = 9;
+	set_pcvar_num(gCvarMatchRunning, 1);
 	StartVersusCountdown();
 }
 
