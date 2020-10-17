@@ -217,6 +217,7 @@ new gCvarCoreBlockSpec;
 new gCvarMatchRunning;
 
 new gFwPause;
+new gFwPreIntermissionMode;
 
 new const gWeaponClass[][] = {
 	"weapon_357",
@@ -375,6 +376,9 @@ public plugin_precache() {
 	
 	gFwPause = CreateMultiForward("agmodx_pause", ET_IGNORE);
 	if (gFwPause < 0) log_amx("Error creating forward");
+
+	gFwPreIntermissionMode = CreateMultiForward("agmodx_pre_intermission_mode", ET_IGNORE);
+	if (gFwPreIntermissionMode < 0) log_amx("Error creating forward");
 
 	// Load mode cvars
 	new mode[32];
@@ -2998,6 +3002,8 @@ public EventIntermissionMode() {
 }
 
 public StartIntermissionMode() {
+	new fwReturnTemp;
+	ExecuteForward(gFwPreIntermissionMode, fwReturnTemp);
 	new ent = create_entity("game_end");
 	if (is_valid_ent(ent))
 		ExecuteHamB(Ham_Use, ent, 0, 0, 1.0, 0.0);
