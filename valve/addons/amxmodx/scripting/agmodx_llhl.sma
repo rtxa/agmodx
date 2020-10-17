@@ -17,6 +17,7 @@
 
     # Thanks to:
     - Th3-822: FPS Limiter
+    - Alka: Server FPS
     - Arkshine: Unstuck command
     - Assassin, Darkzito, DieGo, Dcarlox, K3NS4N, Rhye, rtxa and Shadow: Testers
 */
@@ -46,7 +47,8 @@ new bool:gIsAlive[MAX_PLAYERS + 1];
 #define precision_round(%1,%2) (float(floatround((%1)/ %2)) * %2)
 
 enum (+=101) {
-    TASK_FPSLIMITER = 36961
+    TASK_FPSLIMITER = 36961,
+    TASK_SHOWVENGINE
 };
 
 new gCvarFpsCheckInterval;
@@ -66,6 +68,8 @@ new Float:gUnstuckLastUsed[MAX_PLAYERS + 1];
 new Float:gLastProbeFPS[MAX_PLAYERS + 1];
 new gProbeSum[MAX_PLAYERS + 1], gProbeCount[MAX_PLAYERS + 1], Float:gMeanFPS[MAX_PLAYERS + 1];
 new gNumDetections[MAX_PLAYERS + 1];
+new Float:gServerFPS;
+static Float:gActualServerFPS;
 
 // Sounds to check if sv_ag_check_soundfiles is 1
 new const gConsistencySoundFiles[][] = {
@@ -137,6 +141,8 @@ public plugin_init() {
 
     gMaxPlayers = get_maxplayers();
 
+    register_forward(FM_StartFrame, "FwStartFrame");
+
     register_clcmd("say /unstuck", "CmdUnstuck");
 
     RegisterHam(Ham_Spawn, "player", "Ham_Player_Spawn_Pre", 0);
@@ -150,6 +156,8 @@ public plugin_init() {
 
     // Add vote for mp_respawn_fix (Only in LLHL gamemode)
     ag_vote_add("ag_respawn_fix", "OnVoteRespawnFix");
+
+    set_msg_block(SVC_INTERMISSION, BLOCK_SET);
 }
 
 public plugin_cfg() {
@@ -192,9 +200,40 @@ public Ham_Player_Killed_Post(id) {
     return HAM_IGNORED;
 }
 
-// Don't calculate player fps when map is finished
+// Create task before intermission because we can't run tasks when in intermission mode
+public agmodx_pre_intermission_mode() {
+    set_task(0.25, "taskShowVEngine", TASK_SHOWVENGINE, .flags = "b");
+    gActualServerFPS = gServerFPS;
+}
+
 public Ham_Game_End(id) {
+    // Don't calculate player fps when map is finished
     remove_task(TASK_FPSLIMITER);
+
+    new players[MAX_PLAYERS], numPlayers;
+    get_players(players, numPlayers);
+    
+    new player;
+    for (new i; i < numPlayers; i++) {
+        player = players[i];
+        hl_strip_user_weapons(player);
+        client_cmd(player, "+showscores");
+    }
+}
+
+public FwStartFrame() {
+    static Float:gametime, Float:framesPer = 0.0;
+    static Float:tempFps;
+    
+    gametime = get_gametime();
+    
+    if(framesPer >= gametime) {
+        tempFps += 1.0;
+    } else {
+        framesPer = framesPer + 1.0;
+        gServerFPS = tempFps;
+        tempFps = 0.0;
+    }
 }
 
 public fmCmdStart_Pre(id, uc_handle) {
@@ -233,6 +272,11 @@ public taskMeasureMeanFPS() {
             }
         }
     }
+}
+
+public taskShowVEngine() {
+    set_dhudmessage(0, 100, 200, -1.0, -0.125, 0, 0.0, 10.0, 0.2);
+    show_dhudmessage(0, "Llhl Mode vEngine^n----------------------^nServer fps: %.1f^nFilecheck: %s", gActualServerFPS, get_pcvar_num(gCvarCheckSoundFiles) ? "On" : "Off");
 }
 
 // If I don't do this when pausing/unpausing the game, the fps will be miscalculated (High values) and false positives will occur
