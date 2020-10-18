@@ -369,16 +369,12 @@ public plugin_precache() {
 	new fwPreConfig, fwPostConfig, fwReturnTemp;
 	
 	fwPreConfig = CreateMultiForward("agmodx_pre_config", ET_IGNORE);
-	if (fwPreConfig < 0) log_amx("Error creating forward");
 	
 	fwPostConfig = CreateMultiForward("agmodx_post_config", ET_IGNORE);
-	if (fwPostConfig < 0) log_amx("Error creating forward");
 	
 	gFwPause = CreateMultiForward("agmodx_pause", ET_IGNORE);
-	if (gFwPause < 0) log_amx("Error creating forward");
 
 	gFwPreIntermissionMode = CreateMultiForward("agmodx_pre_intermission_mode", ET_IGNORE);
-	if (gFwPreIntermissionMode < 0) log_amx("Error creating forward");
 
 	// Load mode cvars
 	new mode[32];
