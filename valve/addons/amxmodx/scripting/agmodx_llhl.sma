@@ -137,7 +137,7 @@ public agmodx_post_config() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    register_dictionary("agmodxllhl.txt");
+    register_dictionary("agmodx_llhl.txt");
 
     gMaxPlayers = get_maxplayers();
 
