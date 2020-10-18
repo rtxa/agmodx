@@ -10,11 +10,11 @@ LLHL_FILECONSISTENCY_KICK = You have a different file than the one on the server
 LLHL_BLOCK_NAMECHANGE_MSG = You can't change your name while a match is in progress.
 
 [es]
-LLHL_FPSL_KICK = Tu valor de tu 'fps_max' es mayor que %d
+LLHL_FPSL_KICK = El valor de 'fps_max' que estas usando es mayor que %d
 LLHL_FPSL_KICK_MSG = %s ha sido kickeado por superar el limite de 'fps_max'
 LLHL_DEMO_RECORDING = Grabando %s.dem
-LLHL_UNSTUCK_ON_COOLDOWN = Debes de esperar %.1f segundos para poder usar nuevamente el comando
-LLHL_UNSTUCK_FREESPOT_NOTFOUND = No se encontro ningun lugar libre en donde puedas reubicarte
+LLHL_UNSTUCK_ON_COOLDOWN = Debes esperar %.1f segundos para poder usar nuevamente el comando.
+LLHL_UNSTUCK_FREESPOT_NOTFOUND = No se encontro ningun lugar libre para reubicarte.
 LLHL_UNSTUCK_PLAYER_DEAD = No puedes usar este comando mientras estas muerto
 LLHL_FILECONSISTENCY_MSG = %s (%s) ha sido kickeado por tener un archivo distinto al del servidor: sound/%s
 LLHL_FILECONSISTENCY_KICK = Tienes un archivo distinto al del servidor: %s
