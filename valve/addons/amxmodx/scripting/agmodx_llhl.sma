@@ -276,7 +276,7 @@ public taskMeasureMeanFPS() {
 
 public taskShowVEngine() {
     set_dhudmessage(0, 100, 200, -1.0, -0.125, 0, 0.0, 10.0, 0.2);
-    show_dhudmessage(0, "Llhl Mode vEngine^n----------------------^nServer fps: %.1f^nFilecheck: %s", gActualServerFPS, get_pcvar_num(gCvarCheckSoundFiles) ? "On" : "Off");
+    show_dhudmessage(0, "LLHL Mode vEngine^n----------------------^nServer fps: %.1f^nFilecheck: %s", gActualServerFPS, get_pcvar_num(gCvarCheckSoundFiles) ? "On" : "Off");
 }
 
 // If I don't do this when pausing/unpausing the game, the fps will be miscalculated (High values) and false positives will occur
