@@ -13,7 +13,7 @@
     - sv_ag_block_namechange_inmatch "1"
 
     # New vote:
-    - ag_respawn_fix "0/1"
+    - mp_respawn_fix "0/1"
 
     # Thanks to:
     - Th3-822: FPS Limiter
@@ -155,7 +155,7 @@ public plugin_init() {
     register_forward(FM_ClientUserInfoChanged, "FwClientUserInfoChanged");
 
     // Add vote for mp_respawn_fix (Only in LLHL gamemode)
-    ag_vote_add("ag_respawn_fix", "OnVoteRespawnFix");
+    ag_vote_add("mp_respawn_fix", "OnVoteRespawnFix");
 
     set_msg_block(SVC_INTERMISSION, BLOCK_SET);
 }
@@ -317,7 +317,7 @@ public OnVoteRespawnFix(id, check, argc, arg1[], arg2[]) {
 
 	if (!check) {
 		new num = str_to_num(arg2);
-		if (equal(arg1, "ag_respawn_fix"))
+		if (equal(arg1, "mp_respawn_fix"))
 			num = num > 0 ? 1 : 0;
 		set_pcvar_num(gCvarRespawnFix, num);
 	} else {
