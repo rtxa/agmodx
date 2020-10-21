@@ -919,6 +919,11 @@ public StartVersus() {
 
 	gStartVersusTime = 9;
 	set_pcvar_num(gCvarMatchRunning, 1);
+
+	new fwCountdownStart, fwReturnTemp;
+	fwCountdownStart = CreateMultiForward("agmodx_countdown_start", ET_IGNORE);
+	ExecuteForward(fwCountdownStart, fwReturnTemp);
+
 	StartVersusCountdown();
 }
 
@@ -926,6 +931,10 @@ public StartVersusCountdown() {
 	PlayNumSound(0, gStartVersusTime);
 
 	if (gStartVersusTime == 0) {
+		new fwCountdownEnd, fwReturnTemp;
+		fwCountdownEnd = CreateMultiForward("agmodx_countdown_end", ET_IGNORE);
+		ExecuteForward(fwCountdownEnd, fwReturnTemp);
+		
 		gVersusStarted = true;
 
 		gBlockCmdDrop = false;
