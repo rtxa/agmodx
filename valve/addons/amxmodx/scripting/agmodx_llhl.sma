@@ -383,6 +383,14 @@ UnStuckPlayer(const id) {
     return 0;
 }
 
+public agmodx_countdown_start() {
+    remove_task(TASK_FPSLIMITER);
+}
+
+public agmodx_countdown_end() {
+    set_task(get_pcvar_float(gCvarFpsCheckInterval), "taskMeasureMeanFPS", TASK_FPSLIMITER, .flags = "b");
+}
+
 public CvarMatchRunningHook(pcvar, const old_value[], const new_value[]) {
     new num = str_to_num(new_value);
 
