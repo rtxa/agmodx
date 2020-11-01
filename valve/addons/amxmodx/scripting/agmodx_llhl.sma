@@ -150,14 +150,15 @@ public plugin_init() {
     RegisterHam(Ham_Killed, "player", "Ham_Player_Killed_Post", 1);
     RegisterHam(Ham_Use, "game_end", "Ham_Game_End");
 
+    register_message(SVC_INTERMISSION, "FwMsgIntermission");
+
     register_forward(FM_CmdStart, "fmCmdStart_Pre");
     register_forward(FM_SetModel, "FwSetModel");
     register_forward(FM_ClientUserInfoChanged, "FwClientUserInfoChanged");
 
     // Add vote for mp_respawn_fix (Only in LLHL gamemode)
     ag_vote_add("mp_respawn_fix", "OnVoteRespawnFix");
-
-    set_msg_block(SVC_INTERMISSION, BLOCK_SET);
+    
 }
 
 public plugin_cfg() {
@@ -201,24 +202,19 @@ public Ham_Player_Killed_Post(id) {
 }
 
 // Create task before intermission because we can't run tasks when in intermission mode
-public agmodx_pre_intermission_mode() {
-    set_task(0.25, "taskShowVEngine", TASK_SHOWVENGINE, .flags = "b");
+public FwMsgIntermission() {
     gActualServerFPS = gServerFPS;
+    client_cmd(0, "stop;wait;wait;+showscores;+showcores");
+    set_task(0.1, "taskShowVEngine", TASK_SHOWVENGINE, .flags = "b");    
+    message_begin(0, SVC_FINALE);
+    write_string("");
+    message_end();
+    return PLUGIN_HANDLED;
 }
 
 public Ham_Game_End(id) {
     // Don't calculate player fps when map is finished
     remove_task(TASK_FPSLIMITER);
-
-    new players[MAX_PLAYERS], numPlayers;
-    get_players(players, numPlayers);
-    
-    new player;
-    for (new i; i < numPlayers; i++) {
-        player = players[i];
-        hl_strip_user_weapons(player);
-        client_cmd(player, "+showscores");
-    }
 }
 
 public FwStartFrame() {
