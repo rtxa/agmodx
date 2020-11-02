@@ -216,6 +216,8 @@ new gCvarBanChargers;
 new gCvarCoreBlockSpec;
 new gCvarMatchRunning;
 
+new gFwPause;
+
 new const gWeaponClass[][] = {
 	"weapon_357",
 	"weapon_9mmAR",
@@ -362,13 +364,23 @@ public plugin_precache() {
 	// reset this always
 	gCvarMatchRunning = create_cvar("sv_ag_match_running", "0");
 	set_pcvar_string(gCvarMatchRunning, "0");
+	
+	new fwPreConfig, fwPostConfig, fwReturnTemp;
+	
+	fwPreConfig = CreateMultiForward("agmodx_pre_config", ET_IGNORE);
+	
+	fwPostConfig = CreateMultiForward("agmodx_post_config", ET_IGNORE);
+	
+	gFwPause = CreateMultiForward("agmodx_pause", ET_IGNORE);
 
 	// Load mode cvars
 	new mode[32];
 	get_pcvar_string(gCvarGameMode, mode, charsmax(mode));
 
+	ExecuteForward(fwPreConfig, fwReturnTemp);
 	server_cmd("exec gamemodes/%s.cfg", mode);
 	server_exec();
+	ExecuteForward(fwPostConfig, fwReturnTemp);
 }
 
 public plugin_natives() {
@@ -889,7 +901,6 @@ public StartVersus() {
 	gIsSuddenDeath = false;
 	
 	set_pcvar_num(gCvarMatchRunning, 0); // reset to 0 so plugins hooking this cvar can be triggered
-	set_pcvar_num(gCvarMatchRunning, 1);
 
 	// reset score and freeze players who are going to play versus
 	new players[MAX_PLAYERS], numPlayers;
@@ -904,6 +915,12 @@ public StartVersus() {
 	}
 
 	gStartVersusTime = 9;
+	set_pcvar_num(gCvarMatchRunning, 1);
+
+	new fwCountdownStart, fwReturnTemp;
+	fwCountdownStart = CreateMultiForward("agmodx_countdown_start", ET_IGNORE);
+	ExecuteForward(fwCountdownStart, fwReturnTemp);
+
 	StartVersusCountdown();
 }
 
@@ -911,6 +928,10 @@ public StartVersusCountdown() {
 	PlayNumSound(0, gStartVersusTime);
 
 	if (gStartVersusTime == 0) {
+		new fwCountdownEnd, fwReturnTemp;
+		fwCountdownEnd = CreateMultiForward("agmodx_countdown_end", ET_IGNORE);
+		ExecuteForward(fwCountdownEnd, fwReturnTemp);
+		
 		gVersusStarted = true;
 
 		gBlockCmdDrop = false;
@@ -2819,7 +2840,9 @@ PauseGame() {
 }
 
 public CmdPauseAg(id) {
+	new fwReturnTemp;
 	set_cvar_num("pausable", 0);	
+	ExecuteForward(gFwPause, fwReturnTemp);
 	return PLUGIN_HANDLED;
 }
 
