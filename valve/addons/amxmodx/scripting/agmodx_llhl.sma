@@ -38,9 +38,6 @@
 
 #define GetPlayerHullSize(%1)  ((pev(%1, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN)
 
-#define is_player(%1) (1 <= %1 <= gMaxPlayers)
-stock gMaxPlayers;
-
 #define __is_user_alive(%1) (gIsAlive[%1])
 new bool:gIsAlive[MAX_PLAYERS + 1];
 
@@ -64,6 +61,7 @@ new gCvarDestroyableSatchel;
 new gCvarDestroyableSatchelHP;
 new gCvarBlockNameChangeInMatch;
 new gCvarRespawnFix;
+
 new Float:gUnstuckLastUsed[MAX_PLAYERS + 1];
 new Float:gLastProbeFPS[MAX_PLAYERS + 1];
 new gProbeSum[MAX_PLAYERS + 1], gProbeCount[MAX_PLAYERS + 1], Float:gMeanFPS[MAX_PLAYERS + 1];
@@ -102,23 +100,29 @@ public plugin_precache() {
 // We create the cvars before 'exec gamemodes/%s.cfg'
 public agmodx_pre_config() {
     gCvarAllowVoteSetting = get_cvar_pointer("sv_ag_vote_setting");
+
     // FPS Limiter
     gCvarFpsCheckInterval = create_cvar("sv_ag_fpslimit_check_interval", "5.0");
     gCvarFpsMaxDetections = create_cvar("sv_ag_fpslimit_max_detections", "5");
     gCvarFpsMax = create_cvar("sv_ag_fpslimit_max_fps", "144");
     gCvarFpsMarginError = create_cvar("sv_ag_fpslimiter_margin_error", "0.6");
+
     // Unstuck command
     gCvarUnstuckCooldown = create_cvar("sv_ag_unstuck_cooldown", "10.0");
     gCvarUnstuckStartDistance = create_cvar("sv_ag_unstuck_start_distance", "32");
     gCvarUnstuckMaxSearchAttempts = create_cvar("sv_ag_unstuck_max_attempts", "64");
+
     // Sound file checker
     gCvarCheckSoundFiles = create_cvar("sv_ag_check_soundfiles", "0");
+
     // Destroyable Satchel
     gCvarDestroyableSatchel =  create_cvar("sv_ag_destroyable_satchel", "0");
     gCvarDestroyableSatchelHP = create_cvar("sv_ag_destroyable_satchel_hp", "1");
+
     // Block name change (Only spectators) log in match
     gCvarBlockNameChangeInMatch = create_cvar("sv_ag_block_namechange_inmatch", "1");
 
+    // Make respawn delay consistent in all fps values (already implemented by BugfixedHL)
     gCvarRespawnFix = get_cvar_pointer("mp_respawn_fix");
 
     hook_cvar_change(gCvarFpsCheckInterval, "CvarAgFpsCheckIntervalHook");
@@ -139,8 +143,6 @@ public plugin_init() {
 
     register_dictionary("agmodx_llhl.txt");
 
-    gMaxPlayers = get_maxplayers();
-
     register_forward(FM_StartFrame, "FwStartFrame");
 
     register_clcmd("say /unstuck", "CmdUnstuck");
@@ -158,7 +160,6 @@ public plugin_init() {
 
     // Add vote for mp_respawn_fix (Only in LLHL gamemode)
     ag_vote_add("mp_respawn_fix", "OnVoteRespawnFix");
-    
 }
 
 public plugin_cfg() {
@@ -170,8 +171,8 @@ public inconsistent_file(id, const filename[], reason[64]) {
     new name[32], authid[32];
     get_user_name(id, name, charsmax(name));
     get_user_authid(id, authid, charsmax(authid));
-    client_print(0, print_chat, "%L", LANG_PLAYER, "LLHL_FILECONSISTENCY_MSG", name, authid, filename);
-    server_cmd("kick #%d ^"%L^"", get_user_userid(id), id, "LLHL_FILECONSISTENCY_KICK", filename);
+    client_print(0, print_chat, "%l", "LLHL_FILECONSISTENCY_MSG", name, authid, filename);
+    server_cmd("kick #%d ^"%l^"", get_user_userid(id), "LLHL_FILECONSISTENCY_KICK", filename);
     return PLUGIN_HANDLED;
 }
 
@@ -289,7 +290,7 @@ public FwClientUserInfoChanged(id) {
         get_user_info(id, name, newName, charsmax(newName));
         if (get_pcvar_num(gCvarBlockNameChangeInMatch) && !equal(oldName, newName) && (cvar || (cvar = get_cvar_pointer("sv_ag_match_running"))) && get_pcvar_num(cvar) && hl_get_user_spectator(id)) {
             set_user_info(id, name, oldName);
-            client_print(id, print_chat, "%L", LANG_PLAYER, "LLHL_BLOCK_NAMECHANGE_MSG");
+            client_print(id, print_chat, "%l", "LLHL_BLOCK_NAMECHANGE_MSG");
             return FMRES_HANDLED;
         }
     }
@@ -336,18 +337,20 @@ public CmdUnstuck(id) {
     new Float:elapsedTime = get_gametime() - gUnstuckLastUsed[id];
 
     if (elapsedTime < cooldownTime) {
-        client_print(id, print_chat, "%L", id, "LLHL_UNSTUCK_ON_COOLDOWN", cooldownTime - elapsedTime);
+        client_print(id, print_chat, "%l", "LLHL_UNSTUCK_ON_COOLDOWN", cooldownTime - elapsedTime);
         return PLUGIN_HANDLED;
     }
+
     gUnstuckLastUsed[id] = get_gametime();
     new value;
     if ((value = UnStuckPlayer(id)) != 1) {
         switch (value) {
-            case 0: client_print(id, print_chat, "%L", LANG_PLAYER, "LLHL_UNSTUCK_FREESPOT_NOTFOUND");
-            case -1: client_print(id, print_chat, "%L", LANG_PLAYER, "LLHL_UNSTUCK_PLAYER_DEAD");
+            case 0: client_print(id, print_chat, "%l", "LLHL_UNSTUCK_FREESPOT_NOTFOUND");
+            case -1: client_print(id, print_chat, "%l", "LLHL_UNSTUCK_PLAYER_DEAD");
         }
     }
-    return PLUGIN_CONTINUE;
+
+    return PLUGIN_HANDLED;
 }
 
 UnStuckPlayer(const id) {
@@ -376,6 +379,7 @@ UnStuckPlayer(const id) {
         }
         distance += get_pcvar_num(gCvarUnstuckStartDistance);
     }
+
     return 0;
 }
 
@@ -404,6 +408,7 @@ public CvarMatchRunningHook(pcvar, const old_value[], const new_value[]) {
         format_time(formatted, charsmax(formatted), "%d%m%Y_%H%M%S", timestamp);
         get_mapname(mapname, charsmax(mapname));
         formatex(strDemo, charsmax(strDemo), "[LLHL]_%s_%s", mapname, formatted);
+
         // Record demo
         for (new id = 1; id <= MaxClients; id++) {
             if (!is_user_connected(id))
