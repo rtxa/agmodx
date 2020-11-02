@@ -3004,7 +3004,6 @@ public EventIntermissionMode() {
 }
 
 public StartIntermissionMode() {
-	new fwReturnTemp;
 	new ent = create_entity("game_end");
 	if (is_valid_ent(ent))
 		ExecuteHamB(Ham_Use, ent, 0, 0, 1.0, 0.0);
