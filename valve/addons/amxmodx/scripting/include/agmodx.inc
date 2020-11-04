@@ -33,3 +33,14 @@ native bool:ag_vote_add(const name[], const callback[]);
 native bool:ag_vote_remove(const name[]);
 
 native bool:ag_vote_exists(const name[]);
+
+/* 
+ * Checks if a player is playing a match
+ * 
+ * @param        id - Player slot (1-32)
+ * 
+ * @return       Returns true if a player is playing a match, false if the 
+ *               player is spectating or there's no match in progress
+ * 
+ */
+native bool:ag_is_player_inmatch(id);
