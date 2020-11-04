@@ -180,6 +180,7 @@ public inconsistent_file(id, const filename[], reason[64]) {
     } else {
         client_print(0, print_chat, "%l", "LLHL_FILECONSISTENCY_MSG", name, authid, filename);
     }
+    log_amx("%L", LANG_SERVER, "LLHL_FILECONSISTENCY_MSG", name, authid, filename);
     server_cmd("kick #%d ^"%L^"", get_user_userid(id), "LLHL_FILECONSISTENCY_KICK", id, filename);
     return PLUGIN_HANDLED;
 }
@@ -272,6 +273,7 @@ public taskMeasureMeanFPS() {
                     static name[MAX_NAME_LENGTH];
                     get_user_name(id, name, charsmax(name));
                     server_cmd("kick #%d ^"%L^"", get_user_userid(id), "LLHL_FPSL_KICK", id, get_pcvar_num(gCvarFpsMax));
+                    log_amx("%L", LANG_SERVER, "LLHL_FPSL_KICK_MSG", name, get_pcvar_num(gCvarFpsMax));
                     client_print(0, print_chat, "%l", "LLHL_FPSL_KICK_MSG", name, get_pcvar_num(gCvarFpsMax));
                 }
             }
