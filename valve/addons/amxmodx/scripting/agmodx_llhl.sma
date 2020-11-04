@@ -215,7 +215,7 @@ public Ham_Player_Killed_Post(id) {
 public FwMsgIntermission() {
     gActualServerFPS = gServerFPS;
     client_cmd(0, "stop;wait;wait;+showscores");
-    set_task(0.1, "taskShowVEngine", TASK_SHOWVENGINE, .flags = "b");    
+    set_task(0.1, "taskShowVEngine", TASK_SHOWVENGINE);    
     message_begin(0, SVC_FINALE);
     write_string("");
     message_end();
