@@ -171,8 +171,17 @@ public inconsistent_file(id, const filename[], reason[64]) {
     new name[32], authid[32];
     get_user_name(id, name, charsmax(name));
     get_user_authid(id, authid, charsmax(authid));
-    client_print(0, print_chat, "%l", "LLHL_FILECONSISTENCY_MSG", name, authid, filename);
-    server_cmd("kick #%d ^"%l^"", get_user_userid(id), "LLHL_FILECONSISTENCY_KICK", filename);
+    if (get_cvar_num("sv_ag_match_running")) {
+        for (new i = 1; i <= MaxClients; i++) {
+            if (!ag_is_player_inmatch(i)) {
+                client_print(i, print_chat, "%l", "LLHL_FILECONSISTENCY_MSG", name, authid, filename);
+            }
+        }
+    } else {
+        client_print(0, print_chat, "%l", "LLHL_FILECONSISTENCY_MSG", name, authid, filename);
+    }
+    SetGlobalTransTarget(id);
+    server_cmd("kick #%d ^"%l^"", "LLHL_FILECONSISTENCY_KICK", filename);
     return PLUGIN_HANDLED;
 }
 
