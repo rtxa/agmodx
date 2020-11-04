@@ -37,10 +37,13 @@ native bool:ag_vote_exists(const name[]);
 /* 
  * Checks if a player is playing a match
  * 
+ * @note         That the player is not playing a match doesn't imply that there's a match in progress.
+ *               Be sure to check first cvar 'sv_ag_match_running' before using this native.
+ *
  * @param        id - Player slot (1-32)
  * 
- * @return       Returns true if a player is playing a match, false if the 
- *               player is spectating or there's no match in progress
+ * @return       Returns true if the player is in the match, false if the 
+ *               there's no match in progress or he isn't in the match.
  * 
  */
 native bool:ag_is_player_inmatch(id);
