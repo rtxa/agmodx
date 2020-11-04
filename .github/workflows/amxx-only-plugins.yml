@@ -1,0 +1,58 @@
+name: AMXX Only Plugins Workflow
+
+on:
+  push:
+    branches: 
+      - master
+      # Add ci-only-plugins branch to test the changes before merging to master
+      - ci-only-plugins
+  pull_request:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download latest amxmodx 1.9 (Linux)
+      run: |
+        wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx.tar.gz
+        tar -xzf amxx.tar.gz
+    - name: Give amxxpc the required permissions
+      run: chmod +x addons/amxmodx/scripting/amxxpc
+    - name: Compile agmodx plugins
+      run: |
+        # Saving the current location to cd later
+        previousDir=$(pwd)
+
+        # Creating folders where we'll place compiled plugins
+        mkdir agmodx-dev-plugins
+
+        # In case the repository has an include folder, we copy the dependencies
+        if [ -d valve/addons/amxmodx/scripting/include ]; then
+          echo "Copying non-standard dependencies..."
+          cp -a valve/addons/amxmodx/scripting/include/*.inc addons/amxmodx/scripting/include
+        fi
+
+        # Add missing native is_user_authorized (amxmodx.inc)
+        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' addons/amxmodx/scripting/include/amxmodx.inc -i
+
+        # Move to the folder where the compiler is located
+        cd addons/amxmodx/scripting
+
+        # Compile all plugins inside scripting folder
+        for file in $previousDir/valve/addons/amxmodx/scripting/*.sma
+        do
+          smafile="`echo $file | sed -e 's/\.sma$/\.amxx/'`"
+          echo -e "\nCompiling $(basename $file)..." 
+          ./amxxpc $file -o$previousDir/agmodx-dev-plugins/$(basename "$smafile")
+        done
+
+        # Returning again to the location where we were before
+        cd $previousDir
+    - name: Upload agmodx-dev-plugins
+      uses: actions/upload-artifact@master
+      with:
+        name: agmodx-dev-plugins
+        path: agmodx-dev-plugins
