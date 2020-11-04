@@ -1249,6 +1249,8 @@ public LoadLocations() {
 		}
 	}
 
+	fclose(handle);
+
 	return true;
 }
 
