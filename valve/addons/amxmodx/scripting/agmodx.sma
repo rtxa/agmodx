@@ -1206,10 +1206,26 @@ public FwVoiceSetClientListening(receiver, sender, bool:listen) {
 * Location System
 */
 public LoadLocations() {
-	new map[32];
-	get_mapname(map, charsmax(map));
+	new mapFile[64];
 	
-	new handle = fopen(fmt("locs/%s.loc", map), "r");
+	// because fopen is case sensitive, we need to find the .loc file and use his exact name
+	// otherwise, files like HAVOC.LOC or HaVoC.LoC will not be read
+	{
+		new mapName[32];
+		get_mapname(mapName, charsmax(mapName));
+
+		new file[64];
+		new handleDir = open_dir("locs", file, charsmax(file));
+		do {
+			if (equali(file, fmt("%s.loc", mapName))) {
+				formatex(mapFile, charsmax(mapFile), "locs/%s", file);
+				break;
+			}
+		} while (next_file(handleDir, file, charsmax(file)));
+		close_dir(handleDir);
+	}
+
+	new handle = fopen(mapFile, "r");
 
 	if (!handle)
 		return false;
