@@ -272,7 +272,8 @@ public taskMeasureMeanFPS() {
                 } else {
                     static name[MAX_NAME_LENGTH];
                     get_user_name(id, name, charsmax(name));
-                    server_cmd("kick #%d ^"%l^"", get_user_userid(id), "LLHL_FPSL_KICK", get_pcvar_num(gCvarFpsMax));
+                    SetGlobalTransTarget(id);
+                    server_cmd("kick #%d ^"%l^"", "LLHL_FPSL_KICK", get_pcvar_num(gCvarFpsMax));
                     client_print(0, print_chat, "%l", LANG_PLAYER, "LLHL_FPSL_KICK_MSG", name, get_pcvar_num(gCvarFpsMax));
                 }
             }
