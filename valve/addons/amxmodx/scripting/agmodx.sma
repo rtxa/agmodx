@@ -387,6 +387,7 @@ public plugin_natives() {
 	register_native("ag_vote_add", "native_ag_vote_add");
 	register_native("ag_vote_remove", "native_ag_vote_remove");
 	register_native("ag_vote_exists", "native_ag_vote_exists");
+	register_native("ag_is_player_inmatch", "native_ag_is_player_inmatch");
 }
 
 public plugin_init() {
@@ -3213,4 +3214,15 @@ public native_ag_vote_exists(plugin_id, argc) {
 		return true;
 
 	return false;
+}
+
+public native_ag_is_player_inmatch(plugin_id, argc) {
+    if (argc < 1)
+        return false;
+
+    new id = get_param(1);
+    if (!IsPlayer(id) || !gVersusStarted)
+        return false;
+    
+    return RestoreScore_FindPlayer(id);
 }
