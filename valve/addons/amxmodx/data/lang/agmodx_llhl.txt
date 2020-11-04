@@ -1,6 +1,6 @@
 [en]
 LLHL_FPSL_KICK = Your 'fps_max' value is higher than %d
-LLHL_FPSL_KICK_MSG = %s has been kicked for exceeding the FPS limit (Max: %d).
+LLHL_FPSL_KICK_MSG = %s has been kicked for exceeding the FPS limit (Max: %d)
 LLHL_DEMO_RECORDING = Recording %s.dem
 LLHL_UNSTUCK_ON_COOLDOWN = You have to wait %.1f seconds to be able to use this command again.
 LLHL_UNSTUCK_FREESPOT_NOTFOUND = No free spot was found to relocate you.
@@ -11,7 +11,7 @@ LLHL_BLOCK_NAMECHANGE_MSG = You can't change your name while a match is in progr
 
 [es]
 LLHL_FPSL_KICK = El valor de 'fps_max' que estas usando es mayor que %d
-LLHL_FPSL_KICK_MSG = %s ha sido desconectado por superar el limite de FPS (Maximo: %d).
+LLHL_FPSL_KICK_MSG = %s ha sido desconectado por superar el limite de FPS (Maximo: %d)
 LLHL_DEMO_RECORDING = Grabando %s.dem
 LLHL_UNSTUCK_ON_COOLDOWN = Debes esperar %.1f segundos para poder usar el comando nuevamente.
 LLHL_UNSTUCK_FREESPOT_NOTFOUND = No se encontro ningun lugar libre para reubicarte.
