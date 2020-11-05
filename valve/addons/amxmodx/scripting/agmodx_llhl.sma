@@ -91,9 +91,18 @@ new const gConsistencySoundFiles[][] = {
 };
 
 public plugin_precache() {
+    register_plugin(PLUGIN, VERSION, AUTHOR);
+    
     if (!IsSelectedMode(MODE_TYPE_NAME)) {
         StopPlugin();
         return;
+    }
+
+    if (get_pcvar_num(gCvarCheckSoundFiles)) {
+        // Sound file consistency
+        for (new i; i < sizeof gConsistencySoundFiles; i++) {
+            force_unmodified(force_exactfile, {0,0,0}, {0,0,0}, gConsistencySoundFiles[i]);
+        }
     }
 }
 
@@ -129,18 +138,7 @@ public agmodx_pre_config() {
     hook_cvar_change(gCvarRespawnFix, "CvarAgRespawnFixHook");
 }
 
-public agmodx_post_config() {
-    if (get_pcvar_num(gCvarCheckSoundFiles)) {
-        // Sound file consistency
-        for (new i; i < sizeof gConsistencySoundFiles; i++) {
-            force_unmodified(force_exactfile, {0,0,0}, {0,0,0}, gConsistencySoundFiles[i]);
-        }
-    }
-}
-
 public plugin_init() {
-    register_plugin(PLUGIN, VERSION, AUTHOR);
-
     register_dictionary("agmodx_llhl.txt");
 
     register_forward(FM_StartFrame, "FwStartFrame");
