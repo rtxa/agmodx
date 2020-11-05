@@ -91,6 +91,8 @@ new const gConsistencySoundFiles[][] = {
 };
 
 public plugin_precache() {
+    register_plugin(PLUGIN, VERSION, AUTHOR);
+    
     if (!IsSelectedMode(MODE_TYPE_NAME)) {
         StopPlugin();
         return;
@@ -139,8 +141,6 @@ public agmodx_post_config() {
 }
 
 public plugin_init() {
-    register_plugin(PLUGIN, VERSION, AUTHOR);
-
     register_dictionary("agmodx_llhl.txt");
 
     register_forward(FM_StartFrame, "FwStartFrame");
