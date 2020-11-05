@@ -97,6 +97,13 @@ public plugin_precache() {
         StopPlugin();
         return;
     }
+
+    if (get_pcvar_num(gCvarCheckSoundFiles)) {
+        // Sound file consistency
+        for (new i; i < sizeof gConsistencySoundFiles; i++) {
+            force_unmodified(force_exactfile, {0,0,0}, {0,0,0}, gConsistencySoundFiles[i]);
+        }
+    }
 }
 
 // We create the cvars before 'exec gamemodes/%s.cfg'
@@ -129,15 +136,6 @@ public agmodx_pre_config() {
 
     hook_cvar_change(gCvarFpsCheckInterval, "CvarAgFpsCheckIntervalHook");
     hook_cvar_change(gCvarRespawnFix, "CvarAgRespawnFixHook");
-}
-
-public agmodx_post_config() {
-    if (get_pcvar_num(gCvarCheckSoundFiles)) {
-        // Sound file consistency
-        for (new i; i < sizeof gConsistencySoundFiles; i++) {
-            force_unmodified(force_exactfile, {0,0,0}, {0,0,0}, gConsistencySoundFiles[i]);
-        }
-    }
 }
 
 public plugin_init() {
