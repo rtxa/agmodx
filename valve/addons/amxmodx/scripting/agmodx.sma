@@ -1183,6 +1183,9 @@ public FwVoiceSetClientListening(receiver, sender, bool:listen) {
 	if (receiver == sender)
 		return FMRES_IGNORED;
 
+	if (!is_user_connected(receiver) || !is_user_connected(sender))
+		return FMRES_IGNORED;
+
 	if (gVersusStarted) {
 		// Don't allow players who are not in the match to hear players in a match even if ag_spectalk is enabled
 		if (RestoreScore_FindPlayer(sender) && !RestoreScore_FindPlayer(receiver)) {
