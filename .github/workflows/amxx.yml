@@ -112,7 +112,7 @@ jobs:
 
         # Add amxmodx to metamod plugins
         echo 'linux addons/amxmodx/dlls/amxmodx_mm_i386.so' > agmodx-dev-linux/valve/addons/metamod/plugins.ini
-        echo 'win32 addons/amxmodx/dlls/amxmodx.dll' > agmodx-dev-windows/valve/addons/metamod/plugins.ini
+        echo 'win32 addons/amxmodx/dlls/amxmodx_mm.dll' > agmodx-dev-windows/valve/addons/metamod/plugins.ini
 
         liblist='// Valve Game Info file'
         liblist+='\n// These are key/value pairs.  Certain mods will use different settings.'
