@@ -2825,7 +2825,7 @@ SetPlayerEquipment(id) {
 	}
 
 	if (get_pcvar_bool(gCvarStartLongJump)) {
-			give_item(id, "item_longjump");
+		hl_set_user_longjump(id, true);
 	}
 
 	ResetBpAmmo(id);
