@@ -70,7 +70,7 @@ stock ResetChargers() {
 			if (equal(classname, "func_recharge")) {
 				set_pev(i, pev_frame, 0);
 				set_pev(i, pev_nextthink, 0);
-				set_ent_data(i, "CRecharge", "m_iJuice", get_skill_cvar_num("sk_suitcharger"));
+				set_ent_data(i, "CRecharge", "m_iJuice", 30);
 			} else if (equal(classname, "func_healthcharger")) {
 				set_pev(i, pev_frame, 0);
 				set_pev(i, pev_nextthink, 0);
