@@ -1,4 +1,4 @@
-name: AG Mod X - Full Package Release
+name: AG Mod X - Full release package
 
 on:
   push:
@@ -6,78 +6,78 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v1
-    - name: Download latest amxmodx 1.9 (Linux)
+    - name: Checkout repository
+      uses: actions/checkout@v1
+
+    - name: Download latest AMX Mod X v1.9
       run: |
-        wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx.tar.gz
-        tar -xzf amxx.tar.gz
-    - name: Download latest amxmodx 1.9 (Windows)
-      run: |
+        wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx-linux.tar.gz
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=windows&package=base" -O amxx-windows.zip
-        mkdir amxx-windows
+        mkdir amxx-windows amxx-linux
+        tar -xzf amxx-linux.tar.gz -C amxx-linux
         unzip amxx-windows.zip -d amxx-windows
-    - name: Download Metamod v1.21p39 (Solokiller)
+
+    - name: Download Metamod-P v1.21p39
       run: |
         wget "https://github.com/Solokiller/Metamod-P-CMake/releases/download/v1.21p39/Metamod-P-opt-fast-Linux.zip" -O metamod.zip
         wget "https://github.com/Solokiller/Metamod-P-CMake/releases/download/v1.21p39/Metamod-P-opt-fast.zip" -O metamod-win.zip
         unzip metamod.zip
         unzip metamod-win.zip -d metamod
-    - name: Give amxxpc the required permissions
-      run: chmod +x addons/amxmodx/scripting/amxxpc
-    - name: Compile agmodx plugins
-      run: |
-        # Saving the current location to cd later
-        previousDir=$(pwd)
 
-        # Creating agmodx release folder structure (Windows and linux)
+    - name: Create AG Mod X folder structure for Windows and Linux
+      run: |
         os=("agmodx-dev-linux" "agmodx-dev-windows")
         for i in "${os[@]}"
         do
           mkdir $i && cd $i && mkdir valve && cd valve
           mkdir addons ctf dlls gamemodes locs models sound
-
-          # Returning to the location where we were before
-          cd $previousDir
+          # Return to the initial location
+          cd $GITHUB_WORKSPACE
         done
 
+    - name: Copy necessary files for compiling
+      run: |
         # Copy amxmodx addons folder (Windows and linux)
-        cp -a addons/* agmodx-dev-linux/valve/addons
+        cp -a amxx-linux/addons/* agmodx-dev-linux/valve/addons
         cp -a amxx-windows/addons/* agmodx-dev-windows/valve/addons
 
         # In case the repository has an include folder, we copy the dependencies
         if [ -d valve/addons/amxmodx/scripting/include ]; then
           echo "Copying non-standard dependencies..."
-          cp -a valve/addons/amxmodx/scripting/include/*.inc addons/amxmodx/scripting/include
+          cp -a valve/addons/amxmodx/scripting/include/*.inc amxx-linux/addons/amxmodx/scripting/include
         fi
 
         # Add missing native is_user_authorized (amxmodx.inc)
-        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' addons/amxmodx/scripting/include/amxmodx.inc -i
+        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' amxx-linux/addons/amxmodx/scripting/include/amxmodx.inc -i
 
+    - name: Compile plugins
+      run: |
         # Move to the folder where the compiler is located
-        cd addons/amxmodx/scripting
+        cd amxx-linux/addons/amxmodx/scripting
+
+        # Give amxxpc the required permissions
+        chmod +x amxxpc
 
         # Compile all plugins inside scripting folder
-        for file in $previousDir/valve/addons/amxmodx/scripting/*.sma
+        for file in $GITHUB_WORKSPACE/valve/addons/amxmodx/scripting/*.sma
         do
           smafile="`echo $file | sed -e 's/\.sma$/\.amxx/'`"
-          echo -e "\nCompiling $(basename $file)..." 
-          ./amxxpc $file -o$previousDir/agmodx-dev-linux/valve/addons/amxmodx/plugins/$(basename "$smafile")
+          echo -e "\nCompiling $(basename $file)..."
+          ./amxxpc $file -o$GITHUB_WORKSPACE/agmodx-dev-linux/valve/addons/amxmodx/plugins/$(basename "$smafile")
         done
 
-        # Returning again to the location where we were before
-        cd $previousDir
+        # Return to initial location
+        cd $GITHUB_WORKSPACE
 
-        # Copy compiled plugins to windows artifact
+        # Copy compiled plugins to the windows artifact
         cp -a agmodx-dev-linux/valve/addons/amxmodx/plugins/*.amxx agmodx-dev-windows/valve/addons/amxmodx/plugins
 
-        # Remove scripting folder
-        rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
-        rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
-
+    - name: Copy the rest of the files
+      run: |
+        os=("agmodx-dev-linux" "agmodx-dev-windows")
         for systems in "${os[@]}"
         do
           # Copy agmodx plugins list and multilanguage files
@@ -114,6 +114,7 @@ jobs:
         echo 'linux addons/amxmodx/dlls/amxmodx_mm_i386.so' > agmodx-dev-linux/valve/addons/metamod/plugins.ini
         echo 'win32 addons/amxmodx/dlls/amxmodx_mm.dll' > agmodx-dev-windows/valve/addons/metamod/plugins.ini
 
+        # Create liblist.gam file
         liblist='// Valve Game Info file'
         liblist+='\n// These are key/value pairs.  Certain mods will use different settings.'
         liblist+='\ngame "Half-Life"'
@@ -126,15 +127,22 @@ jobs:
         liblist+='\nsecure "1"'
         liblist+='\ntype "singleplayer_only"'
 
-        # Create liblist.gam file
         echo -e $liblist > agmodx-dev-linux/valve/liblist.gam
         echo -e $liblist > agmodx-dev-windows/valve/liblist.gam
-    - name: Upload agmodx-dev artifacts for Linux
+
+        # Remove unnecessary files
+        rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
+        rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
+
+    - name: Upload AG Mod X package for Linux
       uses: actions/upload-artifact@master
       with:
         name: agmodx-dev-linux
         path: agmodx-dev-linux
-    - name: Upload agmodx-dev artifacts for Windows
+
+    # TODO: maybe I should in the name of the artifact the branch and short commit SHA
+    # More info: https://stackoverflow.com/questions/58886293/getting-current-branch-and-commit-hash-in-github-action
+    - name: Upload AG Mod X package for Windows
       uses: actions/upload-artifact@master
       with:
         name: agmodx-dev-windows
