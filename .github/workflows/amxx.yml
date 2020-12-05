@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
 
     - name: Download latest AMX Mod X v1.9
       run: |
@@ -29,7 +29,6 @@ jobs:
 
     - name: Create AG Mod X folder structure for Windows and Linux
       run: |
-        # Creating agmodx release folder structure (Windows and linux)
         os=("agmodx-dev-linux" "agmodx-dev-windows")
         for i in "${os[@]}"
         do
@@ -141,7 +140,8 @@ jobs:
         name: agmodx-dev-linux
         path: agmodx-dev-linux
 
-    # deberia usar un numero de version con $GITHUB_SHA o
+    # TODO: maybe I should in the name of the artifact the branch and short commit SHA
+    # More info: https://stackoverflow.com/questions/58886293/getting-current-branch-and-commit-hash-in-github-action
     - name: Upload AG Mod X package for Windows
       uses: actions/upload-artifact@master
       with:
