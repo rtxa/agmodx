@@ -17,7 +17,7 @@ jobs:
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx-linux.tar.gz
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=windows&package=base" -O amxx-windows.zip
         mkdir amxx-windows amxx-linux
-        tar -xzf amxx-linux.tar.gz -c amxx-linux
+        tar -xzf amxx-linux.tar.gz -C amxx-linux
         unzip amxx-windows.zip -d amxx-windows
 
     - name: Download Metamod-P v1.21p39
