@@ -1,4 +1,4 @@
-name: AG Mod X - Only Plugins Release 2
+name: AG Mod X - Only Plugins Release
 
 on:
   push:
@@ -66,7 +66,7 @@ jobs:
         do
           smafile="`echo $file | sed -e 's/\.sma$/\.amxx/'`"
           echo -e "\nCompiling $(basename $file)..." 
-          ./amxxpc $file -o $GITHUB_WORKSPACE/agmodx-dev-linux/valve/addons/amxmodx/plugins/$(basename "$smafile")
+          ./amxxpc $file -o$GITHUB_WORKSPACE/agmodx-dev-linux/valve/addons/amxmodx/plugins/$(basename "$smafile")
         done
         
         # Return to initial location
