@@ -132,9 +132,9 @@ jobs:
 
     - name: Remove unnecesary files
       run: |
-      # Remove scripting folder
-      rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
-      rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
+        # Remove scripting folder
+        rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
+        rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
 
     - name: Upload AG Mod X package for Linux
       uses: actions/upload-artifact@master
