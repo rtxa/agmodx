@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v1
 
     - name: Download latest AMX Mod X v1.9
       run: |
@@ -38,7 +38,7 @@ jobs:
           cd $GITHUB_WORKSPACE
         done
 
-    - name: Copy neccesary files for compiling
+    - name: Copy necessary files for compiling
       run: |
         # Copy amxmodx addons folder (Windows and linux)
         cp -a amxx-linux/addons/* agmodx-dev-linux/valve/addons
