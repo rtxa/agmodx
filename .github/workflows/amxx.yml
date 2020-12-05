@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-    - uses: actions/checkout@v1
+    - name: Checkout repository
+      uses: actions/checkout@v1
 
     - name: Download latest AMX Mod X v1.9
       run: |
@@ -73,11 +73,12 @@ jobs:
         # Return to initial location
         cd $GITHUB_WORKSPACE
 
-    - name: Copy the rest of the files
-      run: |
         # Copy compiled plugins to the windows artifact
         cp -a agmodx-dev-linux/valve/addons/amxmodx/plugins/*.amxx agmodx-dev-windows/valve/addons/amxmodx/plugins
 
+    - name: Copy the rest of the files
+      run: |
+        os=("agmodx-dev-linux" "agmodx-dev-windows")
         for systems in "${os[@]}"
         do
           # Copy agmodx plugins list and multilanguage files
