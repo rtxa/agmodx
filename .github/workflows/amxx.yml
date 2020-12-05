@@ -74,6 +74,7 @@ jobs:
         cd $GITHUB_WORKSPACE
 
     - name: Copy the rest of the files
+      run: |
         # Copy compiled plugins to the windows artifact
         cp -a agmodx-dev-linux/valve/addons/amxmodx/plugins/*.amxx agmodx-dev-windows/valve/addons/amxmodx/plugins
 
