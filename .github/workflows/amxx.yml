@@ -12,7 +12,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v1
 
-    - name: Download latest AMX Mod X 1.9
+    - name: Download latest AMX Mod X v1.9
       run: |
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx-linux.tar.gz
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=windows&package=base" -O amxx-windows.zip
@@ -48,11 +48,11 @@ jobs:
         # In case the repository has an include folder, we copy the dependencies
         if [ -d valve/addons/amxmodx/scripting/include ]; then
           echo "Copying non-standard dependencies..."
-          cp -a valve/addons/amxmodx/scripting/include/*.inc addons/amxmodx/scripting/include
+          cp -a valve/addons/amxmodx/scripting/include/*.inc amxx-linux/addons/amxmodx/scripting/include
         fi
 
         # Add missing native is_user_authorized (amxmodx.inc)
-        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' addons/amxmodx/scripting/include/amxmodx.inc -i
+        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' amxx-linux/addons/amxmodx/scripting/include/amxmodx.inc -i
 
     - name: Compile plugins
       run: |
