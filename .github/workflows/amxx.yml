@@ -27,7 +27,7 @@ jobs:
         unzip metamod.zip
         unzip metamod-win.zip -d metamod
 
-    - name: Create folder structure
+    - name: Create AG Mod X folder structure for Windows and Linux
       run: |
         # Creating agmodx release folder structure (Windows and linux)
         os=("agmodx-dev-linux" "agmodx-dev-windows")
@@ -74,6 +74,7 @@ jobs:
         cd $GITHUB_WORKSPACE
 
     - name: Copy the rest of the files
+      uses: actions/checkout@v1
       run: |
         # Copy compiled plugins to the windows artifact
         cp -a agmodx-dev-linux/valve/addons/amxmodx/plugins/*.amxx agmodx-dev-windows/valve/addons/amxmodx/plugins
@@ -130,9 +131,7 @@ jobs:
         echo -e $liblist > agmodx-dev-linux/valve/liblist.gam
         echo -e $liblist > agmodx-dev-windows/valve/liblist.gam
 
-    - name: Remove unnecesary files
-      run: |
-        # Remove scripting folder
+        # Remove unnecessary files
         rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
         rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
 
