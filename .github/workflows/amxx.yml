@@ -131,6 +131,7 @@ jobs:
         echo -e $liblist > agmodx-dev-windows/valve/liblist.gam
 
     - name: Remove unnecesary files
+      run: |
       # Remove scripting folder
       rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
       rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
