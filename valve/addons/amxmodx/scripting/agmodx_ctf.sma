@@ -214,7 +214,7 @@ ParseEntFromFile(const input[], ent_name[], len, Float:ent_origin[3], Float:ent_
 }
 
 public plugin_init() {
-	register_dictionary("agmodxctf.txt");
+	register_dictionary("agmodx_ctf.txt");
 	
 	// load always ctf map config file
 	new bool:result = LoadCtfMapFile();

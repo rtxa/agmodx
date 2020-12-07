@@ -74,7 +74,7 @@ stock ResetChargers() {
 			} else if (equal(classname, "func_healthcharger")) {
 				set_pev(i, pev_frame, 0);
 				set_pev(i, pev_nextthink, 0);
-				set_ent_data(i, "CWallHealth", "m_iJuice", 75);
+				set_ent_data(i, "CWallHealth", "m_iJuice", get_skill_cvar_num("sk_healthcharger"));
 			}
 		}
 	}
@@ -277,4 +277,16 @@ stock CountSpecs() {
 			numSpecs++;
 	}
 	return numSpecs;
+}
+
+stock get_skill_cvar_string(const name[], output[], len) {
+	new skill = clamp(get_cvar_num("skill"), 1, 3);
+	get_cvar_string(fmt("%s%d", name, skill), output, len);
+}
+
+
+stock get_skill_cvar_num(const name[]) {
+	new value[32];
+	get_skill_cvar_string(name, value, charsmax(value));
+	return str_to_num(value);
 }

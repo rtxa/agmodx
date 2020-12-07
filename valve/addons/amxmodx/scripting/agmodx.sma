@@ -1183,9 +1183,23 @@ public FwVoiceSetClientListening(receiver, sender, bool:listen) {
 	if (receiver == sender)
 		return FMRES_IGNORED;
 
-	if (gVersusStarted && !get_pcvar_num(gCvarSpecTalk) && hl_get_user_spectator(sender) && !hl_get_user_spectator(receiver)) {
-		engfunc(EngFunc_SetClientListening, receiver, sender, false);
-		return FMRES_SUPERCEDE;
+	if (!is_user_connected(receiver) || !is_user_connected(sender))
+		return FMRES_IGNORED;
+
+	if (gVersusStarted) {
+		// Don't allow players who are not in the match to hear players in a match even if ag_spectalk is enabled
+		if (RestoreScore_FindPlayer(sender) && !RestoreScore_FindPlayer(receiver)) {
+			engfunc(EngFunc_SetClientListening, receiver, sender, false);
+			return FMRES_SUPERCEDE;
+		}
+
+		if (!get_pcvar_num(gCvarSpecTalk)) {
+			// Don't allow players who are not in the match to speak to players in a match
+			if (!RestoreScore_FindPlayer(sender) && RestoreScore_FindPlayer(receiver)) {
+				engfunc(EngFunc_SetClientListening, receiver, sender, false);
+				return FMRES_SUPERCEDE;
+			}
+		}
 	}
 
 	return FMRES_IGNORED;
@@ -1195,10 +1209,26 @@ public FwVoiceSetClientListening(receiver, sender, bool:listen) {
 * Location System
 */
 public LoadLocations() {
-	new map[32];
-	get_mapname(map, charsmax(map));
+	new mapFile[64];
 	
-	new handle = fopen(fmt("locs/%s.loc", map), "r");
+	// because fopen is case sensitive, we need to find the .loc file and use his exact name
+	// otherwise, files like HAVOC.LOC or HaVoC.LoC will not be read
+	{
+		new mapName[32];
+		get_mapname(mapName, charsmax(mapName));
+
+		new file[64];
+		new handleDir = open_dir("locs", file, charsmax(file));
+		do {
+			if (equali(file, fmt("%s.loc", mapName))) {
+				formatex(mapFile, charsmax(mapFile), "locs/%s", file);
+				break;
+			}
+		} while (next_file(handleDir, file, charsmax(file)));
+		close_dir(handleDir);
+	}
+
+	new handle = fopen(mapFile, "r");
 
 	if (!handle)
 		return false;
@@ -1237,6 +1267,8 @@ public LoadLocations() {
 			buffer[i++] = c;
 		}
 	}
+
+	fclose(handle);
 
 	return true;
 }
@@ -2793,7 +2825,7 @@ SetPlayerEquipment(id) {
 	}
 
 	if (get_pcvar_bool(gCvarStartLongJump)) {
-			give_item(id, "item_longjump");
+		hl_set_user_longjump(id, true);
 	}
 
 	ResetBpAmmo(id);

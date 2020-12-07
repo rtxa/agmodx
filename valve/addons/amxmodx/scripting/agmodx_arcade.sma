@@ -51,10 +51,32 @@ public CmdDrop() {
 
 public OnPlayerKilled_Pre(victim, attacker) {
 	if (is_user_alive(attacker)) {
-		set_user_health(attacker, get_pcvar_num(gCvarStartHealth));
-		set_user_armor(attacker, get_pcvar_num(gCvarStartArmor));
-		ResetBpAmmo(attacker);
-		ResetWeaponClip(attacker);
+		RestorePlayer(attacker); // restore attacker HP/AP and weapons after frag
+	}
+}
+
+RestorePlayer(id) {
+	set_user_health(id, get_pcvar_num(gCvarStartHealth));
+	set_user_armor(id, get_pcvar_num(gCvarStartArmor));
+
+	RestoreWeapons(id);
+	ResetBpAmmo(id);
+	ResetWeaponClip(id);
+}
+
+RestoreWeapons(id) {
+	// these weapons need to be restored in case they have gone from player's inventory 
+	if (!hl_user_has_weapon(id, HLW_SATCHEL) && get_pcvar_num(gCvarStartWeapons[START_SATCHEL])) {
+		give_item(id, "weapon_satchel");
+	}
+	if (!hl_user_has_weapon(id, HLW_HANDGRENADE) && get_pcvar_num(gCvarStartWeapons[START_HGRENADE])) {
+		give_item(id, "weapon_handgrenade");
+	}
+	if (!hl_user_has_weapon(id, HLW_SNARK) && get_pcvar_num(gCvarStartWeapons[START_SNARK])) {
+		give_item(id, "weapon_snark");
+	}
+	if (!hl_user_has_weapon(id, HLW_TRIPMINE) && get_pcvar_num(gCvarStartWeapons[START_TRIPMINE])) {
+		give_item(id, "weapon_tripmine");
 	}
 }
 
