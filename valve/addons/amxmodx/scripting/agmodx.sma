@@ -2525,7 +2525,7 @@ CalculateVote(&numFor, &numAgainst, &numUndecided) {
 		}
 	}
 	
-	numUndecided = get_playersnum() - (numFor + numAgainst);
+	numUndecided = get_playersnum_ex(GetPlayers_ExcludeHLTV | GetPlayers_ExcludeBots) - (numFor + numAgainst);
 
 	// show vote hud
 	if (numFor > numAgainst && numFor > numUndecided) // accepted
