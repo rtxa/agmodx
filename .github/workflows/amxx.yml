@@ -7,7 +7,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
+    env:
+      platform_folders: agmodx-dev-linux agmodx-dev-windows
+      
     steps:
     - name: Checkout repository
       uses: actions/checkout@v1
@@ -28,12 +31,10 @@ jobs:
 
     - name: Create AG Mod X folder structure for Windows and Linux
       run: |
-        os=("agmodx-dev-linux" "agmodx-dev-windows")
-        for i in "${os[@]}"
+        for agmodx_folder in $platform_folders
         do
-          mkdir $i && cd $i && mkdir valve && cd valve
+          mkdir $agmodx_folder && cd $agmodx_folder && mkdir valve && cd valve
           mkdir addons ctf dlls gamemodes locs models sound
-          # Return to the initial location
           cd $GITHUB_WORKSPACE
         done
 
@@ -76,12 +77,11 @@ jobs:
 
     - name: Copy the rest of the files
       run: |
-        os=("agmodx-dev-linux" "agmodx-dev-windows")
-        for systems in "${os[@]}"
+        for agmodx_folder in $platform_folders
         do
           # Copy agmodx plugins list and multilanguage files
-          cp valve/addons/amxmodx/data/lang/*.txt $systems/valve/addons/amxmodx/data/lang
-          cp valve/addons/amxmodx/configs/plugins-agmodx.ini $systems/valve/addons/amxmodx/configs
+          cp valve/addons/amxmodx/data/lang/*.txt $agmodx_folder/valve/addons/amxmodx/data/lang
+          cp valve/addons/amxmodx/configs/plugins-agmodx.ini $agmodx_folder/valve/addons/amxmodx/configs
 
           # Copy the rest of the directories and files from agmodx repo
           toCopy=("ctf" "dlls" "gamemodes" "locs" "models" "sound" "delta.lst" "server.cfg" "startup_server.cfg")
@@ -89,16 +89,16 @@ jobs:
           do
             # Directory
             if [[ -d valve/$tc ]]; then
-              if [[ $tc == "dlls" && $systems == "agmodx-dev-linux" ]]; then
-                cp -a valve/$tc/*.so $systems/valve/$tc
-              elif [[ $tc == "dlls" && $systems == "agmodx-dev-windows" ]]; then
-                cp -a valve/$tc/*.dll $systems/valve/$tc
+              if [[ $tc == "dlls" && $agmodx_folder == "agmodx-dev-linux" ]]; then
+                cp -a valve/$tc/*.so $agmodx_folder/valve/$tc
+              elif [[ $tc == "dlls" && $agmodx_folder == "agmodx-dev-windows" ]]; then
+                cp -a valve/$tc/*.dll $agmodx_folder/valve/$tc
               else
-                cp -a valve/$tc/* $systems/valve/$tc
+                cp -a valve/$tc/* $agmodx_folder/valve/$tc
               fi
             # File
             elif [[ -f valve/$tc ]]; then
-              cp -a valve/$tc $systems/valve
+              cp -a valve/$tc $agmodx_folder/valve
             fi
           done
         done
