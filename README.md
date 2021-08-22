@@ -29,8 +29,8 @@ AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X from 
 
 ## ☰ Requirements
 
-- HLDS Build 8308 or newer / [ReHLDS](https://github.com/dreamstalker/rehlds/releases) 3.6 or newer (**Warning**: Last version of ReHLDS on Linux has an auto-aim bug, use version 3.7.0.693 instead).
-- [Metamod-P v1.21p37](https://github.com/jkivilin/metamod-p/releases) or newer (included and ready to use in the full package).
+- HLDS Build 8308 or newer / [ReHLDS](https://github.com/dreamstalker/rehlds/releases) 3.8.0.739 or newer.
+- [Metamod-P v1.21p38](https://github.com/jkivilin/metamod-p/releases) or newer (included and ready to use in the full package).
 - [Last AMXX v1.9](https://www.amxmodx.org/downloads-new.php) (included and ready to use in the full package).
 
 ## ⚙ How To Install
