@@ -9,7 +9,6 @@
 #include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X SgBow"
-#define VERSION "Beta 2.4"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -17,7 +16,7 @@
 #define MODE_TYPE_NAME "sgbow"
 
 public plugin_precache() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
+	register_plugin(PLUGIN, AGMODX_VERSION, AUTHOR);
 
 	if (!IsSelectedMode(MODE_TYPE_NAME)) {
 		StopPlugin();

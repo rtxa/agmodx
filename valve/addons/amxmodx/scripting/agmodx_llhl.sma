@@ -29,7 +29,6 @@
 #include <agmodx_stocks>
 
 #define PLUGIN      "AG Mod X LLHL"
-#define VERSION     "Beta 2.4"
 #define AUTHOR      "FlyingCat"
 
 #pragma semicolon 1
@@ -91,7 +90,7 @@ new const gConsistencySoundFiles[][] = {
 };
 
 public plugin_precache() {
-    register_plugin(PLUGIN, VERSION, AUTHOR);
+    register_plugin(PLUGIN, AGMODX_VERSION, AUTHOR);
     
     if (!IsSelectedMode(MODE_TYPE_NAME)) {
         StopPlugin();
