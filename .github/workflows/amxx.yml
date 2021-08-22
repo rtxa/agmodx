@@ -20,12 +20,11 @@ jobs:
         tar -xzf amxx-linux.tar.gz -C amxx-linux
         unzip amxx-windows.zip -d amxx-windows
 
-    - name: Download Metamod-P v1.21p39
+    - name: Download Metamod-P v1.21p38
       run: |
-        wget "https://github.com/Solokiller/Metamod-P-CMake/releases/download/v1.21p39/Metamod-P-opt-fast-Linux.zip" -O metamod.zip
-        wget "https://github.com/Solokiller/Metamod-P-CMake/releases/download/v1.21p39/Metamod-P-opt-fast.zip" -O metamod-win.zip
-        unzip metamod.zip
-        unzip metamod-win.zip -d metamod
+        wget "https://github.com/Bots-United/metamod-p/releases/download/v1.21p38/metamod_i686_linux_win32-1.21p38.tar.xz" -O metamod.tar.xz
+        mkdir metamod
+        tar -xf metamod.tar.xz -C metamod
 
     - name: Create AG Mod X folder structure for Windows and Linux
       run: |
