@@ -1,6 +1,6 @@
 ![Logo](https://imgur.com/EFxGF19.png)
 
-![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-Beta%202.5-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-07/12/2020-blue "Last Update") 
+![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-Beta%202.5.1-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-22/08/2021-blue "Last Update") 
 
 AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X from the ground. It's easy to add new stuff, make improvements, do changes, etc.
 
