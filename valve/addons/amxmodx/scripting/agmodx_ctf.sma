@@ -46,7 +46,7 @@ new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 new const VOX_SOUNDS[][] = { "vox/endgame.wav", "vox/captured.wav", "vox/enemy.wav", "vox/flag.wav", "vox/returned.wav" };
 
 new bool:gIsCtfMode;
-new bool:gIsMapCtf;
+new bool:gIsMapCtfNative;
 
 new gBlueScore;
 new gRedScore;
@@ -136,7 +136,7 @@ public OnPlayerSpawn(id) {
 	client_print(id, print_center, "%l", "CTF_NOTCTFMAP");
 }
 
-bool:LoadCtfMapFile() {
+bool:LoadCtfMapCfgFile() {
 	new mapname[32];
 	get_mapname(mapname, charsmax(mapname));
 
@@ -215,14 +215,9 @@ ParseEntFromFile(const input[], ent_name[], len, Float:ent_origin[3], Float:ent_
 public plugin_init() {
 	register_dictionary("agmodx_ctf.txt");
 	
-	// load always ctf map config file
-	new bool:result = LoadCtfMapFile();
+	new bool:hasCfgFile = LoadCtfMapCfgFile();
 
-	// in case map isn't ctf, let's see if the ctf map config file has loaded
-	if (!gIsMapCtf)
-		gIsMapCtf = result; 
-
-	if (!gIsMapCtf) {
+	if (!hasCfgFile && !gIsMapCtfNative) {
 		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
 		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
 		return;
@@ -802,7 +797,7 @@ public pfn_keyvalue(ent) {
 		} else if (equal(key, "angles")) {
 			SetFlagStartAngles(gFlagRed, vector);
 		}
-		gIsMapCtf = true;
+		gIsMapCtfNative = true;
 	}
 	return PLUGIN_CONTINUE;
 }
