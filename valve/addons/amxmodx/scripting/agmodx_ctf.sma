@@ -767,9 +767,22 @@ public pfn_keyvalue(ent) {
 	StrToVec(value, vector);
 
 	static spawn;
+
+	// Because these entities are not implemented in HL, we need to recreate them
+	// 1. Let's spawn a generic entity (info_target) or a similar one.
+	if (equal(key, "classname")) {
+		if (equal(value, INFO_PLAYER_BLUE) || equal(value, INFO_PLAYER_RED)) {
+			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
+		} else if (equal(value, INFO_FLAG_BLUE)) {
+			gFlagBlue = CreateCustomEnt(INFO_FLAG_BLUE);
+		} else if (equal(value, INFO_FLAG_RED)) {
+			gFlagRed = CreateCustomEnt(INFO_FLAG_RED);
+		}
+	}
+
+	// 2. Then we fill their properties as we read them, until we move to the next entity.
 	if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
 		if (equal(key, "origin")) {
-			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
 			entity_set_origin(spawn, vector);
 			set_pev(spawn, pev_netname, "blue");
 		} else if (equal(key, "angles")) {
@@ -777,7 +790,6 @@ public pfn_keyvalue(ent) {
 		}
 	} else if (equal(classname, INFO_PLAYER_RED)) { // info_player_team2
 		if (equal(key, "origin")) {
-			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
 			entity_set_origin(spawn, vector);
 			set_pev(spawn, pev_netname, "red");
 		} else if (equal(key, "angles")) {
@@ -785,14 +797,12 @@ public pfn_keyvalue(ent) {
 		}
 	} else if (equal(classname, INFO_FLAG_BLUE)) { // item_flag_team1
 		if (equal(key, "origin")) {
-			gFlagBlue = CreateCustomEnt(INFO_FLAG_BLUE);
 			SetFlagStartOrigin(gFlagBlue, vector);
 		} else if (equal(key, "angles")) {
 			SetFlagStartAngles(gFlagBlue, vector);
 		}
 	} else if (equal(classname, INFO_FLAG_RED)) { // item_flag_team2
 		if (equal(key, "origin")) {
-			gFlagRed = CreateCustomEnt(INFO_FLAG_RED);
 			SetFlagStartOrigin(gFlagRed, vector);
 		} else if (equal(key, "angles")) {
 			SetFlagStartAngles(gFlagRed, vector);
