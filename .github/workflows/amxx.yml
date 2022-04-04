@@ -45,7 +45,7 @@ jobs:
         # Compile all plugins inside scripting folder
         for file in $GITHUB_WORKSPACE/valve/addons/amxmodx/scripting/*.sma
         do
-          filename="`echo $file | basename -s .sma $file`"
+          filename="`echo $(basename -s .sma $file)`"
           echo -e "\nCompiling $filename.sma"
           ./amxxpc -i$GITHUB_WORKSPACE/valve/addons/amxmodx/scripting/include $file -o$GITHUB_WORKSPACE/.plugins/$filename.amxx
         done
