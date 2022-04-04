@@ -20,8 +20,7 @@ jobs:
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=linux&package=base" -O amxx-linux.tar.gz
         wget "https://www.amxmodx.org/latest.php?version=1.9&os=windows&package=base" -O amxx-windows.zip
         mkdir amxx-windows amxx-linux
-        tar -xzf amxx-linux.tar.gz -C amxx-linux
-        unzip amxx-windows.zip -d amxx-windows
+        tar -xzf amxx-linux.tar.gz -C amxx-linux && unzip amxx-windows.zip -d amxx-windows
 
     - name: Download Metamod-P v1.21p38
       run: |
@@ -29,34 +28,16 @@ jobs:
         mkdir metamod
         tar -xf metamod.tar.xz -C metamod
 
-    - name: Create AG Mod X folder structure for Windows and Linux
-      run: |
-        for agmodx_folder in $platform_folders
-        do
-          mkdir $agmodx_folder && cd $agmodx_folder && mkdir valve && cd valve
-          mkdir addons ctf dlls gamemodes locs models sound
-          cd $GITHUB_WORKSPACE
-        done
-
-    - name: Copy necessary files for compiling
-      run: |
-        # Copy amxmodx addons folder (Windows and linux)
-        cp -a amxx-linux/addons/* agmodx-dev-linux/valve/addons
-        cp -a amxx-windows/addons/* agmodx-dev-windows/valve/addons
-
-        # In case the repository has an include folder, we copy the dependencies
-        if [ -d valve/addons/amxmodx/scripting/include ]; then
-          echo "Copying non-standard dependencies..."
-          cp -a valve/addons/amxmodx/scripting/include/*.inc amxx-linux/addons/amxmodx/scripting/include
-        fi
-
-        # Add missing native is_user_authorized (amxmodx.inc)
-        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' amxx-linux/addons/amxmodx/scripting/include/amxmodx.inc -i
-
     - name: Compile plugins
       run: |
+        # This dir will contain compiled plugins
+        mkdir .plugins
+
         # Move to the folder where the compiler is located
         cd amxx-linux/addons/amxmodx/scripting
+        
+        # Add missing native is_user_authorized (amxmodx.inc)
+        sed 's/native is_user_hltv(index);/& \nnative is_user_authorized(index);\n/' include/amxmodx.inc -i
 
         # Give amxxpc the required permissions
         chmod +x amxxpc
@@ -64,18 +45,34 @@ jobs:
         # Compile all plugins inside scripting folder
         for file in $GITHUB_WORKSPACE/valve/addons/amxmodx/scripting/*.sma
         do
-          smafile="`echo $file | sed -e 's/\.sma$/\.amxx/'`"
-          echo -e "\nCompiling $(basename $file)..."
-          ./amxxpc $file -o$GITHUB_WORKSPACE/agmodx-dev-linux/valve/addons/amxmodx/plugins/$(basename "$smafile")
+          filename="`echo $file | basename -s .sma $file`"
+          echo -e "\nCompiling $filename.sma"
+          ./amxxpc -i$GITHUB_WORKSPACE/valve/addons/amxmodx/scripting/include $file -o$GITHUB_WORKSPACE/.plugins/$filename.amxx
         done
 
         # Return to initial location
         cd $GITHUB_WORKSPACE
 
-        # Copy compiled plugins to the windows artifact
-        cp -a agmodx-dev-linux/valve/addons/amxmodx/plugins/*.amxx agmodx-dev-windows/valve/addons/amxmodx/plugins
+    - name: Create AG Mod X folder structure
+      run: |
+        for agmodx_folder in $platform_folders
+        do
+          mkdir -p $agmodx_folder/valve && cd $_
+          mkdir addons ctf dlls gamemodes locs models sound
+          cd $GITHUB_WORKSPACE
+        done
 
-    - name: Copy the rest of the files
+    - name: Copy AMX Mod X and compiled plugins
+      run: |
+        # Copy amxmodx addons folder (Windows and linux)
+        cp -a amxx-linux/addons/* agmodx-dev-linux/valve/addons
+        cp -a amxx-windows/addons/* agmodx-dev-windows/valve/addons
+
+        # Copy compiled plugins
+        cp -a .plugins/*.amxx agmodx-dev-linux/valve/addons/amxmodx/plugins
+        cp -a .plugins/*.amxx agmodx-dev-windows/valve/addons/amxmodx/plugins
+
+    - name: Copy assets
       run: |
         for agmodx_folder in $platform_folders
         do
@@ -103,9 +100,13 @@ jobs:
           done
         done
 
-        # Create metamod folder and copy metamod plugin
-        mkdir agmodx-dev-linux/valve/addons/metamod agmodx-dev-linux/valve/addons/metamod/dlls
-        mkdir agmodx-dev-windows/valve/addons/metamod agmodx-dev-windows/valve/addons/metamod/dlls
+    - name: Copy and setup Metamod
+      run: |
+        # Create metamod folder
+        mkdir -p agmodx-dev-linux/valve/addons/metamod/dlls
+        mkdir -p agmodx-dev-windows/valve/addons/metamod/dlls
+
+        # Copy metamod
         cp metamod/*.so agmodx-dev-linux/valve/addons/metamod/dlls
         cp metamod/*.dll agmodx-dev-windows/valve/addons/metamod/dlls
 
@@ -129,7 +130,8 @@ jobs:
         echo -e $liblist > agmodx-dev-linux/valve/liblist.gam
         echo -e $liblist > agmodx-dev-windows/valve/liblist.gam
 
-        # Remove unnecessary files
+    - name: Remove unnecessary files
+      run: |
         rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
         rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
 
