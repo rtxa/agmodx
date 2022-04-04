@@ -114,16 +114,20 @@ jobs:
         rm -r agmodx-dev-linux/valve/addons/amxmodx/scripting
         rm -r agmodx-dev-windows/valve/addons/amxmodx/scripting
 
+    - name: Get current tag and commit SHA for artifact naming
+      id: naming
+      run: |
+        echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
+        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
     - name: Upload AG Mod X package for Linux
       uses: actions/upload-artifact@master
       with:
-        name: agmodx-dev-linux
+        name: agmodx-${{ steps.naming.outputs.tag }}-dev-linux-${{ steps.naming.outputs.sha_short }}
         path: agmodx-dev-linux
 
-    # TODO: maybe I should in the name of the artifact the branch and short commit SHA
-    # More info: https://stackoverflow.com/questions/58886293/getting-current-branch-and-commit-hash-in-github-action
     - name: Upload AG Mod X package for Windows
       uses: actions/upload-artifact@master
       with:
-        name: agmodx-dev-windows
+        name: agmodx-${{ steps.naming.outputs.tag }}-dev-windows-${{ steps.naming.outputs.sha_short }}
         path: agmodx-dev-windows
