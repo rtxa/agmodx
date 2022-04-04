@@ -8,9 +8,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    env:
-      platform_folders: agmodx-dev-linux agmodx-dev-windows
-      
     steps:
     - name: Checkout repository
       uses: actions/checkout@v1
@@ -55,7 +52,7 @@ jobs:
 
     - name: Create AG Mod X folder structure
       run: |
-        for agmodx_folder in $platform_folders
+        for agmodx_folder in agmodx-dev-linux agmodx-dev-windows
         do
           mkdir -p $agmodx_folder/valve && cd $_
           mkdir addons ctf dlls gamemodes locs models sound
@@ -74,31 +71,13 @@ jobs:
 
     - name: Copy assets
       run: |
-        for agmodx_folder in $platform_folders
-        do
-          # Copy agmodx plugins list and multilanguage files
-          cp valve/addons/amxmodx/data/lang/*.txt $agmodx_folder/valve/addons/amxmodx/data/lang
-          cp valve/addons/amxmodx/configs/plugins-agmodx.ini $agmodx_folder/valve/addons/amxmodx/configs
+        # Copy assets to both platforms
+        rsync -av --exclude=dlls valve agmodx-dev-linux
+        rsync -av --exclude=dlls valve agmodx-dev-windows
 
-          # Copy the rest of the directories and files from agmodx repo
-          toCopy=("ctf" "dlls" "gamemodes" "locs" "models" "sound" "delta.lst" "server.cfg" "startup_server.cfg")
-          for tc in "${toCopy[@]}"
-          do
-            # Directory
-            if [[ -d valve/$tc ]]; then
-              if [[ $tc == "dlls" && $agmodx_folder == "agmodx-dev-linux" ]]; then
-                cp -a valve/$tc/*.so $agmodx_folder/valve/$tc
-              elif [[ $tc == "dlls" && $agmodx_folder == "agmodx-dev-windows" ]]; then
-                cp -a valve/$tc/*.dll $agmodx_folder/valve/$tc
-              else
-                cp -a valve/$tc/* $agmodx_folder/valve/$tc
-              fi
-            # File
-            elif [[ -f valve/$tc ]]; then
-              cp -a valve/$tc $agmodx_folder/valve
-            fi
-          done
-        done
+        # Copy server binaries according to platform
+        cp valve/dlls/*.so agmodx-dev-linux/valve/dlls/
+        cp valve/dlls/*.dll agmodx-dev-windows/valve/dlls/
 
     - name: Copy and setup Metamod
       run: |
