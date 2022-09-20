@@ -34,7 +34,6 @@
 #include <hlstocks>
 
 #define PLUGIN  "AG Mod X"
-#define VERSION "Beta 2.4"
 #define AUTHOR  "rtxA"
 
 #define CONTACT_INFO "More info: https://git.io/agmodx"
@@ -249,7 +248,7 @@ new const gAmmoClass[][] = {
 
 public plugin_precache() {
 	// AG Mod X Version
-	create_cvar("agmodx_version", VERSION, FCVAR_SERVER);
+	create_cvar("agmodx_version", AGMODX_VERSION, FCVAR_SERVER);
 
 	// General cvars
 	gCvarHudColor = create_cvar("sv_ag_hud_color", "255 255 0", FCVAR_SERVER); // yellow
@@ -391,7 +390,7 @@ public plugin_natives() {
 }
 
 public plugin_init() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
+	register_plugin(PLUGIN, AGMODX_VERSION, AUTHOR);
 
 	// Cache models from teamlist
 	GetTeamListModels(gTeamsName, HL_MAX_TEAMS, gNumTeams); // This will fix VGUI Viewport
@@ -1458,7 +1457,7 @@ public ShowSettings(id) {
 
 	// left - top
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.02, 0, 0.0, 10.0, 0.2);
-	show_dhudmessage(id, "AG Mod X %s Build %s^n%s", VERSION, buildDate, arg);
+	show_dhudmessage(id, "AG Mod X %s Build %s^n%s", AGMODX_VERSION, buildDate, arg);
 
 	// center - top
 	if (gVersusStarted) {

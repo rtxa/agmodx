@@ -1,0 +1,7 @@
+{
+    "amxxpawn.compiler.executablePath": "${workspaceRoot}/.compiler/amxxpc.exe",
+    "amxxpawn.compiler.includePaths": [
+        "${workspaceRoot}/.compiler/include",
+        "${workspaceRoot}/valve/addons/amxmodx/scripting/include"
+    ]
+}

@@ -1,6 +1,6 @@
 ![Logo](https://imgur.com/EFxGF19.png)
 
-![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-Beta%202.5-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-07/12/2020-blue "Last Update") 
+![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-Beta%202.5.1-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-22/08/2021-blue "Last Update") 
 
 AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X from the ground. It's easy to add new stuff, make improvements, do changes, etc.
 
@@ -29,8 +29,8 @@ AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X from 
 
 ## ☰ Requirements
 
-- HLDS Build 8308 or newer / [ReHLDS](https://github.com/dreamstalker/rehlds/releases) 3.6 or newer (**Warning**: Last version of ReHLDS on Linux has an auto-aim bug, use version 3.7.0.693 instead).
-- [Metamod-P v1.21p37](https://github.com/jkivilin/metamod-p/releases) or newer (included and ready to use in the full package).
+- HLDS Build 8308 or newer / [ReHLDS](https://github.com/dreamstalker/rehlds/releases) 3.8.0.739 or newer.
+- [Metamod-P v1.21p38](https://github.com/jkivilin/metamod-p/releases) or newer (included and ready to use in the full package).
 - [Last AMXX v1.9](https://www.amxmodx.org/downloads-new.php) (included and ready to use in the full package).
 
 ## ⚙ How To Install

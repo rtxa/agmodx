@@ -29,7 +29,6 @@
 #include <agmodx_stocks>
 
 #define PLUGIN      "AG Mod X LLHL"
-#define VERSION     "Beta 2.4"
 #define AUTHOR      "FlyingCat"
 
 #pragma semicolon 1
@@ -66,7 +65,6 @@ new Float:gUnstuckLastUsed[MAX_PLAYERS + 1];
 new Float:gLastProbeFPS[MAX_PLAYERS + 1];
 new gProbeSum[MAX_PLAYERS + 1], gProbeCount[MAX_PLAYERS + 1], Float:gMeanFPS[MAX_PLAYERS + 1];
 new gNumDetections[MAX_PLAYERS + 1];
-new Float:gServerFPS;
 static Float:gActualServerFPS;
 
 // Sounds to check if sv_ag_check_soundfiles is 1
@@ -91,7 +89,7 @@ new const gConsistencySoundFiles[][] = {
 };
 
 public plugin_precache() {
-    register_plugin(PLUGIN, VERSION, AUTHOR);
+    register_plugin(PLUGIN, AGMODX_VERSION, AUTHOR);
     
     if (!IsSelectedMode(MODE_TYPE_NAME)) {
         StopPlugin();
@@ -211,7 +209,7 @@ public Ham_Player_Killed_Post(id) {
 
 // Create task before intermission because we can't run tasks when in intermission mode
 public FwMsgIntermission() {
-    gActualServerFPS = gServerFPS;
+    gActualServerFPS = get_global_float(GL_frametime);
     client_cmd(0, "stop;wait;wait;+showscores");
     set_task(0.1, "taskShowVEngine", TASK_SHOWVENGINE);    
     message_begin(0, SVC_FINALE);
@@ -223,21 +221,6 @@ public FwMsgIntermission() {
 public Ham_Game_End(id) {
     // Don't calculate player fps when map is finished
     remove_task(TASK_FPSLIMITER);
-}
-
-public FwStartFrame() {
-    static Float:gametime, Float:framesPer = 0.0;
-    static Float:tempFps;
-    
-    gametime = get_gametime();
-    
-    if(framesPer >= gametime) {
-        tempFps += 1.0;
-    } else {
-        framesPer = framesPer + 1.0;
-        gServerFPS = tempFps;
-        tempFps = 0.0;
-    }
 }
 
 public fmCmdStart_Pre(id, uc_handle) {
@@ -281,7 +264,7 @@ public taskMeasureMeanFPS() {
 
 public taskShowVEngine() {
     set_dhudmessage(0, 100, 200, -1.0, -0.125, 0, 0.0, 10.0, 0.2);
-    show_dhudmessage(0, "LLHL Mode vEngine^n----------------------^nServer fps: %.1f^nFilecheck: %s", gActualServerFPS, get_pcvar_num(gCvarCheckSoundFiles) ? "On" : "Off");
+    show_dhudmessage(0, "LLHL Mode vEngine^n----------------------^nServer fps: %.1f^nFilecheck: %s", (1.0 / gActualServerFPS), get_pcvar_num(gCvarCheckSoundFiles) ? "On" : "Off");
 }
 
 // If I don't do this when pausing/unpausing the game, the fps will be miscalculated (High values) and false positives will occur

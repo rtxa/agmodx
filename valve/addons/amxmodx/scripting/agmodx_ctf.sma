@@ -9,7 +9,6 @@
 #include <agmodx_stocks>
 
 #define PLUGIN  "AG Mod X CTF"
-#define VERSION "Beta 2.4"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -47,7 +46,7 @@ new const FLAG_MODEL[] = "models/ctf/flag.mdl";
 new const VOX_SOUNDS[][] = { "vox/endgame.wav", "vox/captured.wav", "vox/enemy.wav", "vox/flag.wav", "vox/returned.wav" };
 
 new bool:gIsCtfMode;
-new bool:gIsMapCtf;
+new bool:gIsMapCtfNative;
 
 new gBlueScore;
 new gRedScore;
@@ -66,7 +65,7 @@ new gCvarFlagReturnTime;
 new gCvarFlagDelayTime;
 
 public plugin_precache() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
+	register_plugin(PLUGIN, AGMODX_VERSION, AUTHOR);
 
 	gIsCtfMode = IsSelectedMode(MODE_TYPE_NAME);
 
@@ -137,7 +136,7 @@ public OnPlayerSpawn(id) {
 	client_print(id, print_center, "%l", "CTF_NOTCTFMAP");
 }
 
-bool:LoadCtfMapFile() {
+bool:LoadCtfMapCfgFile() {
 	new mapname[32];
 	get_mapname(mapname, charsmax(mapname));
 
@@ -216,14 +215,9 @@ ParseEntFromFile(const input[], ent_name[], len, Float:ent_origin[3], Float:ent_
 public plugin_init() {
 	register_dictionary("agmodx_ctf.txt");
 	
-	// load always ctf map config file
-	new bool:result = LoadCtfMapFile();
+	new bool:hasCfgFile = LoadCtfMapCfgFile();
 
-	// in case map isn't ctf, let's see if the ctf map config file has loaded
-	if (!gIsMapCtf)
-		gIsMapCtf = result; 
-
-	if (!gIsMapCtf) {
+	if (!hasCfgFile && !gIsMapCtfNative) {
 		RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", true);
 		log_amx("%L", LANG_SERVER, "CTF_NOTCTFMAP");
 		return;
@@ -772,38 +766,48 @@ public pfn_keyvalue(ent) {
 	new Float:vector[3];
 	StrToVec(value, vector);
 
-	static spawn;
+	static customEnt;
+
+	// Because these entities are not implemented in HL, we need to recreate them
+	// 1. Let's spawn a generic entity (info_target) or a similar one.
+	if (equal(key, "classname")) {
+		if (equal(value, INFO_PLAYER_BLUE) || equal(value, INFO_PLAYER_RED)) {
+			customEnt = create_entity(INFO_PLAYER_DEATHMATCH);
+		} else if (equal(value, INFO_FLAG_BLUE)) {
+			gFlagBlue = CreateCustomEnt(INFO_FLAG_BLUE);
+		} else if (equal(value, INFO_FLAG_RED)) {
+			gFlagRed = CreateCustomEnt(INFO_FLAG_RED);
+		}
+	}
+
+	// 2. Then we fill their properties as we read them, until we move to the next entity.
 	if (equal(classname, INFO_PLAYER_BLUE)) { // info_player_team1
 		if (equal(key, "origin")) {
-			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
-			entity_set_origin(spawn, vector);
-			set_pev(spawn, pev_netname, "blue");
+			entity_set_origin(customEnt, vector);
+			set_pev(customEnt, pev_netname, "blue");
 		} else if (equal(key, "angles")) {
-			set_pev(spawn, pev_angles, vector);
+			set_pev(customEnt, pev_angles, vector);
 		}
 	} else if (equal(classname, INFO_PLAYER_RED)) { // info_player_team2
 		if (equal(key, "origin")) {
-			spawn = create_entity(INFO_PLAYER_DEATHMATCH);
-			entity_set_origin(spawn, vector);
-			set_pev(spawn, pev_netname, "red");
+			entity_set_origin(customEnt, vector);
+			set_pev(customEnt, pev_netname, "red");
 		} else if (equal(key, "angles")) {
-			set_pev(spawn, pev_angles, vector);
+			set_pev(customEnt, pev_angles, vector);
 		}
 	} else if (equal(classname, INFO_FLAG_BLUE)) { // item_flag_team1
 		if (equal(key, "origin")) {
-			gFlagBlue = CreateCustomEnt(INFO_FLAG_BLUE);
 			SetFlagStartOrigin(gFlagBlue, vector);
 		} else if (equal(key, "angles")) {
 			SetFlagStartAngles(gFlagBlue, vector);
 		}
 	} else if (equal(classname, INFO_FLAG_RED)) { // item_flag_team2
 		if (equal(key, "origin")) {
-			gFlagRed = CreateCustomEnt(INFO_FLAG_RED);
 			SetFlagStartOrigin(gFlagRed, vector);
 		} else if (equal(key, "angles")) {
 			SetFlagStartAngles(gFlagRed, vector);
 		}
-		gIsMapCtf = true;
+		gIsMapCtfNative = true;
 	}
 	return PLUGIN_CONTINUE;
 }

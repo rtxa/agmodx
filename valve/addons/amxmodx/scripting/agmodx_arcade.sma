@@ -10,7 +10,6 @@
 #include <agmodx_const>
 
 #define PLUGIN  "AG Mod X Arcade"
-#define VERSION "Beta 2.4"
 #define AUTHOR  "rtxA"
 
 #pragma semicolon 1
@@ -24,7 +23,7 @@ new gCvarStartHealth;
 new gCvarStartArmor;
 
 public plugin_precache() {
-	register_plugin(PLUGIN, VERSION, AUTHOR);
+	register_plugin(PLUGIN, AGMODX_VERSION, AUTHOR);
 
 	if (!IsSelectedMode(MODE_TYPE_NAME)) {
 		StopPlugin();

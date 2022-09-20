@@ -1,0 +1,7 @@
+node_modules/
+.compiler/
+.thirdparty/
+dist/
+.amxxpack.json
+package-lock.json
+package.json
