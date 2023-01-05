@@ -2290,9 +2290,13 @@ public OnVoteAgAllow(id, check, argc, arg1[], arg2[]) {
 	return true;
 }
 
-public OnVoteGameMode(id, check, argc, arg1[]) {
+public OnVoteGameMode(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
-		ChangeMode(arg1);
+		set_pcvar_string(gCvarGameMode, arg1); // set new mode
+		if (argc > 1) {
+			set_pcvar_string(gCvarAmxNextMap, arg2);
+		}
+		StartIntermissionMode();
 		return true;
 	} else {
 		if (!get_pcvar_num(gCvarAllowVoteGameMode)) {
@@ -2324,6 +2328,24 @@ public OnVoteGameMode(id, check, argc, arg1[]) {
 			console_print(id, "%l", "GAMEMODE_NOTALLOWED");
 			return false;
 		}
+
+		// now let's check if the player specified a map change too
+		if (argc < 2) {
+			return true;
+		}
+
+		// is map vote allowed?
+		if (!get_pcvar_num(gCvarAllowVoteMap)) {
+			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
+		if (!is_map_valid(arg2)) {
+			console_print(id, "%l", "INVALID_MAP");
+			return false;
+		}
+
+		return true;
 	}
 }
 
