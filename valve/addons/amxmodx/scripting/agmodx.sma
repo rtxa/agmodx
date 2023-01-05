@@ -2300,26 +2300,31 @@ public OnVoteGameMode(id, check, argc, arg1[]) {
 			return false;
 		}
 
-		new listModes[512];
-		get_pcvar_string(gCvarAllowedGameModes, listModes, charsmax(listModes));
+		new allowedModes[512];
+		get_pcvar_string(gCvarAllowedGameModes, allowedModes, charsmax(allowedModes));
 		
-		// all gamemodes are allowed if cvar is empty
-		if (!strlen(listModes)) {
-			return true;
+		new bool:result = false;
+
+		// if cvar is empty, then all modes are allowed
+		if (!strlen(allowedModes)) {
+			result = true;
 		}
 
+		// let's see if we can find the voted gamemode inside the string
 		new mode[32];
-		while (strlen(listModes)) {
-			strtok(listModes, mode, charsmax(mode), listModes, charsmax(listModes), ';');
+		while (strlen(allowedModes)) {
+			strtok(allowedModes, mode, charsmax(mode), allowedModes, charsmax(allowedModes), ';');
 			if (equali(mode, arg1)) {
-				return true;
+				result = true;
 			}
 		}
 
-		console_print(id, "%l", "GAMEMODE_NOTALLOWED");
-		return false;
+		// if we don't match anything, then mode is not allowed and vote shouldn't start
+		if (!result) {
+			console_print(id, "%l", "GAMEMODE_NOTALLOWED");
+			return false;
+		}
 	}
-	
 }
 
 LoadGameMode() {
