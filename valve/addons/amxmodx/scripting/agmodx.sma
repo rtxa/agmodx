@@ -2318,28 +2318,8 @@ public OnVoteGameMode(id, check, argc, arg1[], arg2[]) {
 			console_print(id, "%l", "VOTE_NOTALLOWED");
 			return false;
 		}
-
-		new allowedModes[512];
-		get_pcvar_string(gCvarAllowedGameModes, allowedModes, charsmax(allowedModes));
 		
-		new bool:result = false;
-
-		// if cvar is empty, then all modes are allowed
-		if (!strlen(allowedModes)) {
-			result = true;
-		}
-
-		// let's see if we can find the voted gamemode inside the string
-		new mode[32];
-		while (strlen(allowedModes)) {
-			strtok(allowedModes, mode, charsmax(mode), allowedModes, charsmax(allowedModes), ';');
-			if (equali(mode, arg1)) {
-				result = true;
-			}
-		}
-
-		// if we don't match anything, then mode is not allowed and vote shouldn't start
-		if (!result) {
+		if (!IsGameModeAllowed(arg1)) {
 			console_print(id, "%l", "GAMEMODE_NOTALLOWED");
 			return false;
 		}
@@ -2349,7 +2329,6 @@ public OnVoteGameMode(id, check, argc, arg1[], arg2[]) {
 			return true;
 		}
 
-		// is map vote allowed?
 		if (!get_pcvar_num(gCvarAllowVoteMap)) {
 			console_print(id, "%l", "VOTE_NOTALLOWED");
 			return false;
@@ -2724,6 +2703,30 @@ ChangeMode(const mode[], const map[] = "") {
 	}
 	set_pcvar_string(gCvarAmxNextMap, map);
 	StartIntermissionMode();
+}
+/**
+ * Checks if the game mode is allowed
+ * by looking at the cvar 'sv_ag_allowed_gamemodes'
+ */
+bool:IsGameModeAllowed(const mode[]) {
+    new allowedModes[512];
+    get_pcvar_string(gCvarAllowedGameModes, allowedModes, charsmax(allowedModes));
+    
+    // if cvar is empty, then all modes are allowed
+    if (!strlen(allowedModes)) {
+        return true;
+    }
+
+    // if we match the game mode inside the string, then is allowed
+    new str[32];
+    while (strlen(allowedModes)) {
+        strtok(allowedModes, str, charsmax(str), allowedModes, charsmax(allowedModes), ';');
+        if (equali(mode, str)) {
+            return true;
+        }
+    }
+
+	return false;
 }
 
 // i want to show score when map finishes so you can take a pic, engine_changelevel() will change it instantly
