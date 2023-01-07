@@ -2292,11 +2292,7 @@ public OnVoteAgAllow(id, check, argc, arg1[], arg2[]) {
 
 public OnVoteGameMode(id, check, argc, arg1[], arg2[]) {
 	if (!check) {
-		set_pcvar_string(gCvarGameMode, arg1); // set new mode
-		if (argc > 1) {
-			set_pcvar_string(gCvarAmxNextMap, arg2);
-		}
-		StartIntermissionMode();
+		ChangeMode(arg1, arg2);
 		return true;
 	} else {
 		if (!get_pcvar_num(gCvarAllowVoteGameMode)) {
@@ -2690,14 +2686,24 @@ ProcessVoteHelp(id, start_argindex, bool:do_search, const main_command[], const 
 	}
 }
 
-public ChangeMode(const mode[]) {
-	set_pcvar_string(gCvarGameMode, mode); // set new mode
-
-	// we need to reload the map so cvars can take effect
-	new map[32];
-	get_mapname(map, charsmax(map));
+/**
+ * Changes game mode and shows intermission
+ *
+ * @note This doesn't check that the game mode or map exists,
+ *       so make sure they do before using it.
+ *
+ * @param mode Name of the game mode.
+ * @param map  Name of the map. If not specified, it will use
+ *             the current one. 
+ */
+ChangeMode(const mode[], const map[] = "") {
+	set_pcvar_string(gCvarGameMode, mode); // set next mode
+	new currentMap[32];
+	if (!strlen(map)) {
+		get_mapname(currentMap, charsmax(currentMap));
+		set_pcvar_string(gCvarAmxNextMap, currentMap);
+	}
 	set_pcvar_string(gCvarAmxNextMap, map);
-
 	StartIntermissionMode();
 }
 
