@@ -1703,21 +1703,40 @@ public CmdAgNextMap(id, level, cid) {
 }
 
 public CmdGameMode(id, level, cid) {
-	new arg[32];
-	read_argv(0, arg, charsmax(arg));
-	strtolower(arg);
+	new arg1[32];
+	read_argv(0, arg1, charsmax(arg1));
+	strtolower(arg1);
+	
+	new arg2[32];
+	read_argv(1, arg2, charsmax(arg2));
+	strtolower(arg2);
 
+	// If a normal player is calling this command, then call a vote
 	if (!IsUserServer(id)) {
-		new cmd[16];
-		read_argv(0, cmd, charsmax(cmd));
-		client_cmd(id, "vote %s", cmd);
+		client_cmd(id, "vote %s %s", arg1, arg2);
 		return PLUGIN_HANDLED;
-	}   
-
-	if (TrieKeyExists(gTrieVoteList, arg)) {
-		log_amx("Change gamemode: ^"%s^" ^"%N^"", arg, id);
-		ChangeMode(arg);
 	}
+
+	// If the server console is calling this command,
+	// then let's change the game mode without calling a vote
+
+	new argc = read_argc();
+
+	// if only game mode has been specified, then change to the same map
+	if (argc == 1) {
+		log_amx("Change gamemode: ^"%s^" ^"%N^"", arg1, id);
+		ChangeMode(arg1);
+		return PLUGIN_HANDLED;
+	}
+	
+	if (!is_map_valid(arg2)) {
+		console_print(id, "%l", "INVALID_MAP");
+		return PLUGIN_HANDLED;
+	}
+
+	log_amx("Change gamemode: ^"%s %s^" ^"%N^"", arg1, arg2, id);
+
+	ChangeMode(arg1, arg2);
 
 	return PLUGIN_HANDLED;
 }
