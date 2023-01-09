@@ -38,6 +38,7 @@ new gCvarStartAmmo[SIZE_AMMO];
 // arena vars
 new Array:gArenaQueue;
 
+new stock bool:gIsNotReady[MAX_PLAYERS + 1];
 
 new bool:gMatchStarted;
 new gMatchWinner;
@@ -81,6 +82,8 @@ public plugin_init() {
 
 	register_clcmd("drop", "CmdDrop");
 	register_clcmd("spectate", "CmdSpectate");
+	register_clcmd("ready", "CmdReady");
+	register_clcmd("notready", "CmdNotReady");
 
 	gHudShowMatch = CreateHudSyncObj();
 	gArenaQueue = ArrayCreate();
@@ -110,6 +113,43 @@ public CmdDrop() {
 
 public CmdSpectate() {
 	// notready function has to be added
+	return PLUGIN_HANDLED;
+}
+
+public CmdReady(id) {
+	// player is already in ready state, ignore
+	if (!gIsNotReady[id]) {
+		return PLUGIN_HANDLED;
+	}
+
+	gIsNotReady[id] = false;
+	console_print(id, "%l", "NOTREADY_OFF");
+
+	// update arena list now, otherwise player will be added to the waiting list
+	// when a new round is about to start, making him wait more longer than expected
+	CountArenaQueue();
+
+	return PLUGIN_HANDLED;
+}
+
+public CmdNotReady(id) {
+	// player is already in not ready state, ignore
+	if (gIsNotReady[id]) {
+		return PLUGIN_HANDLED;
+	}
+
+	new isPlayerSelected = id == gFirstPlayer || id == gSecondPlayer;
+
+	if (isPlayerSelected && task_exists(TASK_ARENACOUNTDOWN)) {
+		// can't change to not ready when player has been selected to play a match
+		console_print(id, "%l", "NOTREADY_INVALIDATE");
+		return PLUGIN_HANDLED;
+	}
+	
+	// finally, set player to not ready mode state
+	gIsNotReady[id] = true;
+	console_print(id, "%l", "NOTREADY_ON");
+
 	return PLUGIN_HANDLED;
 }
 
@@ -164,11 +204,31 @@ public OnPlayerKilled_Post(victim, attacker) {
 		set_task(3.0, "EndArena", TASK_ENDMATCH);
 }
 
+/**
+ * Gets the number of players playing arena
+ * @note Not ready players aren't included
+ */
+Arena_GetNumPlayers() {
+	new players[MAX_PLAYERS], numPlayers;
+	get_players_ex(players, numPlayers);
+
+	new num = 0;
+	new id = 0;
+	for (new i = 0; i < numPlayers; i++) {
+		id = players[i];
+		if (!gIsNotReady[id]) {
+			num++;
+		}
+	}
+
+	return num;
+}
+
 /*
 * Arena Mode
 */
 public StartArena() {
-	if (get_playersnum() > 1) {
+	if (Arena_GetNumPlayers() > 1) {
 		CountArenaQueue();
 
 		// get the players so we can show their name
@@ -202,6 +262,10 @@ public ArenaCountdown() {
 		gMatchStarted = true;
 
 		ClearSyncHud(0, gHudShowMatch);
+
+		// Send to spec to all, except the winner
+		// A player who has won the previous match and is now not ready can still be alive
+		SendAlivesToSpec(gFirstPlayer);
 
 		// Spawn players
 		if (hl_get_user_spectator(gFirstPlayer))
@@ -253,12 +317,23 @@ public EndArena() {
 /* This add new players to the queue and removes the disconnected players.
  */
 public CountArenaQueue() {
+	new bool:isPlayerOnArray = false;
+	new idx = 0;
 	for (new id = 1; id <= MaxClients; id++) { 
-		if (is_user_connected(id)) {
-			if (ArrayFindValue(gArenaQueue, id) == ARRAY_NOMATCHES)
-				ArrayPushCell(gArenaQueue, id);
-		} else {
-			ArrayDeleteCell(gArenaQueue, id);
+		idx = ArrayFindValue(gArenaQueue, id);
+		isPlayerOnArray = idx != ARRAY_NOMATCHES;
+	
+		// Remove disconnected or not ready players from count if any
+		if (!is_user_connected(id) || gIsNotReady[id]) {
+			if (isPlayerOnArray) {
+				ArrayDeleteItem(gArenaQueue, idx);
+			}
+			continue;
+		}
+
+		// Put him in the queue if he isn't already in it
+		if (!isPlayerOnArray) {
+			ArrayPushCell(gArenaQueue, id);
 		}
 	}
 }
@@ -275,8 +350,10 @@ public client_putinserver(id) {
 }
 
 public client_disconnected(id) {
+	// Reset flags and remove pending tasks when player leaves
 	remove_task(TASK_SENDTOSPEC + id);
 	remove_task(TASK_SENDVICTIMTOSPEC + id);
+	gIsNotReady[id] = false;
 
 	if (gMatchWinner == id) {
 		get_user_name(id, gMatchWinnerName, charsmax(gMatchWinnerName));
@@ -314,6 +391,22 @@ SetGodModeAlives() {
 
 	for (new i; i < numPlayers; i++)
 		set_user_godmode(players[i], true);
+}
+
+/**
+ * This will send to spectate mode to anyone alive
+ * @note You can specify a player to not be send to spec
+ */
+SendAlivesToSpec(ignoredPlayer = 0) {
+	new players[MAX_PLAYERS], num;
+	get_players_ex(players, num, GetPlayers_ExcludeDead);
+	new player;
+	for (new i = 0; i < num; i++) {
+		player = players[i];
+		if (player != ignoredPlayer) {
+			hl_set_user_spectator(player);
+		}
+	}
 }
 
 public CvarHudColorHook(pcvar, const old_value[], const new_value[]) {
