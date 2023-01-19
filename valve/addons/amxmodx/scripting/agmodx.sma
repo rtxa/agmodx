@@ -173,6 +173,7 @@ new gCvarVoteFragLimitMin;
 new gCvarVoteFailedTime;
 new gCvarVoteDuration;
 new gCvarVoteOldStyle;
+new gCvarAllowVoteBots;
 
 new gCvarAgStartMinPlayers;
 
@@ -265,6 +266,7 @@ public plugin_precache() {
 	gCvarAllowVoteMap = create_cvar("sv_ag_vote_map", "1", FCVAR_SERVER);
 	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER);
 	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER);
+	gCvarAllowVoteBots = create_cvar("sv_ag_vote_allow_bots", "0");
 
 	// Limits for vote cvars
 	gCvarVoteTimeLimitMax = create_cvar("sv_ag_vote_mp_timelimit_high", "1440"); // one day
@@ -2533,7 +2535,12 @@ public VoteThink() {
 
 CalculateVote(&numFor, &numAgainst, &numUndecided) {
 	new players[MAX_PLAYERS], numPlayers;
-	get_players(players, numPlayers);
+
+	if (get_pcvar_bool(gCvarAllowVoteBots)) {
+		get_players_ex(players, numPlayers, GetPlayers_ExcludeHLTV);
+	} else {
+		get_players_ex(players, numPlayers, GetPlayers_ExcludeHLTV | GetPlayers_ExcludeBots);
+	}
 
 	numFor = numAgainst = numUndecided = 0;
 
@@ -2545,7 +2552,7 @@ CalculateVote(&numFor, &numAgainst, &numUndecided) {
 		}
 	}
 	
-	numUndecided = get_playersnum() - (numFor + numAgainst);
+	numUndecided = numPlayers - (numFor + numAgainst);
 
 	// show vote hud
 	if (numFor > numAgainst && numFor > numUndecided) // accepted
@@ -2727,7 +2734,7 @@ bool:IsGameModeAllowed(const mode[]) {
         }
     }
 
-	return false;
+    return false;
 }
 
 // i want to show score when map finishes so you can take a pic, engine_changelevel() will change it instantly
