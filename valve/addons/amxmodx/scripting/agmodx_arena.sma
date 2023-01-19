@@ -210,7 +210,7 @@ public OnPlayerKilled_Post(victim, attacker) {
  */
 Arena_GetNumPlayers() {
 	new players[MAX_PLAYERS], numPlayers;
-	get_players_ex(players, numPlayers);
+	get_players_ex(players, numPlayers, GetPlayers_ExcludeHLTV);
 
 	new num = 0;
 	new id = 0;
@@ -324,7 +324,7 @@ public CountArenaQueue() {
 		isPlayerOnArray = idx != ARRAY_NOMATCHES;
 	
 		// Remove disconnected or not ready players from count if any
-		if (!is_user_connected(id) || gIsNotReady[id]) {
+		if (!is_user_connected(id) || is_user_hltv(id) || gIsNotReady[id]) {
 			if (isPlayerOnArray) {
 				ArrayDeleteItem(gArenaQueue, idx);
 			}
