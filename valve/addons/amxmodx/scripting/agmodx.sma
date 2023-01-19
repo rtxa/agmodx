@@ -2696,12 +2696,13 @@ ProcessVoteHelp(id, start_argindex, bool:do_search, const main_command[], const 
  */
 ChangeMode(const mode[], const map[] = "") {
 	set_pcvar_string(gCvarGameMode, mode); // set next mode
-	new currentMap[32];
 	if (!strlen(map)) {
+		new currentMap[32];
 		get_mapname(currentMap, charsmax(currentMap));
 		set_pcvar_string(gCvarAmxNextMap, currentMap);
+	} else {
+		set_pcvar_string(gCvarAmxNextMap, map);
 	}
-	set_pcvar_string(gCvarAmxNextMap, map);
 	StartIntermissionMode();
 }
 /**
