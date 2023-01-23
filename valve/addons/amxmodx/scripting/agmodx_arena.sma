@@ -20,15 +20,13 @@
 // TaskIDs
 enum (+=100) {
 	TASK_SENDVICTIMTOSPEC = 1499,
-	TASK_ARENACOUNTDOWN,
-	TASK_STARTMATCH,
+	TASK_COUNTDOWN,
+	TASK_WAITINGPLAYERS,
 	TASK_ENDMATCH,
 	TASK_SENDTOSPEC
 };
 
-#define MATCH_WAITING_Y 0.2
-#define MATCH_WINNER_Y 0.2
-#define MATCH_START_Y 0.2
+#define HUD_MATCH_POS_Y 0.2
 
 #define ARRAY_NOMATCHES -1 // i use this with ArrayFindValue
 
@@ -95,7 +93,7 @@ public plugin_init() {
 	// blocks player score reset from the core
 	set_cvar_num("sv_ag_core_block_spec", 1);
 
-	StartArena();
+	Arena_WaitingPlayers();
 }
 
 public OnVoteNotAllowed(id) {
@@ -127,7 +125,7 @@ public CmdReady(id) {
 
 	// update arena list now, otherwise player will be added to the waiting list
 	// when a new round is about to start, making him wait more longer than expected
-	CountArenaQueue();
+	Arena_UpdatePlayerList();
 
 	return PLUGIN_HANDLED;
 }
@@ -140,7 +138,7 @@ public CmdNotReady(id) {
 
 	new isPlayerSelected = id == gFirstPlayer || id == gSecondPlayer;
 
-	if (isPlayerSelected && task_exists(TASK_ARENACOUNTDOWN)) {
+	if (isPlayerSelected && task_exists(TASK_COUNTDOWN)) {
 		// can't change to not ready when player has been selected to play a match
 		console_print(id, "%l", "NOTREADY_INVALIDATE");
 		return PLUGIN_HANDLED;
@@ -201,7 +199,7 @@ public OnPlayerKilled_Post(victim, attacker) {
 	set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
 
 	if (!task_exists(TASK_ENDMATCH))
-		set_task(3.0, "EndArena", TASK_ENDMATCH);
+		set_task(3.0, "Arena_EndMatch", TASK_ENDMATCH);
 }
 
 /**
@@ -224,82 +222,83 @@ Arena_GetNumPlayers() {
 	return num;
 }
 
-/*
-* Arena Mode
-*/
-public StartArena() {
-	if (Arena_GetNumPlayers() > 1) {
-		CountArenaQueue();
-
-		// get the players so we can show their name
-		gFirstPlayer = ArrayGetCell(gArenaQueue, 0);
-		gSecondPlayer = ArrayGetCell(gArenaQueue, 1);
-
-		gMatchWinner = 0;
-
-		gStartMatchTime = 3;
-		ArenaCountdown();
-		
-	} else { // Wait for more players...
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WAITING_Y, 0, 2.0, 4.0, 0.2, 0.5);
+public Arena_WaitingPlayers() {
+	// Wait for more players...
+	if (Arena_GetNumPlayers() < 2) {
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, HUD_MATCH_POS_Y, 0, 2.0, 4.0, 0.2, 0.5);
 		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WAITING");
-		set_task(5.0, "StartArena", TASK_STARTMATCH);	
+		set_task(5.0, "Arena_WaitingPlayers", TASK_WAITINGPLAYERS);
+		return;
 	}
+
+	Arena_UpdatePlayerList();
+
+	// get the players so we can show their name
+	gFirstPlayer = ArrayGetCell(gArenaQueue, 0);
+	gSecondPlayer = ArrayGetCell(gArenaQueue, 1);
+
+	gMatchWinner = 0;
+
+	gStartMatchTime = 3;
+	Arena_CountDown();
 }
 
+public Arena_StartMatch() {
+	gMatchStarted = true;
 
-public ArenaCountdown() {
+	ClearSyncHud(0, gHudShowMatch);
+
+	// Send to spec to all, except the winner
+	// A player who has won the previous match and is now not ready can still be alive
+	SendAlivesToSpec(gFirstPlayer);
+
+	// Spawn players
+	if (hl_get_user_spectator(gFirstPlayer))
+		hl_set_user_spectator(gFirstPlayer, false);
+	else
+		hl_user_spawn(gFirstPlayer);
+
+	hl_set_user_spectator(gSecondPlayer, false);
+
+	ResetMap();
+}
+
+public Arena_CountDown() {
+	// If any of the match players have disconnect, start to look for new players again
 	if (!is_user_connected(gFirstPlayer) || !is_user_connected(gSecondPlayer)) {
 		ClearSyncHud(0, gHudShowMatch);
-		if (!task_exists(TASK_STARTMATCH))
-			set_task(3.0, "StartArena", TASK_STARTMATCH);
+		if (!task_exists(TASK_WAITINGPLAYERS))
+			set_task(3.0, "Arena_WaitingPlayers", TASK_WAITINGPLAYERS);
 		return;
 	}
 
 	PlayNumSound(0, gStartMatchTime);
 
 	if (gStartMatchTime == 0) {
-		gMatchStarted = true;
-
-		ClearSyncHud(0, gHudShowMatch);
-
-		// Send to spec to all, except the winner
-		// A player who has won the previous match and is now not ready can still be alive
-		SendAlivesToSpec(gFirstPlayer);
-
-		// Spawn players
-		if (hl_get_user_spectator(gFirstPlayer))
-			hl_set_user_spectator(gFirstPlayer, false);
-		else
-			hl_user_spawn(gFirstPlayer);
-
-		hl_set_user_spectator(gSecondPlayer, false);
-
-		ResetMap();
-
+		Arena_StartMatch();
 		return;
 	}
 
 	PlaySound(0, gBeepSnd);
 
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_START_Y, 0, 3.0, 10.0, 0.2, 0.5); 
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, HUD_MATCH_POS_Y, 0, 3.0, 10.0, 0.2, 0.5); 
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_STARTARENA", gFirstPlayer, gSecondPlayer, gStartMatchTime);
 
-	set_task(1.0, "ArenaCountdown", TASK_ARENACOUNTDOWN);
+	set_task(1.0, "Arena_CountDown", TASK_COUNTDOWN);
 
 	gStartMatchTime--;
 }
 
-public EndArena() {
-	if (task_exists(TASK_STARTMATCH))
+public Arena_EndMatch() {
+	if (task_exists(TASK_WAITINGPLAYERS))
 		return;
 
 	gMatchStarted = false;
 
-	set_task(3.0, "StartArena", TASK_STARTMATCH); // start new match after win match
+	set_task(3.0, "Arena_WaitingPlayers", TASK_WAITINGPLAYERS); // start new match after win match
 
 	if (!gMatchWinner) {
-		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WINNER_Y, 0, 3.0, 4.0, 0.2, 0.2); 
+		set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, HUD_MATCH_POS_Y, 0, 3.0, 4.0, 0.2, 0.2); 
 		ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_NOWINNER");
 		return;
 	}
@@ -309,14 +308,14 @@ public EndArena() {
 		set_user_godmode(gMatchWinner, true); // give inmmunity to player after win
 	}
 
-	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, MATCH_WINNER_Y, 0, 3.0, 4.0, 0.2, 0.2);
+	set_hudmessage(gHudRed, gHudGreen, gHudBlue, -1.0, HUD_MATCH_POS_Y, 0, 3.0, 4.0, 0.2, 0.2);
 	ShowSyncHudMsg(0, gHudShowMatch, "%l", "MATCH_WINNER", gMatchWinnerName);
 
 }
 
 /* This add new players to the queue and removes the disconnected players.
  */
-public CountArenaQueue() {
+public Arena_UpdatePlayerList() {
 	new bool:isPlayerOnArray = false;
 	new idx = 0;
 	for (new id = 1; id <= MaxClients; id++) { 
@@ -346,7 +345,7 @@ ArrayDeleteCell(Array:handle, value) {
 
 public client_putinserver(id) {
 	set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid scoreboard glitchs
-	CountArenaQueue();
+	Arena_UpdatePlayerList();
 }
 
 public client_disconnected(id) {
@@ -362,9 +361,9 @@ public client_disconnected(id) {
 
 // aca esta el bug, hay q usar el gMatchStarted, cuando se desocneca el player y aun sigue vivo
 public client_remove(id) {
-	CountArenaQueue();
+	Arena_UpdatePlayerList();
 
-	if (task_exists(TASK_ARENACOUNTDOWN)) {
+	if (task_exists(TASK_COUNTDOWN)) {
 		// player to start match have disconnect, so cancel the countdown
 		if (id == gFirstPlayer || id == gSecondPlayer) {
 			gFirstPlayer = gSecondPlayer = 0;
@@ -379,7 +378,7 @@ public client_remove(id) {
 			}
 			if (GetNumAlives() < 2) {
 				SetGodModeAlives();
-				set_task(3.0, "EndArena", TASK_ENDMATCH);
+				set_task(3.0, "Arena_EndMatch", TASK_ENDMATCH);
 			}
 		}
 	}
