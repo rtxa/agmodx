@@ -833,6 +833,87 @@
 						 "linux"     "1904"
 						 "mac"       "1904"
 					 }
+
+					 "m_iChatFlood" // int : BugfixedHL
+					 {
+						 "type"      "integer"
+ 
+						 "windows"   "1888"
+						 "linux"     "1908"
+						 "mac"       "1908"
+					 }
+
+					 "m_flNextSpectatorCommand" // float : BugfixedHL
+					 {
+						 "type"      "float"
+ 
+						 "windows"   "1892"
+						 "linux"     "1912"
+						 "mac"       "1912"
+					 }
+ 
+					 "m_flNextFullUpdate" // float[2] : BugfixedHL
+					 {
+						 "type"      "float"
+ 
+						 "windows"   "1896"
+						 "linux"     "1916"
+						 "mac"       "1916"
+					 }
+ 
+					 "m_bConnected" // BOOL : BugfixedHL
+					 {
+						 "type"      "integer"
+ 
+						 "windows"   "1904"
+						 "linux"     "1924"
+						 "mac"       "1924"
+					 }
+ 
+					 "m_bPutInServer" // BOOL : BugfixedHL
+					 {
+						 "type"      "integer"
+ 
+						 "windows"   "1908"
+						 "linux"     "1928"
+						 "mac"       "1928"
+					 }
+ 
+					 "m_bIsBot" // BOOL : BugfixedHL
+					 {
+						 "type"      "integer"
+ 
+						 "windows"   "1912"
+						 "linux"     "1932"
+						 "mac"       "1932"
+					 }
+ 
+					 "m_vecLastViewAngles" // Vector : BugfixedHL
+					 {
+						 "type"      "vector"
+ 
+						 "windows"   "1916"
+						 "linux"     "1936"
+						 "mac"       "1936"
+					 }
+  
+					 "m_bInWelcomeCam" // BOOL : BugfixedHL
+					 {
+						 "type"      "integer"
+ 
+						 "windows"   "1928"
+						 "linux"     "1948"
+						 "mac"       "1948"
+					 }
+
+					 "m_flDeathAnimationStartTime" // float : BugfixedHL
+					{
+						 "type"      "float"
+	
+						 "windows"   "1932"
+						 "linux"     "1952"
+						 "mac"       "1952"
+					}					 
 				 }
 			 }
 		 }
