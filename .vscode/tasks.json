@@ -1,0 +1,89 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"inputs": [
+		{
+			"id": "compilePattern",
+			"description": "Compile pattern",
+			"type": "promptString"
+		}
+	],
+	"problemMatcher": {
+		"owner": "amxxpack",
+		"fileLocation": [
+			"autoDetect",
+			"${workspaceFolder}"
+		],
+		"background": {
+			"activeOnStart": true,
+			"beginsPattern": "File change detected. Starting incremental compilation...",
+			"endsPattern": "Compilation complete. Watching for file changes."
+		},
+		"pattern": [
+			{
+				"regexp": "\\[(ERROR|WARNING)\\]\\s+(.*?):(\\d*)\\s+-\\s+(.*)$",
+				"severity": 1,
+				"file": 2,
+				"line": 3,
+				"message": 4,
+				"loop": true
+			}
+		]
+	},
+	"tasks": [
+		{
+			"label": "AMXXPack Build",
+			"type": "shell",
+			"command": "npx amxxpack build",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"icon": {
+				"color": "terminal.ansiGreen",
+				"id": "wrench"
+			}
+		},
+		{
+			"label": "AMXXPack Watch",
+			"type": "shell",
+			"command": "npx amxxpack build --watch",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"icon": {
+				"color": "terminal.ansiGreen",
+				"id": "eye-watch"
+			},
+			"isBackground": true
+		},
+		{
+			"label": "AMXXPack Compile",
+			"type": "shell",
+			"command": "npx amxxpack compile *${input:compilePattern}*",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"icon": {
+				"color": "terminal.ansiGreen",
+				"id": "run"
+			}
+		},
+		{
+			"label": "AMXXPack Compile Current",
+			"type": "shell",
+			"command": "npx amxxpack compile ${fileBasename}",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"icon": {
+				"color": "terminal.ansiBlue",
+				"id": "run"
+			}
+		}
+	]
+}
