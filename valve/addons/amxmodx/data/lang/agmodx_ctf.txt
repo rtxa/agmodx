@@ -10,14 +10,22 @@ CTF_FLAGBACK = Your flag has RETURNED!
 CTF_EFLAGBACK = The ENEMY flag has RETURNED!
 CTF_LOSTFLAG = Your team lost the ENEMY flag!
 CTF_ELOSTFLAG = The ENEMY lost your FLAG!
-!CTF_YOUCAP = vox/endgame you(e80) captured(e90) the(s15 e80) (e100) enemy flag
-!CTF_TEAMCAP = vox/endgame Your(e90) team(e80) captured(e90) the(s15 e80) flag
-!CTF_THEYCAP = vox/endgame the enemy team captured(e90) the(s15 e80) flag
-!CTF_YOUGOTFLAG = vox/buzwarn you(e80) have(e90) the(s15 e80) enemy flag
-!CTF_GOTFLAG =  vox/buzwarn Your team has the(s15 e80) enemy flag
-!CTF_EGOTFLAG = vox/buzwarn The enemy has(s5) your flag
-!CTF_FLAGBACK = vox/deeoo Your(e80) flag(e80) has(s10) returned
-!CTF_EFLAGBACK = vox/dadeda The enemy flag(e80) has(s5) returned
+
+CTF_YOUHAVEBLUEFLAG = %n got the BLUE flag! 
+CTF_YOUHAVEREDFLAG = %n got the RED flag!
+CTF_BLUEFLAGRETURNED = %n returned the BLUE flag!
+CTF_REDFLAGRETURNED = %n returned the RED flag!
+CTF_BLUEFLAGCAPTURED = %n captured the BLUE flag!
+CTF_REDFLAGCAPTURED = %n captured the RED flag!
+CTF_BLUEFLAGLOST = %n lost the BLUE flag!
+CTF_REDFLAGLOST = %n lost the RED flag!
+!CTF_YOUHAVEFLAG = ctf/youhaveflag
+!CTF_TEAMHAVEFLAG = ctf/teamhaveflag
+!CTF_ENEMYHAVEFLAG = ctf/enemyhaveflag
+!CTF_BLUEFLAGSTOLEN = ctf/blueflagstolen
+!CTF_REDFLAGSTOLEN = ctf/redflagstolen
+!CTF_BLUESCORES = ctf/bluescores
+!CTF_REDSCORES = ctf/redscores
 
 [es]
 CTF_NOTCTFMAP = Mapa no compatible con el modo CTF
@@ -31,3 +39,12 @@ CTF_FLAGBACK = Tu BANDERA ha sido DEVUELTA.
 CTF_EFLAGBACK = La bandera ENEMIGA ha sido DEVUELTA.
 CTF_LOSTFLAG = Tu equipo ha perdido la bandera ENEMIGA.
 CTF_ELOSTFLAG = El ENEMIGO ha perdido tu BANDERA.
+
+CTF_YOUHAVEBLUEFLAG = %n tiene la bandera AZUL! 
+CTF_YOUHAVEREDFLAG = %n tiene la bandera ROJA!
+CTF_BLUEFLAGRETURNED = %n devolvio la bandera AZUL!
+CTF_REDFLAGRETURNED = %n devolvio la bandera ROJA!
+CTF_BLUEFLAGCAPTURED = %n capturo la bandera AZUL!
+CTF_REDFLAGCAPTURED = %n capturo la bandera ROJA!
+CTF_BLUEFLAGLOST = %n perdio la bandera AZUL!
+CTF_REDFLAGLOST = %n perdio la bandera ROJA!
