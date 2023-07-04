@@ -3,7 +3,7 @@
 #endif
 #define _agmodx_const_included
 
-#define AGMODX_VERSION "Beta 2.5.1"
+#define AGMODX_VERSION "Beta 2.5.2"
 
 // array size of some gamemode cvars
 #define SIZE_WEAPONS 14 
