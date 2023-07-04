@@ -19,11 +19,10 @@ jobs:
         mkdir amxx-windows amxx-linux
         tar -xzf amxx-linux.tar.gz -C amxx-linux && unzip amxx-windows.zip -d amxx-windows
 
-    - name: Download Metamod-P v1.21p38
+    - name: Download Metamod-P CMake v1.21p39
       run: |
-        wget "https://github.com/Bots-United/metamod-p/releases/download/v1.21p38/metamod_i686_linux_win32-1.21p38.tar.xz" -O metamod.tar.xz
-        mkdir metamod
-        tar -xf metamod.tar.xz -C metamod
+        wget "https://github.com/rtxa/Metamod-P-CMake/releases/download/v1.21p39/metamod-cmake-1.21p39-win32-linux.zip" -O metamod.zip
+        unzip metamod.zip -d metamod
 
     - name: Compile plugins
       run: |
