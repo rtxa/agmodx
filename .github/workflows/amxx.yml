@@ -116,8 +116,8 @@ jobs:
     - name: Get current tag and commit SHA for artifact naming
       id: naming
       run: |
-        echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
-        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
     - name: Upload AG Mod X package for Linux
       uses: actions/upload-artifact@master
