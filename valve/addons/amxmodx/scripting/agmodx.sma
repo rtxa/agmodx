@@ -838,7 +838,11 @@ public CvarAgRpgFixHook(pcvar, const old_value[], const new_value[]) {
 
 public CvarAgGaussFixHook(pcvar, const old_value[], const new_value[]) {
 	new num = str_to_num(new_value);
-	set_pcvar_num(gCvarSelfGauss, num ? 2 : 1);
+	if (num == 1)
+		num = 0;
+	else if (num == 0)
+		num = 1;
+	set_pcvar_num(gCvarSelfGauss, num);
 }
 
 
@@ -2068,9 +2072,14 @@ public OnVoteSelfGauss(id, check, argc, arg1[], arg2[]) {
 
 	if (!check) {
 		new num = str_to_num(arg2);
-		// mp_selfgauss 0 blocks selfgauss partially, 1 enables it and 2 blocks it completely
-		if (equal(arg1, "ag_gauss_fix"))
-			num = num ? 2 : 1;
+		// mp_selfgauss - 0: self gauss partially disabled, 1: self gauss enabled, 2: self gauss fully disabled
+		// ag_gauss_fix - 0: self gauss enabled, 1: self gauss partially disabled, 2: self gauss fully disabled
+		if (equal(arg1, "ag_gauss_fix")) {
+			if (num == 1)
+				num = 0;
+			else if (num == 0)
+				num = 1;
+		}
 		set_pcvar_num(gCvarSelfGauss, num);
 	} else {
 		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
@@ -2080,6 +2089,15 @@ public OnVoteSelfGauss(id, check, argc, arg1[], arg2[]) {
 
 		if (!is_str_num(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
+			return false;
+		}
+
+		new num = str_to_num(arg2);
+		if (num > 2) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MAX", 2);
+			return false;
+		} else if (num < 0) {
+			console_print(id, "%l %d", "INVALID_NUMBER_MIN", 0);
 			return false;
 		}
 	}
