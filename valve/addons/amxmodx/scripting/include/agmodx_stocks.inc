@@ -290,3 +290,20 @@ stock get_skill_cvar_num(const name[]) {
 	get_skill_cvar_string(name, value, charsmax(value));
 	return str_to_num(value);
 }
+
+// Alternative to is_str_num which supports both positive and negative numbers.
+stock bool:is_str_num_ex(const sString[]) {
+	new i = 0;
+	new bool:is_negative = false;
+
+    if (sString[0] == '-') {
+        is_negative = true;
+        i++;
+    }
+
+    while (sString[i] && isdigit(sString[i])) {
+        i++;
+    }
+
+    return sString[i] == 0 && i != (is_negative ? 1 : 0);
+}

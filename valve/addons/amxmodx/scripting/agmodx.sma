@@ -1837,7 +1837,7 @@ public OnVoteMaxSpeed(id, check, argc, arg1[], arg2[]) {
 			return false;
 		}
 
-		if (!is_str_num(arg2)) {
+		if (!is_str_num_ex(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
 		}
@@ -1899,7 +1899,7 @@ public OnVoteTimeLimit(id, check, argc, arg1[], arg2[]) {
 			return false;
 		}
 
-		if (!is_str_num(arg2)) {
+		if (!is_str_num_ex(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
 		}
@@ -2046,7 +2046,7 @@ public OnVoteFragLimit(id, check, argc, arg1[], arg2[]) {
 			return false;
 		}
 
-		if (!is_str_num(arg2)) {
+		if (!is_str_num_ex(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
 		}
@@ -2087,7 +2087,7 @@ public OnVoteSelfGauss(id, check, argc, arg1[], arg2[]) {
 			return false;
 		}
 
-		if (!is_str_num(arg2)) {
+		if (!is_str_num_ex(arg2)) {
 			console_print(id, "%l", "INVALID_NUMBER");
 			return false;
 		}
