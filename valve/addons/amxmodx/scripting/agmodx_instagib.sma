@@ -18,6 +18,8 @@
 
 new gCvarStartWeapons[SIZE_WEAPONS];
 new gCvarStartAmmo[SIZE_AMMO];
+new gCvarSelfGauss;
+new gSelfGaussOldValue;
 
 public plugin_precache() {
 	register_plugin(PLUGIN, AGMODX_VERSION, AUTHOR);
@@ -31,6 +33,8 @@ public plugin_precache() {
 		gCvarStartWeapons[i] = get_cvar_pointer(gAgStartWeapons[i]);
 	for (new i; i < sizeof gCvarStartAmmo; i++)
 		gCvarStartAmmo[i] = get_cvar_pointer(gAgStartAmmo[i]);
+
+	gCvarSelfGauss = get_cvar_pointer("mp_selfgauss");
 }
 
 public plugin_init() {
@@ -41,6 +45,14 @@ public plugin_init() {
 	register_clcmd("drop", "CmdDrop");
 
 	RemoveGamePlayerEquip();
+
+	gSelfGaussOldValue = get_pcvar_num(gCvarSelfGauss);
+
+	set_pcvar_num(gCvarSelfGauss, 2); // Block selfgauss
+}
+
+public plugin_end() {
+	set_pcvar_num(gCvarSelfGauss, gSelfGaussOldValue);
 }
 
 public CmdDrop() {
