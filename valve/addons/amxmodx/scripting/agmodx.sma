@@ -837,8 +837,8 @@ public CvarAgRpgFixHook(pcvar, const old_value[], const new_value[]) {
 }
 
 public CvarAgGaussFixHook(pcvar, const old_value[], const new_value[]) {
-	new num = clamp(str_to_num(new_value), 0, 1);
-	set_pcvar_num(gCvarSelfGauss, num ? 0 : 1);
+	new num = str_to_num(new_value);
+	set_pcvar_num(gCvarSelfGauss, num ? 2 : 1);
 }
 
 
@@ -1473,7 +1473,7 @@ public ShowSettings(id) {
 		get_pcvar_num(gCvarFragLimit), 
 		get_pcvar_num(gCvarFriendlyFire) ? "On" : "Off", 
 		get_pcvar_num(gCvarForceRespawn) ? "On" : "Off",
-		get_pcvar_num(gCvarSelfGauss) ? "On" : "Off");
+		get_pcvar_num(gCvarSelfGauss) == 2 ? "Off" : "On");
 
 	set_task(10.0, "ShowSettings", id + TASK_SHOWSETTINGS); // this will stop hud overlap
 }
@@ -2068,8 +2068,9 @@ public OnVoteSelfGauss(id, check, argc, arg1[], arg2[]) {
 
 	if (!check) {
 		new num = str_to_num(arg2);
+		// mp_selfgauss 0 blocks selfgauss partially, 1 enables it and 2 blocks it completely
 		if (equal(arg1, "ag_gauss_fix"))
-			num = num > 0 ? 0 : 1;
+			num = num ? 2 : 1;
 		set_pcvar_num(gCvarSelfGauss, num);
 	} else {
 		if (!get_pcvar_num(gCvarAllowVoteSetting)) {
