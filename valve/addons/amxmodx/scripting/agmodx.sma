@@ -447,6 +447,8 @@ public plugin_init() {
 
 	register_concmd("help", "CmdHelp", ADMIN_ALL, "AGCMD_HELP", _, true);
 
+	register_concmd("test", "CmdTest", ADMIN_ALL);
+
 	register_clcmd("spectate", "CmdSpectate"); // block spectate
 	register_clcmd("drop", "CmdDrop"); // block drop
 	register_clcmd("jointeam", "CmdJoinTeam"); // this will make work the vgui
@@ -559,8 +561,11 @@ public client_putinserver(id) {
 	if (gSendConnectingToSpec) {
 		// warning: authid checking can fail because client_authorized() can be called after this...
 		if (!gVersusStarted || !RestoreScore_FindPlayer(id)) {
+			set_pev(id, pev_iuser1, 1); // This will make it show up in the scoreboard in spectator list
 			set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
 		}
+
+		
 	}
 
 	set_task(3.0, "ShowSettings", id);
