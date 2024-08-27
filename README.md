@@ -1,51 +1,60 @@
-![Logo](https://imgur.com/EFxGF19.png)
+![Logo](agmodx-logo.png)
 
 ![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-Beta%202.5.2-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-04/07/2023-blue "Last Update")
 
-AG Mod X is an improved Mini AG alternative made as a plugin for AMX Mod X from the ground. It's easy to add new stuff, make improvements, do changes, etc.
+AG Mod X is an improved Mini AG alternative developed as an AMX Mod X plugin from the ground up. It contains many bugfixes and improvements, and because it's open source it allows you to add new stuff and make improvements easily.
 
-### ☰ Features
+## ☰ Features
 
-- Bugfixed HL inside. Fixes a lot of issues from the original HL and comes with some nice features and improvements.
-- Multi-language support (English and Spanish are included).
-- Portability/Flexibility. The mod allows to use other plugins in your server and more because the mod itself is an AMXX plugin. You can easily turn it off in case there's an interference with another plugin.
-- New gamemodes like **LLHL** or missing ones like **CTF** have been added.
-- It's open-source.
+- **Bugfixes and Improvements:** The mod includes new commands and improvements to existing ones, with bug fixes and QoL changes in the gameplay through the use of Bugfixed HL in the core of the mod.
+- **Portability and Flexibility:** The mod itself is an AMX Mod X plugin, allowing easy integration with other plugins on your server. You can easily disable the mod in case it conflicts with other plugins.
+- **Multi-Language Support:** The mod supports translations of texts, menus and HUDs, with English and Spanish translations included out-of-the-box.
+- **Open-Source:** The mod's source code is available, allowing you to add new features and make improvements with just basic programming knowledge.
 
-### ☰ Improvements and fixes to the original Mini AG.
 
-- Color codes are now displayed and don't get removed anymore (Always enabled).
-- Weapons are now displayed in spectator mode.
+## ☰ Improvements and fixes to the original Mini AG.
+
+- HUD for messages and votes are now displayed with the AG Style. Colors can be customized too.
+- Color codes are now displayed and no longer get removed. Most players already use clients that support coloring.
 - Respawn time is now consistent with all FPS values (no more players spawning instantly by using high FPS).
-- No more bug of standing corpses from clients playing with high FPS.
-- Fixed the chat anti-flood not unmuting you when the game was paused.
-- *HUD messages and votes* are now displayed with the *AG Style.*
-- CMDs like `agallow`, `agkick` or `agforcespectator` now allow to type the player's name partially and without the need to add color codes.
-- New votes have been added: `ag_spectalk`, `mp_respawn_fix` and more.
-- Fixed some **damage** cvars not working, like the ones from the *crossbow* and the *hand grenade*. Added damage cvar for gauss secondary attack.
-- Help commands like `aglistvotes` and `help` have been improved to display in different pages. Avoids too the chance to get disconnect by overflow when there are a lot of commands.
+- Fixed chat anti-flood muting the player indefinitely when the game is paused.
+- No more bug of standing corpses from clients playing with high FPS. 
+- Now you can use partial player names and without the need to include color codes for the next commands: `agallow`, `agkick`, `agforcespectator`, etc.
+- Now you can vote for game mode and map simultaneously, saving you time by using  
+  `vote <gamemode> [map]`. For example: `vote arena stalkx`.
+- Added damage CVars for the crossbow and gauss secondary attack. Fixed hand grenade damage CVar too.
+- Weapons are now displayed in spectator mode.
+- Included more than 200 map locations (Thanks Golem).
+- The `aglistvotes` and `help` commands now display across multiple pages, preventing disconnects due to commands overflow.
 
- More info about the new commands and features can be found in the [Wiki](https://github.com/rtxa/agmodx/wiki).
+### Game modes
+
+- Added **LLHL** game mode: Similar to EHLL, made for leagues/tournaments for fair competition.
+- **Capture The Flag** mode is back! It wasn't available due to some limitations.
+- Added **Arcade X:** Same as Arcade but now you start without armor, allowing for a more fast-paced gameplay.
+- Fixed bolts fired from a previous match not being removed when a new duel starts in *Arena* mode.
+
+More info about the new commands and features can be found in the [Docs](https://github.com/rtxa/agmodx/wiki).
 
 ## ☰ Requirements
 
-- HLDS Build 8308 or newer / [ReHLDS](https://github.com/dreamstalker/rehlds/releases) 3.8.0.739 or newer.
+- Pre-anniversary edition of HLDS (Build 8684) or latest [ReHLDS](https://github.com/dreamstalker/rehlds/releases) installed. 25th Anniversary compatibility hasn't been tested.
 - [Metamod-P v1.21p38](https://github.com/jkivilin/metamod-p/releases) or newer (included and ready to use in the full package).
-- [Last AMXX v1.9](https://www.amxmodx.org/downloads-new.php) (included and ready to use in the full package).
+- [AMX Mod X 1.10 Build 5190](https://www.amxmodx.org/downloads-new.php) or newer (included and ready to use in the full package).
 
-## ⚙ How To Install
+## ☰ How To Install
 
-1. Have ready a clean installation of the latest *Half-Life Dedicated Server*.
+1. Have ready a clean installation of *Half-Life Dedicated Server*.
 2. Download the *Full Mod Package* from [here](https://github.com/rtxa/agmodx/releases).
-3. Open the package and extract the content inside your server installation. Replace if asked.
+3. Extract the content into your server folder. Replace if asked.
 
-Now turn on your server and enjoy.
+Turn on your server and enjoy!
 
-## ☆ Thanks to:
+## ☰ Thanks to:
 
-- BulliT for his AG Mod and some useful codes.
-- Lev for his Bugfixed HL and some useful codes.
-- KORD_12.7 for his HL Stocks include for AMXX.
-- FlyingCat for his LLHL game mode.
+* **BulliT** for making AG and releasing the source code which was very helpful during development.
+* **Lev** for making Bugfixed HL which includes many bug fixes and QoL improvements.
+* **KORD_12.7** for his HL Stocks include for AMXX.
+* **FlyingCat** for his LLHL game mode.
 
-Please, feel free to create any issues or pull requests, any feedback will be appreciated.
+Please, feel free to report any issues or submit pull requests, any feedback will be appreciated.
