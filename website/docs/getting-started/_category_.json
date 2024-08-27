@@ -1,0 +1,8 @@
+{
+  "label": "Getting started",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Here you would find all the information about the mod, server commands, CVars, game modes, etc."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "label": "Game modes",
+  "position": 3,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Here you would find all the information about the game modes and their settings."
+  }
+}

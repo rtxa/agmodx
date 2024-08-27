@@ -1,0 +1,9 @@
+{
+  "label": "Guides",
+  "position": 3,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Here you would find all the documentation about the server commands, CVars, game modes, etc."
+  }
+}

@@ -1,0 +1,84 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+.headerSection {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background-image: url("@site/static/img/forsaken1-blur.jpg");
+  background-size: cover;
+  background-position: center;
+  color: var(--ifm-font-color-base-inverse);
+  /* Parallax effect */
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+.features {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.ctfSection {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background-image: url("@site/static/img/omen-bg4-alt.jpg");
+  background-size: cover;
+  background-position: center;
+  color: var(--ifm-font-color-base-inverse);
+  text-shadow: 1px 1px 2px black;
+  /* Parallax effect */
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+[data-theme='dark'] .ctfSection {
+  color: var(--ifm-font-color-base);
+}
+
+[data-theme='dark'] .headerSection {
+  color: var(--ifm-font-color-base);
+}
+
+.agmodxLogo {
+  width: 50%;
+}
+
+.ctfImage {
+  width: 60%;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.buttonWithMargin {
+  margin: 1rem;
+}
+
+@media screen and (max-width: 996px) {
+  .agmodxLogo {
+    width: 100%;
+  }
+
+  .ctfImage {
+    width: 100%;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .buttonWithMargin {
+    margin: 0.5rem;
+  }
+}
