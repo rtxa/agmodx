@@ -27,12 +27,12 @@ Some settings don't change on the fly, requiring a map change to have any effect
 ### General
 * `sv_ag_gametype ""` — Special plugins will be activated according to game type. E.g. `ctf`, `arena`, etc.
 * `sv_ag_wallgauss 1` — Wall gauss effect multiplier.
-* `sv_ag_headshot 3` — Headshot damage multiplier.
-* `sv_ag_blastradius 1` — Explosions radius multiplier.
-* 🚧 *Not implemented* `sv_ag_lj_timer 0` — Remove LJ from player after certain time.
-* 🚧 *Not implemented* `sv_ag_spawn_volume 1` — Default volume for spawn.
-* ⛔ *Deprecated* `sv_ag_pure 0` 0: Checks for player models consistency, variables and wallhack. 1: Adds checks for weapon models.
-* ⛔ *Deprecated* `sv_ag_oldphysics 1` — Bunnyhop enabled. Dropped in favour of `mp_bunnyhop`.
+* `sv_ag_headshot 3` — Head shot damage multiplier.
+* `sv_ag_blastradius 1` — Explosion radius multiplier.
+* <Badge type='planned' /> `sv_ag_lj_timer 0` — Remove LJ from player after certain time.
+* <Badge type='planned' /> `sv_ag_spawn_volume 1` — Default volume for spawn.
+* <Badge type='deprecated' /> `sv_ag_pure 0` 0: Checks for player models consistency, variables and wallhack. 1: Adds checks for weapon models.
+* <Badge type='deprecated' /> `sv_ag_oldphysics 1` — Bunnyhop enabled. Dropped in favour of `mp_bunnyhop`.
 
 ### Ban weapons from the map
 * `sv_ag_ban_crowbar 0`
@@ -96,9 +96,9 @@ Some settings don't change on the fly, requiring a map change to have any effect
 * `sv_ag_start_longjump 0`
 
 ### Set weapons damage
-* ✨ **New!** `sv_ag_dmg_bolts_normal 120` — Using scope.
-* ✨ **New!** `sv_ag_dmg_bolts_explosion 40` — Not using scope.
-* ✨ **New!** `sv_ag_dmg_gauss_secondary 200`
+* <Badge type='new' /> `sv_ag_dmg_bolts_normal 120` — Using scope.
+* <Badge type='new' /> `sv_ag_dmg_bolts_explosion 40` — Not using scope.
+* <Badge type='new' /> `sv_ag_dmg_gauss_secondary 200`
 * `sv_ag_dmg_crowbar 25`
 * `sv_ag_dmg_glock 12`
 * `sv_ag_dmg_357 40`
@@ -112,9 +112,9 @@ Some settings don't change on the fly, requiring a map change to have any effect
 * `sv_ag_dmg_satchel 120`
 * `sv_ag_dmg_tripmine 150`
 * `sv_ag_dmg_m203 100`
-* ⛔ *Deprecated* `sv_ag_dmg_egon_narrow 10` — Dropped. This CVar is only used in single player.
-* ⛔ *Deprecated* `sv_ag_dmg_bolts` — Dropped in favour of better naming. Original mod never actually implemented this.
-* ⛔ *Deprecated* `sv_ag_dmg_crossbow` — Dropped in favour of better naming. Original mod never actually implemented this.
+* <Badge type='deprecated' /> `sv_ag_dmg_egon_narrow 10` — Dropped. This CVar is only used in single player.
+* <Badge type='deprecated' /> `sv_ag_dmg_bolts` — Dropped in favour of better naming. Original mod never actually implemented this.
+* <Badge type='deprecated' /> `sv_ag_dmg_crossbow` — Dropped in favour of better naming. Original mod never actually implemented this.
 
 :::caution Caution
 

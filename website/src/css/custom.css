@@ -30,6 +30,11 @@
   --ifm-color-primary-lighter: #8db8fe;
   --ifm-color-primary-lightest: #c1d8ff;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-badge-color: var(--ifm-font-color-base-inverse);
+}
+
+.badge--warning, .badge--danger, .badge--info {
+  color: black;
 }
 
 /* Only apply sidebar centering on Docs page */
