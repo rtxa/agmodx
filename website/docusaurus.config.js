@@ -130,7 +130,7 @@ const config = {
               },
               {
                 label: 'Changelog',
-                href: 'https://github.com/rtxa/agmodx/blob/master/CHANGELOG.md',
+                to: '/changelog',
               },
               {
                 label: 'GitHub',

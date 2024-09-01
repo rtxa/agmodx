@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.6] - 2024-09-01
+
+### New
+
+- **CTF:** Game play has been changed to be more like the original mod.
+  - Now in order to capture, your team's flag must still be at your base.
+  - Messages, sounds and the flag model are now like AG.
+- **BHL:** Improved compatibility with older Linux servers with `GLIBC 2.17`.
+
+### Fixed
+
+- Fixed gauss charge sound not being reset when far away (Only on PAS). Still requires fixing on underwater, static discharge, etc.
+- **BHL:** Fixed self gauss not blocking damage on certain angles. Now `ag_gauss_fix 2` will fully disable it.
+- **Instagib:** Now self gauss damage is fully blocked.
+- Fixed vote not displaying the correct error when the input value is out of bounds.
+
+### Removed
+
+- Removed **Beta** tag from the version. It was used at the beginning of the project when it was far from completion, but now there's no more reason to keep it.
+
+Now the mod has an [official website](https://rtxa.github.io/agmodx) made with Docusaurus. Check it out!
+
 ## [Beta 2.5.2] - 2023-07-04
 
 - Fixed issue with BHL not working on Linux in some cases by going back to older Metamod.
@@ -102,6 +124,7 @@
 - Arcade not setting armor on player spawn.
 - Invalid private data when a player leaves before he has fully joined.
 
+[2.6]: https://github.com/rtxa/agmodx/compare/beta-2.5.2...2.6
 [Beta 2.5.2]: https://github.com/rtxa/agmodx/compare/beta-2.5.1...beta-2.5.2
 [Beta 2.5.1]: https://github.com/rtxa/agmodx/compare/beta-2.5...beta-2.5.1
 [Beta 2.5]: https://github.com/rtxa/agmodx/compare/beta-2.4...beta-2.5

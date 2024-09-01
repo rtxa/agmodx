@@ -1,8 +1,8 @@
 ![Logo](agmodx-logo.png)
 
-![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-Beta%202.5.2-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-04/07/2023-blue "Last Update")
+![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-2.6-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-01/09/2024-blue "Last Update") [![Website](https://img.shields.io/badge/Go%20to%20the%20website-orange)](https://rtxa.github.io/agmodx/)
 
-AG Mod X is an improved Mini AG alternative developed as an AMX Mod X plugin from the ground up. It contains many bugfixes and improvements, and because it's open source it allows you to add new stuff and make improvements easily.
+An improved Mini AG alternative developed as an AMX Mod X plugin from the ground up. It contains many bugfixes and improvements, and because it's open source it allows you to add new stuff and make improvements easily.
 
 ## ☰ Features
 
@@ -34,7 +34,7 @@ AG Mod X is an improved Mini AG alternative developed as an AMX Mod X plugin fro
 - Added **Arcade X:** Same as Arcade but now you start without armor, allowing for a more fast-paced gameplay.
 - Fixed bolts fired from a previous match not being removed when a new duel starts in *Arena* mode.
 
-More info about the new commands and features can be found in the [Docs](https://github.com/rtxa/agmodx/wiki).
+More info about the new commands and features can be found in the [Docs](https://rtxa.github.io/agmodx/docs/getting-started/features).
 
 ## ☰ Requirements
 

@@ -1463,7 +1463,7 @@ public ShowSettings(id) {
 
 	// left - top
 	set_dhudmessage(gHudRed, gHudGreen, gHudBlue, 0.05, 0.02, 0, 0.0, 10.0, 0.2);
-	show_dhudmessage(id, "AG Mod X %s Build %s^n%s", AGMODX_VERSION, buildDate, arg);
+	show_dhudmessage(id, "AG Mod X %s - Build %s^n%s", AGMODX_VERSION, buildDate, arg);
 
 	// center - top
 	if (gVersusStarted) {

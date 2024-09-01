@@ -26,7 +26,7 @@ function HomepageHeader() {
             <InlineIcon icon="lucide:file-text" height="1.5rem" style={{ verticalAlign: 'text-bottom' }} /> Read the docs
           </Link>
         </div>
-        Latest version: <b>Beta 2.5.2</b> — <Link to='/changelog'>What's new?</Link>
+        Latest version: <b>2.6</b> — <Link to='/changelog'>What's new?</Link>
       </div>
     </header>
   );
