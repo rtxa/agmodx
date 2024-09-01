@@ -112,7 +112,7 @@ function CtfSection() {
             <p>
               Capture The Flag wasn't available in the original Mini AG due to some limitations, but now it's back!
               Players can enjoy this classic game mode, where two teams compete to hold and capture
-              the opposing team's flag while defending their own. More info <Link style={{ color: '#5a98fe' }} to='/docs/getting-started/gamemodes/ctf'>here</Link>.
+              the opposing team's flag while defending their own. More info <Link style={{ color: '#5a98fe' }} to='/docs/gamemodes/ctf'>here</Link>.
             </p>
           </div>
           <div className={clsx('col col--6')}>

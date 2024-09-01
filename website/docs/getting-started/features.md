@@ -24,8 +24,8 @@ This page contains most of the features and bug fixes added to AG Mod X. Most of
 
 ### Game modes
 
-- Added **LLHL** game mode. Similar to EHLL. More info [here](/docs/getting-started/gamemodes/llhl.md).
-- Added **CTF** mode back. It wasn't available due to some limitations. More info [here](/docs/getting-started/gamemodes/ctf.md).
+- Added **LLHL** game mode. Similar to EHLL. More info [here](/docs/gamemodes/llhl.md).
+- Added **CTF** mode back. It wasn't available due to some limitations. More info [here](/docs/gamemodes/ctf.md).
 - Added **Arcade X**. Same as Arcade but now you start without armor, allowing for a more fast-paced gameplay.
 - **Arena:** Fixed bolts fired from a previous match not being removed when a new duel starts.
 
