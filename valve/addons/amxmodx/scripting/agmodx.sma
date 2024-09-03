@@ -366,6 +366,12 @@ public plugin_precache() {
 	gCvarMatchRunning = create_cvar("sv_ag_match_running", "0");
 	set_pcvar_string(gCvarMatchRunning, "0");
 	
+	if (!IsPluginFirstLoad()) {
+		// startup_server.cfg is executed before AG CVars are registered, so we need to reload the .cfg to reflect changes.
+		LoadStartupServerCfg();
+		set_localinfo("ag_first_load", "1");
+	}
+
 	new fwPreConfig, fwPostConfig, fwReturnTemp;
 	
 	fwPreConfig = CreateMultiForward("agmodx_pre_config", ET_IGNORE);
@@ -482,6 +488,23 @@ public plugin_init() {
 	StartAgTimer();
 	LoadGameMode();
 	BanGamemodeEnts();
+}
+
+bool:IsPluginFirstLoad() {
+	new isPluginFirstLoad[2];
+	get_localinfo("ag_first_load", isPluginFirstLoad, charsmax(isPluginFirstLoad));
+	return isPluginFirstLoad[0] ? true : false;
+}
+
+// TODO: allow to load startup_server.cfg from subfolders to match BHL behaviour
+LoadStartupServerCfg() {
+	new serverCfg[256];
+	get_cvar_string("servercfgfile", serverCfg, charsmax(serverCfg));
+	if (!serverCfg[0]) {
+		return;
+	}
+	server_cmd("exec startup_%s", serverCfg); // no need to add .cfg at the end
+	server_exec();
 }
 
 public FwChargersUse() {
