@@ -296,14 +296,14 @@ stock bool:is_str_num_ex(const sString[]) {
 	new i = 0;
 	new bool:is_negative = false;
 
-    if (sString[0] == '-') {
-        is_negative = true;
-        i++;
-    }
+	if (sString[0] == '-') {
+		is_negative = true;
+		i++;
+	}
 
-    while (sString[i] && isdigit(sString[i])) {
-        i++;
-    }
+	while (sString[i] && isdigit(sString[i])) {
+		i++;
+	}
 
-    return sString[i] == 0 && i != (is_negative ? 1 : 0);
+	return sString[i] == 0 && i != (is_negative ? 1 : 0);
 }

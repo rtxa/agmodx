@@ -406,7 +406,7 @@ AddPointsToTeamScore(teamIndex, points) {
 	return 0;
 }
 
-CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg[] = "") {
+stock CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg[] = "") {
 	new teamName[16];
 	hl_get_user_team(id, teamName, charsmax(teamName));
 	
@@ -453,7 +453,7 @@ CtfHudMessage(id, const playerMsg[] = "", const teamMsg[] = "", const nonTeamMsg
  *
  * @note The messages should be translation keys that can be used to retrieve the localized message from a translation file.
  */
-CtfTeamHudMessage(team, const teamMsg[], nonTeamMsg[]) {
+stock CtfTeamHudMessage(team, const teamMsg[], nonTeamMsg[]) {
 	set_hudmessage(255, 255, 255, -1.0, 0.75, 2, 0.03, 5.0, 0.03, 0.5);
 
 	new playersTeam[32], numTeam;
@@ -1072,7 +1072,7 @@ Float:StrToVec(const string[], Float:vector[3]) {
 		vector[i] = str_to_float(arg[i]);
 }
 
-bool:array_search(value, array[], size) {
+stock bool:array_search(value, array[], size) {
 	new bool:match;
 	for (new i; i < size; i++)
 		if (array[i] == value)
