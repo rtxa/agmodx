@@ -582,6 +582,7 @@ public client_putinserver(id) {
 	if (gSendConnectingToSpec) {
 		// warning: authid checking can fail because client_authorized() can be called after this...
 		if (!gVersusStarted || !RestoreScore_FindPlayer(id)) {
+			set_pev(id, pev_iuser1, 1); // Fixes players outside of the match not being displayed as spectators when the server is paused
 			set_task(0.1, "SendToSpec", id + TASK_SENDTOSPEC); // delay to avoid some scoreboard glitchs
 		}
 	}
