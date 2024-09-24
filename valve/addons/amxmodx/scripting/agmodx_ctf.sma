@@ -717,6 +717,7 @@ public OnFlagTouch(touched, toucher) {
 	if (flagTeam == playerTeam) {
 		// Give points for returning your flag
 		if (!Flag_IsOnSpawnPoint(touched)) {
+			remove_task(touched + TASK_FLAGRESET);
 			Flag_Reset(touched);
 			AddPoints(toucher, get_pcvar_num(gCvarReturnPoints));
 
