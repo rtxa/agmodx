@@ -26,6 +26,7 @@ CTF_REDFLAGLOST = %n lost the RED flag!
 !CTF_ENEMYHAVEFLAG = ctf/enemyhaveflag
 !CTF_BLUEFLAGRETURNED = ctf/blueflagreturned
 !CTF_REDFLAGRETURNED = ctf/redflagreturned
+!CTF_BLUEFLAGSTOLEN = ctf/blueflagstolen
 !CTF_REDFLAGSTOLEN = ctf/redflagstolen
 !CTF_BLUESCORES = ctf/bluescores
 !CTF_REDSCORES = ctf/redscores
