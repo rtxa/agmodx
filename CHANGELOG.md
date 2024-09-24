@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.6.1] - 2024-09-24
+
+### Fixed
+
+- **CTF:** Added missing sound voice when flag returns on its own.
+- **CTF:** Fixed flag returning on its own even if player has already returned it.
+- Fixed server always restarting in TDM2 mode, regardless of how `sv_ag_gamemode` has been set on `startup_server.cfg`.
+- Fixed `server.cfg` not being executed on map change by default. This fixes password not being removed on map change.
+  - This can be disabled by removing the line `mapchangecfgfile server.cfg` from `startup_server.cfg`.
+- Fixed players outside of the match not being shown as spectators on server pause.
+  
 ## [2.6] - 2024-09-01
 
 ### New
@@ -124,6 +135,7 @@ Now the mod has an [official website](https://rtxa.github.io/agmodx) made with D
 - Arcade not setting armor on player spawn.
 - Invalid private data when a player leaves before he has fully joined.
 
+[2.6.1]: https://github.com/rtxa/agmodx/compare/2.6...2.6.1
 [2.6]: https://github.com/rtxa/agmodx/compare/beta-2.5.2...2.6
 [Beta 2.5.2]: https://github.com/rtxa/agmodx/compare/beta-2.5.1...beta-2.5.2
 [Beta 2.5.1]: https://github.com/rtxa/agmodx/compare/beta-2.5...beta-2.5.1
