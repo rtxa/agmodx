@@ -1,6 +1,6 @@
 # LLHL
 
-![LLHL Logo](assets/llhl-logo.png)
+![](assets/llhl-logo.png)
 
 > LLHL stands for "Liga Latinoamericana de Half-Life"
 

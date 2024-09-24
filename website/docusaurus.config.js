@@ -44,7 +44,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/rtxa/agmodx/tree/main/website/',
+            'https://github.com/rtxa/agmodx/tree/master/website/',
         },
         blog: false,
         theme: {
