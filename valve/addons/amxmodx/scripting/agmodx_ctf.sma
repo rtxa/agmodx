@@ -103,10 +103,22 @@ new const CTF_ML_YOUHAVEFLAG[][] = {
 	"CTF_YOUHAVEREDFLAG"
 };
 
+new const CTF_ML_FLAGRETURNED_PLAYER[][] = {
+	"",
+	"CTF_BLUEFLAGRETURNED_PLAYER",
+	"CTF_REDFLAGRETURNED_PLAYER"
+};
+
 new const CTF_ML_FLAGRETURNED[][] = {
 	"",
 	"CTF_BLUEFLAGRETURNED",
 	"CTF_REDFLAGRETURNED"
+};
+
+new const CTF_ML_SND_FLAGRETURNED[][] = {
+	"",
+	"!CTF_BLUEFLAGRETURNED",
+	"!CTF_REDFLAGRETURNED",
 };
 
 new bool:gIsCtfMode;
@@ -709,9 +721,9 @@ public OnFlagTouch(touched, toucher) {
 			AddPoints(toucher, get_pcvar_num(gCvarReturnPoints));
 
 			// alert/notify players that flag has return to base
-			client_print(0, print_center, "%l", CTF_ML_FLAGRETURNED[playerTeam], toucher);
-			client_print(0, print_console, "%l", CTF_ML_FLAGRETURNED[playerTeam], toucher);
-			log_amx("%l", CTF_ML_FLAGRETURNED[playerTeam], toucher);
+			client_print(0, print_center, "%l", CTF_ML_FLAGRETURNED_PLAYER[playerTeam], toucher);
+			client_print(0, print_console, "%l", CTF_ML_FLAGRETURNED_PLAYER[playerTeam], toucher);
+			log_amx("%l", CTF_ML_FLAGRETURNED_PLAYER[playerTeam], toucher);
 		}
 	}
 
@@ -872,6 +884,14 @@ public Player_TakeFlag(id, ent) {
 
 public Task_FlagReset(taskid) {
 	new ent = taskid - TASK_FLAGRESET;
+
+	// Notify players that the flag has return on its own 
+	new flagTeam = Flag_GetTeam(ent);
+	client_print(0, print_center, "%l", CTF_ML_FLAGRETURNED[flagTeam]);
+	client_print(0, print_console, "%l", CTF_ML_FLAGRETURNED[flagTeam]);
+	log_amx("%l", CTF_ML_FLAGRETURNED[flagTeam]);
+	Speak(0, fmt("%l", CTF_ML_SND_FLAGRETURNED[flagTeam]));
+
 	Flag_Reset(ent);
 }
 
