@@ -44,7 +44,6 @@
 enum (+=100) {
 	TASK_STARTMATCH = 1000,
 	TASK_STARTVERSUS,
-	TASK_SENDVICTIMTOSPEC,
 	TASK_SENDTOSPEC,
 	TASK_SHOWSETTINGS,
 	TASK_AGTIMER
@@ -77,7 +76,6 @@ new bool:gBlockCmdKill;
 new bool:gBlockCmdSpec;
 new bool:gBlockCmdDrop;
 new bool:gBlockPlayerSpawn;
-new bool:gSendVictimToSpec;
 new bool:gSendConnectingToSpec;
 new bool:gIsSuddenDeath;
 
@@ -593,7 +591,6 @@ public client_putinserver(id) {
 
 public client_disconnected(id) {
 	remove_task(TASK_SENDTOSPEC + id);
-	remove_task(TASK_SENDVICTIMTOSPEC + id);
 	remove_task(id);
 
 	// Sometimes a player connects and disconnects before ClientPutInServer()
@@ -643,9 +640,6 @@ public PlayerPreSpawn(id) {
 
  	if (gBlockPlayerSpawn)
 	 	return HAM_SUPERCEDE;
-
-	if (task_exists(TASK_SENDVICTIMTOSPEC + id)) 
-		return HAM_SUPERCEDE;
 
 	return HAM_IGNORED;
 }
@@ -702,9 +696,6 @@ public PlayerPostKilled(victim, attacker) {
 			hl_set_user_frags(victim, hl_get_user_frags(victim) - 1);
 		}
 	}
-
-	if (gSendVictimToSpec)
-		set_task(3.0, "SendVictimToSpec", victim + TASK_SENDVICTIMTOSPEC);
 
 	if (gIsSuddenDeath) {
 		StartIntermissionMode();
@@ -1073,15 +1064,6 @@ public SendToSpec(taskid) {
 	new id = taskid - TASK_SENDTOSPEC;
 	if (is_user_connected(id))
 		hl_set_user_spectator(id, true);
-}
-
-public SendVictimToSpec(taskid) {
-	new id = taskid - TASK_SENDVICTIMTOSPEC;
-	if (is_user_connected(id)) {
-		if (!is_user_alive(id) || is_user_bot(id)) {
-			hl_set_user_spectator(id, true);
-		}
-	}
 }
 
 /*
