@@ -135,6 +135,38 @@ function CtfSection() {
   );
 }
 
+function LLHLSection() {
+  return (
+    <header className={clsx(styles.llhlSection)}>
+      <div className="container">
+        <div className="row">
+          <div className={clsx('col col--6')} style={{ display: 'grid', margin: 'auto', textAlign: 'center' }}>
+            <img src="img/llhl-logo.png" className={clsx(styles.llhlImage)} />
+          </div>
+          <div className={clsx('col col--6 text--left')}>
+            <Heading as="h1" className="hero__title" style={{ margin: '1rem 0' }}>New LLHL game mode!</Heading>
+            <p>
+              LLHL is a game mode designed for the HL/AG community in Latin America for their own leagues and tournaments.
+              This mode features functionality similar to the European game mode counterpart (EHLL mode).
+
+              <Heading as="h3" style={{ margin: '1rem 0' }}>Features</Heading>
+              <ul>
+                <li>Automatic demo recording on match start.</li>
+                <li>FPS and FOV limiter.</li>
+                <li>Block name and model changes when a match is on.</li>
+                <li>Screenshots taken on death and when map ends.</li>
+                <li>Check players are using default sounds for weapons, footsteps, etc.</li>
+                <li>Simple OpenGF32 and AGFix cheat detection.</li>
+              </ul>
+              More info <Link to='/docs/gamemodes/llhl'>here</Link>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
 export default function Home() {
   const { siteConfig } = useDocusaurusContext();
   return (
@@ -144,6 +176,7 @@ export default function Home() {
       <HomepageHeader />
       <FeaturesSection />
       <CtfSection />
+      <LLHLSection />
     </Layout>
   );
 }
