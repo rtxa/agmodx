@@ -6,6 +6,7 @@ import Heading from '@theme/Heading';
 import styles from './index.module.css';
 import { Icon, InlineIcon } from '@iconify/react';
 import IconExternalLink from "@theme/Icon/ExternalLink";
+import { AGMODX_VERSION } from '@site/src/_constants';
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
@@ -26,7 +27,17 @@ function HomepageHeader() {
             <InlineIcon icon="lucide:file-text" height="1.5rem" style={{ verticalAlign: 'text-bottom' }} /> Read the docs
           </Link>
         </div>
-        Latest version: <b>2.6.1</b> — <Link style={{ color: '#5a98fe' }} to='/changelog'>What's new?</Link>
+        <div>
+          <span class="badge badge--info" style={{ fontSize: '80%', margin: '0.5rem', userSelect: 'text' }}>
+            🚀 Latest version: {AGMODX_VERSION}
+          </span>
+          <Link
+            className={clsx("button button--sm button--warning")}
+            style={{ padding: "var(--ifm-badge-padding-vertical) var(--ifm-badge-padding-horizontal)", lineHeight: "1.0", fontSize: "80%", margin: '0.5rem', color: 'var(--ifm-color-gray-900)' }}
+            to="/changelog">
+            💫 What's new?
+          </Link>
+        </div>
       </div>
     </header>
   );
