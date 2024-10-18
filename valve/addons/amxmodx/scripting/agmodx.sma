@@ -439,6 +439,7 @@ public plugin_init() {
 	ag_register_concmd("aglistvotes", "CmdVoteHelp", ADMIN_ALL, "AGCMD_LISTVOTES", _, true);
 	ag_register_concmd("timeleft", "CmdTimeLeft", ADMIN_ALL, "AGCMD_TIMELEFT", _, true);
 	ag_register_clcmd("vote", "CmdVote", ADMIN_ALL, "AGCMD_VOTE", _, true);
+	ag_register_clcmd("callvote", "CmdVote", ADMIN_ALL, "AGCMD_VOTE", _, true);
 	ag_register_clcmd("yes", "CmdVoteYes", ADMIN_ALL, "AGCMD_YES", _, true);
 	ag_register_clcmd("no", "CmdVoteNo", ADMIN_ALL, "AGCMD_NO", _, true);
 	ag_register_clcmd("say !yes", "CmdVoteYes_Say", ADMIN_ALL, "AGCMD_YES", _, true);
