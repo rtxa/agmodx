@@ -162,6 +162,7 @@ new gCvarAllowVoteAgStart;
 new gCvarAllowVoteMap;
 new gCvarAllowVoteKick;
 new gCvarAllowVoteSetting;
+new gCvarDisabledVotes;
 
 new gCvarVoteTimeLimitMax;
 new gCvarVoteTimeLimitMin;
@@ -265,6 +266,7 @@ public plugin_precache() {
 	gCvarAllowVoteKick = create_cvar("sv_ag_vote_kick", "0", FCVAR_SERVER);
 	gCvarAllowVoteSetting = create_cvar("sv_ag_vote_setting", "1", FCVAR_SERVER);
 	gCvarAllowVoteBots = create_cvar("sv_ag_vote_allow_bots", "0");
+	gCvarDisabledVotes = create_cvar("sv_ag_disabled_votes", "", FCVAR_SERVER);
 
 	// Limits for vote cvars
 	gCvarVoteTimeLimitMax = create_cvar("sv_ag_vote_mp_timelimit_high", "1440"); // one day
@@ -536,7 +538,7 @@ public plugin_end() {
 	// i use this handle in general
 	new any:handle;
 
-	// destroy vote list
+	// destroy vote list and their callbacks
 	handle = TrieIterCreate(gTrieVoteList);
 
 	new value;
@@ -2497,6 +2499,11 @@ public CmdVote(id) {
 		return PLUGIN_HANDLED;
 	}
 	
+	if (IsVoteDisabled(gVoteArg1)) {
+		client_print(id, print_console, "%l", "VOTE_NOTALLOWED");
+		return PLUGIN_HANDLED;
+	}
+
 	// execute vote callback, this checks that the required arguments are correct and gives a result
 	new voteResult;
 	ExecuteForward(gVoteOptionFwHandle, voteResult, id, true, gNumVoteArgs, PrepareArray(gVoteArg1, sizeof(gVoteArg1), true), PrepareArray(gVoteArg2, sizeof(gVoteArg2), true));
@@ -2777,6 +2784,34 @@ bool:IsGameModeAllowed(const mode[]) {
     }
 
     return false;
+}
+
+/**
+ * Checks if the vote has been disabled.
+ * Example: sv_ag_disabled_votes "agstart;agallow;mp_timelimit"
+ *
+ * @param vote Name of the vote to check
+ * @note This doesn't check that the vote is a valid entry
+ */
+bool:IsVoteDisabled(const vote[]) {
+	new disabledVotes[512];
+	get_pcvar_string(gCvarDisabledVotes, disabledVotes, charsmax(disabledVotes));
+	
+	// if cvar is empty, then all votes are allowed
+	if (!strlen(disabledVotes)) {
+		return false;
+	}
+
+	// if we find a match, then vote is disabled
+	new str[32];
+	while (strlen(disabledVotes)) {
+		strtok(disabledVotes, str, charsmax(str), disabledVotes, charsmax(disabledVotes), ';');
+		if (equali(vote, str)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 // i want to show score when map finishes so you can take a pic, engine_changelevel() will change it instantly
