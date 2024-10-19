@@ -2291,16 +2291,21 @@ public OnVoteAgNextMap(id, check, argc, arg1[], arg2[]) {
 }
 
 public OnVoteAgNextMode(id, check, argc, arg1[], arg2[]) {
-	if (argc != 1) {
+	if (argc != 2) {
 		client_print(id, print_console, "%l", "VOTE_INVALID");
 		return false;
 	}
 
 	if (!check) {
-		ChangeMode(arg2);
+		set_pcvar_string(gCvarGameMode, arg2);
 	} else {
 		if (!get_pcvar_num(gCvarAllowVoteGameMode)) {
 			console_print(id, "%l", "VOTE_NOTALLOWED");
+			return false;
+		}
+
+		if (!TrieKeyExists(gTrieVoteList, arg2)) {
+			client_print(id, print_console, "%l", "INVALID_MODE");
 			return false;
 		}
 	}
