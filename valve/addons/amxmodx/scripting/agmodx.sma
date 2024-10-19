@@ -1684,12 +1684,18 @@ public CmdAgNextMode(id, level, cid) {
 		return PLUGIN_HANDLED;
 	}
 
-	if (TrieKeyExists(gTrieVoteList, arg)) {
-		log_amx("AgNextMode: ^"%s^" ^"%N^"", arg, id);
-		set_pcvar_string(gCvarGameMode, arg); // set next mode
-	} else {
+	if (!TrieKeyExists(gTrieVoteList, arg)) {
 		client_print(id, print_console, "%l", "INVALID_MODE");
+		return PLUGIN_HANDLED;
 	}
+
+	if (!IsGameModeAllowed(arg)) {
+		client_print(id, print_console, "%l", "GAMEMODE_NOTALLOWED");
+		return PLUGIN_HANDLED;
+	}
+	
+	log_amx("AgNextMode: ^"%s^" ^"%N^"", arg, id);
+	set_pcvar_string(gCvarGameMode, arg); // set next mode
 
 	return PLUGIN_HANDLED;
 }
@@ -2306,6 +2312,11 @@ public OnVoteAgNextMode(id, check, argc, arg1[], arg2[]) {
 
 		if (!TrieKeyExists(gTrieVoteList, arg2)) {
 			client_print(id, print_console, "%l", "INVALID_MODE");
+			return false;
+		}
+
+		if (!IsGameModeAllowed(arg2)) {
+			client_print(id, print_console, "%l", "GAMEMODE_NOTALLOWED");
 			return false;
 		}
 	}
