@@ -1,6 +1,6 @@
 ![Logo](agmodx-logo.png)
 
-![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-2.6.1-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-24/09/2024-blue "Last Update") [![Website](https://img.shields.io/badge/Go%20to%20the%20website-orange)](https://rtxa.github.io/agmodx/)
+![Author](https://img.shields.io/badge/Author-rtxa-9cf "Author") ![Version](https://img.shields.io/badge/Version-2.6.2-blue "Version") ![Last Update](https://img.shields.io/badge/Last%20Update-21/10/2024-blue "Last Update") [![Website](https://img.shields.io/badge/Go%20to%20the%20website-orange)](https://rtxa.github.io/agmodx/)
 
 An improved Mini AG alternative developed as an AMX Mod X plugin from the ground up. It contains many bugfixes and improvements, and because it's open source it allows you to add new stuff and make improvements easily.
 
