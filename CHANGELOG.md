@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.6.2] - 2024-10-21
+
+### New
+
+- Added `callvote` command as an alias for `vote`.
+- Added `sv_ag_disabled_votes` CVar, which sets what votes are disabled on the server. For example: `sv_ag_disabled_votes "agstart;agabort"` will disable `agstart` and `agabort`.
+
+### Improved
+
+- Now game modes can be disabled on the fly when using `sv_ag_allowed_gamemodes` (no need to wait for map restart).
+- Now `mp_respawn_fix` is enabled by default in `startup_server.cfg`. No reason to keep this fix disabled which improves fairness. 
+  - If you need to adjust the respawn time, use `mp_respawn_delay`, which is set to 0.95. This is the fastest spawn time at 125 FPS with the old behavior.
+  
+### Fixed
+
+- Fixed `agnextmode` not working as expected:
+  - Don't allow voting with an empty argument or modes that don't exist.
+  - It will no longer change the map when accepted or called as an admin, which defeated the purpose of setting a next map for the server.
+  - Fixed some misspellings in the translations.
+
 ## [2.6.1] - 2024-09-24
 
 ### Fixed
@@ -135,6 +155,7 @@ Now the mod has an [official website](https://rtxa.github.io/agmodx) made with D
 - Arcade not setting armor on player spawn.
 - Invalid private data when a player leaves before he has fully joined.
 
+[2.6.2]: https://github.com/rtxa/agmodx/compare/2.6.1...2.6.2
 [2.6.1]: https://github.com/rtxa/agmodx/compare/2.6...2.6.1
 [2.6]: https://github.com/rtxa/agmodx/compare/beta-2.5.2...2.6
 [Beta 2.5.2]: https://github.com/rtxa/agmodx/compare/beta-2.5.1...beta-2.5.2

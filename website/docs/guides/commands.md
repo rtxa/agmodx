@@ -95,6 +95,8 @@ All game modes (TDM, Arena, etc.) are already included in the vote list.
 * `sv_ag_vote_start 1` — Allow vote agstart.
 * `sv_ag_vote_allow 1` — Allow vote agallow.
 * `sv_ag_vote_failed_time 15` — Cooldown for next vote if previous one failed.
+* `sv_ag_vote_allow_bots 0` — Allow bots to vote. Debug purposes only.
+* `sv_ag_disabled_votes` — Set what votes are disabled. For example: `sv_ag_disabled_votes "agstart;agabort"` will disable `agstart` and `agabort`.
 * <Badge type='deprecated'/> `sv_ag_vote_admin 0` — Allow vote for player admin. Dropped in favour of AMXX admin system.
 
 **Multiplayer**
