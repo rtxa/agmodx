@@ -6,7 +6,7 @@ import Heading from '@theme/Heading';
 import styles from './index.module.css';
 import { Icon, InlineIcon } from '@iconify/react';
 import IconExternalLink from "@theme/Icon/ExternalLink";
-import { AGMODX_VERSION } from '@site/src/_constants';
+import { AGMODX_VERSION, AGMODX_RELEASE_DATE } from '@site/src/_constants';
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
@@ -30,6 +30,9 @@ function HomepageHeader() {
         <div>
           <span class="badge badge--info" style={{ fontSize: '80%', margin: '0.5rem', userSelect: 'text' }}>
             🚀 Latest version: {AGMODX_VERSION}
+          </span>
+          <span class="badge badge--info" style={{ fontSize: '80%', margin: '0.5rem', userSelect: 'text', backgroundColor: '#bcd1f0', borderColor: '#bcd1f0'}}>
+            📅 Release date: {AGMODX_RELEASE_DATE}
           </span>
           <Link
             className={clsx("button button--sm button--warning")}
