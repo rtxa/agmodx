@@ -662,8 +662,18 @@ public OnPlayerKilled(victim, attacker) {
 		// Deaths caused by a trigger_hurt (Possible falling in some unaccesible area)
 		// will return the flag to base
 		if (equal(classname, "trigger_hurt")) {
+			new flagEnt = GetFlagCarriedByPlayer(victim);
+			new flagTeam = Flag_GetTeam(flagEnt);
 			SetFlagCarriedByPlayer(victim, 0);
-			Flag_Reset(GetFlagCarriedByPlayer(victim));
+			Player_DrawFlagIcon(victim, false, flagTeam);
+
+			client_print(0, print_center, "%l", CTF_ML_FLAGRETURNED[flagTeam]);
+			client_print(0, print_console, "%l", CTF_ML_FLAGRETURNED[flagTeam]);
+			log_amx("%l", CTF_ML_FLAGRETURNED[flagTeam]);
+			Speak(0, fmt("%l", CTF_ML_SND_FLAGRETURNED[flagTeam]));
+
+			Flag_Reset(flagEnt);
+			
 			return HAM_IGNORED;
 		}
 
